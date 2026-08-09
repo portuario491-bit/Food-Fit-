@@ -61,6 +61,18 @@
   input[type="number"]{width:82px;padding:8px 9px;font-size:16px;font-weight:600;border:1.5px solid var(--line);border-radius:8px;background:var(--panel-2);color:var(--ink);text-align:right;font-family:'Inter', sans-serif;}
   input[type="number"]:focus{outline:2px solid var(--yellow);outline-offset:1px;}
 
+  .stepper{display:inline-flex;align-items:center;gap:6px;}
+  .stepper input[type="number"]{width:60px;padding:8px 4px;text-align:center;}
+  .stepper-btn{
+    flex-shrink:0;width:34px;height:34px;border-radius:8px;border:1.5px solid var(--line);
+    background:var(--panel-2);color:var(--ink);font-family:'IBM Plex Mono', monospace;
+    font-size:18px;font-weight:700;line-height:1;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;padding:0;
+  }
+  .stepper-btn:active{background:var(--yellow);color:#211a08;border-color:var(--yellow);}
+  .stepper.compact{gap:3px;}
+  .stepper.compact .stepper-btn{width:23px;height:23px;font-size:13px;border-radius:6px;}
+
   .segmented{display:flex;border-radius:10px;border:1.5px solid var(--line);overflow:hidden;}
   .segmented button{flex:1;padding:8px 6px;font-size:12px;font-weight:600;background:var(--panel-2);color:var(--muted);border:none;border-right:1.5px solid var(--line);cursor:pointer;font-family:'Inter', sans-serif;}
   .segmented button:last-child{border-right:none;}
@@ -103,12 +115,12 @@
   .remove-day{background:none;border:none;color:var(--red);font-size:18px;line-height:1;cursor:pointer;padding:2px 4px;}
   .add-day-btn{width:100%;padding:12px;border-radius:14px;border:1.5px dashed var(--line);background:transparent;color:var(--ink);font-family:'IBM Plex Mono', monospace;font-size:12px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;margin-bottom:14px;}
 
-  .exercise{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px dashed var(--line);gap:8px;}
+  .exercise{display:flex;flex-direction:column;padding:8px 0;border-top:1px dashed var(--line);gap:8px;}
   .exercise:first-of-type{border-top:none;}
   .exercise .ex-main{flex:1;min-width:0;}
   .exercise .ex-name{font-size:13.5px;display:block;}
   .exercise .ex-muscle{font-family:'IBM Plex Mono', monospace;font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;}
-  .exercise .ex-controls{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+  .exercise .ex-controls{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end;row-gap:6px;}
   .mini-input{width:34px;padding:5px 3px;font-size:12px;font-weight:600;text-align:center;border:1.5px solid var(--line);border-radius:6px;background:var(--panel-3);color:var(--ink);font-family:'IBM Plex Mono', monospace;}
   .mini-input.reps{width:46px;}
   .mini-input.weight{width:40px;}
@@ -519,6 +531,51 @@
 
   const $ = id => document.getElementById(id);
 
+  // Wraps a number input with tap-to-adjust "−" / "+" buttons, reusing the
+  // input's own min/max/step attributes so behaviour matches typing in it.
+  function makeStepper(input, opts){
+    if(!input || input.closest('.stepper')) return;
+    opts = opts || {};
+    const step = opts.step != null ? opts.step : (parseFloat(input.step) || 1);
+    const decimals = (String(step).split('.')[1] || '').length;
+    const min = input.min !== '' ? parseFloat(input.min) : null;
+    const max = input.max !== '' ? parseFloat(input.max) : null;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'stepper' + (opts.compact ? ' compact' : '');
+    input.parentNode.insertBefore(wrap, input);
+
+    const minusBtn = document.createElement('button');
+    minusBtn.type = 'button';
+    minusBtn.className = 'stepper-btn';
+    minusBtn.textContent = '−';
+    minusBtn.setAttribute('aria-label', 'Restar');
+
+    const plusBtn = document.createElement('button');
+    plusBtn.type = 'button';
+    plusBtn.className = 'stepper-btn';
+    plusBtn.textContent = '+';
+    plusBtn.setAttribute('aria-label', 'Sumar');
+
+    wrap.appendChild(minusBtn);
+    wrap.appendChild(input);
+    wrap.appendChild(plusBtn);
+
+    function adjust(delta){
+      let v = parseFloat(input.value);
+      if(isNaN(v)) v = min != null ? min : 0;
+      v = v + delta;
+      if(min != null) v = Math.max(min, v);
+      if(max != null) v = Math.min(max, v);
+      v = Math.round(v * Math.pow(10, decimals)) / Math.pow(10, decimals);
+      input.value = decimals > 0 ? v.toFixed(decimals) : String(v);
+      input.dispatchEvent(new Event('input', {bubbles:true}));
+      input.dispatchEvent(new Event('change', {bubbles:true}));
+    }
+    minusBtn.addEventListener('click', e=>{ e.stopPropagation(); adjust(-step); });
+    plusBtn.addEventListener('click', e=>{ e.stopPropagation(); adjust(step); });
+  }
+
   let historyData = {}; // { 'YYYY-MM-DD': { workout: {...}, meals: [...] } } — populated by initHistory()
   let selectedDate = null; // set to todayStr() once defined, before first calcNutrition() call
 
@@ -546,6 +603,9 @@
     $(id).addEventListener('input', ()=>{ calcNutrition(); persistNutritionSettingsDebounced(); });
     $(id).addEventListener('change', ()=>{ calcNutrition(); persistNutritionSettingsDebounced(); });
   });
+  makeStepper($('age'), {step:1});
+  makeStepper($('weight'), {step:1});
+  makeStepper($('height'), {step:1});
 
   let nutritionTargets = { calories:0, protein:0, carbs:0, fat:0 };
 
@@ -801,6 +861,8 @@
           routineData.days[dayIdx].exercises[exIdx].reps = e.target.value;
           persist();
         });
+        makeStepper(row.querySelector('.weight-input'), {step:0.5, compact:true});
+        makeStepper(row.querySelector('.sets-input'), {step:1, compact:true});
         row.querySelector('.remove-ex').addEventListener('click', ()=>{
           routineData.days[dayIdx].exercises.splice(exIdx,1);
           renderRoutine();
@@ -1146,6 +1208,7 @@
       card.querySelector('.carbs-val').textContent = (food.carbs*factor).toFixed(1)+'g';
       card.querySelector('.fat-val').textContent = (food.fat*factor).toFixed(1)+'g';
     });
+    makeStepper(gramsInput, {step:10});
     card.querySelector('.reg-btn').addEventListener('click', (e)=>{
       e.stopPropagation();
       const g = parseFloat(gramsInput.value) || 100;
