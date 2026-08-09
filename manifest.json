@@ -1,0 +1,24 @@
+{
+  "name": "Food&Fit",
+  "short_name": "Food&Fit",
+  "description": "Nutrición y entrenamiento, a tu medida",
+  "start_url": "food-and-fit.html",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#17160f",
+  "theme_color": "#17160f",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
