@@ -921,7 +921,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.2/dist/umd/supabase.js" integrity="sha384-OUpie84zd1LdwNlK9uJJQRwab0BLqo3eKYKFh7hSVL58FSk7wPp2l0kfUMIIoaQd" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.4/dist/quagga.min.js"></script>
 <script>
   /* ---------- SUPABASE ---------- */
   if(typeof window.supabase === 'undefined'){
@@ -2597,11 +2597,9 @@
   }
 
   /* ---------- BARCODE SCANNER ---------- */
-  // Usamos Html5QrcodeScanner (el widget de más alto nivel de la
-  // librería, con su propio botón de "dar permiso a la cámara" y su
-  // propio recuadro de escaneo) en vez de construir la cámara a mano,
-  // porque es la forma más probada y con más gente usándola con éxito.
-  let barcodeScanner = null;
+  // Tres niveles, de más a menos fiable: lector nativo del navegador
+  // (BarcodeDetector) → Quagga2 (librería con motor propio) → escribir
+  // el código a mano, que siempre está disponible.
   let scanInProgress = false;
 
   // Escáner nativo del propio navegador (Shape Detection API), sin
@@ -2672,29 +2670,55 @@
     const usedNative = await tryNativeBarcodeScanner();
     if(usedNative) return;
 
-    // Si el navegador no trae lector nativo, probamos con la librería.
-    if(typeof Html5QrcodeScanner === 'undefined'){
+    // Si el navegador no trae lector nativo, probamos con Quagga2: una
+    // librería distinta de la que se usó antes, con un motor de lectura
+    // propio (no comparte código con la anterior), pensada específicamente
+    // para códigos de barras de productos (EAN/UPC).
+    if(typeof Quagga === 'undefined'){
       $('scannerStatus').textContent = 'No se pudo cargar el lector de códigos de barras. Escribe el código a mano más abajo.';
       return;
     }
     try{
-      const config = { fps: 10, qrbox: { width: 260, height: 150 } };
-      if(typeof Html5QrcodeScanType !== 'undefined'){
-        config.supportedScanTypes = [ Html5QrcodeScanType.SCAN_TYPE_CAMERA ];
-      }
-      barcodeScanner = new Html5QrcodeScanner('scannerReader', config, false);
-      barcodeScanner.render(onBarcodeDetected, ()=>{ /* fotograma sin código detectado: normal, se ignora */ });
+      quaggaActive = true;
+      Quagga.init({
+        inputStream: {
+          type: 'LiveStream',
+          target: $('scannerReader'),
+          constraints: { facingMode: 'environment' }
+        },
+        locator: { patchSize: 'medium', halfSample: true },
+        numOfWorkers: 0,
+        decoder: { readers: ['ean_reader','ean_8_reader','upc_reader','upc_e_reader'] },
+        locate: true
+      }, function(err){
+        if(!quaggaActive) return;
+        if(err){
+          quaggaActive = false;
+          $('scannerStatus').textContent = 'No se pudo acceder a la cámara. Escribe el código a mano más abajo.';
+          return;
+        }
+        Quagga.start();
+        $('scannerStatus').textContent = 'Apunta la cámara al código de barras del producto.';
+      });
+      Quagga.onDetected(quaggaOnDetected);
     }catch(err){
+      quaggaActive = false;
       $('scannerStatus').textContent = 'No se pudo iniciar el lector de códigos de barras. Escribe el código a mano más abajo.';
     }
   }
 
+  let quaggaActive = false;
+  function quaggaOnDetected(result){
+    if(!quaggaActive || !result || !result.codeResult || !result.codeResult.code) return;
+    quaggaActive = false;
+    onBarcodeDetected(result.codeResult.code);
+  }
+
   function stopScannerCamera(){
     stopNativeScanner();
-    if(barcodeScanner){
-      const s = barcodeScanner;
-      barcodeScanner = null;
-      try{ s.clear().catch(()=>{}); }catch(err){ /* ya podría estar detenido */ }
+    if(quaggaActive || typeof Quagga !== 'undefined'){
+      quaggaActive = false;
+      try{ Quagga.offDetected(quaggaOnDetected); Quagga.stop(); }catch(err){ /* ya podría estar detenida */ }
     }
   }
 
