@@ -32,8 +32,24 @@
     --shadow-card:0 6px 18px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.03);
     --shadow-pop:0 14px 34px rgba(0,0,0,0.45);
   }
+  :root[data-theme="light"]{
+    --bg:#f7f4ea;
+    --panel:#ffffff;
+    --panel-2:#efe9d8;
+    --panel-3:#e4dcc4;
+    --ink:#211f16;
+    --muted:#726c58;
+    --line:rgba(33,31,22,0.14);
+    --red:#c1382c;
+    --yellow:#a4720a;
+    --blue:#2f5f92;
+    --green:#3f7a3f;
+    --shadow-card:0 4px 14px rgba(60,50,20,0.10), inset 0 1px 0 rgba(255,255,255,0.6);
+    --shadow-pop:0 14px 30px rgba(60,50,20,0.16);
+  }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
+  html{background:var(--bg);}
   button{transition:transform .12s ease, background-color .15s ease, border-color .15s ease, color .15s ease;}
   button:active{transform:scale(0.95);}
   @keyframes screenIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
@@ -725,6 +741,11 @@
     <label for="accName" style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin:8px 0 6px;text-transform:uppercase;letter-spacing:0.4px;font-family:'IBM Plex Mono', monospace;">Nombre</label>
     <input type="text" id="accName" style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel-2);color:var(--ink);font-size:14px;font-family:'Inter', sans-serif;margin-bottom:12px;">
     <p class="ob-note" style="margin:0 0 12px;">Cuenta: <strong id="accEmailStatic" style="color:var(--ink);"></strong></p>
+    <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:0.4px;font-family:'IBM Plex Mono', monospace;">Tema</label>
+    <div class="segmented" id="themeSeg" style="margin-bottom:16px;">
+      <button type="button" data-val="dark" class="active">Oscuro</button>
+      <button type="button" data-val="light">Claro</button>
+    </div>
     <button class="btn primary" id="accSaveBtn" style="width:100%;padding:11px;">Guardar cambios</button>
     <button class="danger-btn" id="exportDataBtn" style="border-color:var(--line);color:var(--ink);margin-top:10px;">Exportar mis datos</button>
     <button class="danger-btn" id="accLogoutBtn" style="border-color:var(--line);color:var(--ink);margin-top:10px;">Cerrar sesión</button>
@@ -783,6 +804,24 @@
   });
 
   const $ = id => document.getElementById(id);
+
+  /* ---------- THEME ---------- */
+  function applyTheme(theme){
+    document.documentElement.setAttribute('data-theme', theme);
+    try{ localStorage.setItem('foodfit-theme', theme); }catch(err){ /* storage unavailable */ }
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if(metaTheme) metaTheme.setAttribute('content', theme==='light' ? '#f7f4ea' : '#17160f');
+    document.querySelectorAll('#themeSeg button').forEach(b=> b.classList.toggle('active', b.dataset.val===theme));
+  }
+  (function initTheme(){
+    let saved = 'dark';
+    try{ saved = localStorage.getItem('foodfit-theme') || 'dark'; }catch(err){ /* storage unavailable */ }
+    applyTheme(saved);
+  })();
+  $('themeSeg').addEventListener('click', e=>{
+    const b = e.target.closest('button'); if(!b) return;
+    applyTheme(b.dataset.val);
+  });
 
   const HTML_ESCAPE_MAP = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
   function escapeHtml(str){
