@@ -875,14 +875,18 @@
           delete pending[pid];
           savePendingWrites(pending);
         }
+        updateOfflineBadge();
+        // Este guardado sí llegó al servidor: aprovechamos para reintentar
+        // cualquier otro cambio que estuviera pendiente de otras pantallas.
+        flushPendingWrites();
       }catch(err){
         // Sin conexión (u otro fallo temporal): guardamos el cambio en el
         // dispositivo para no perderlo, y se subirá solo al volver la conexión.
         const pending = loadPendingWrites();
         pending[pid] = value;
         savePendingWrites(pending);
+        updateOfflineBadge();
       }
-      updateOfflineBadge();
     },
     async delete(key){
       if(!currentUser) return;
@@ -893,7 +897,12 @@
 
   let flushInFlight = false;
   async function flushPendingWrites(){
-    if(!currentUser || !navigator.onLine || flushInFlight) return;
+    // No comprobamos navigator.onLine aquí: en algunos móviles (sobre todo
+    // en modo "añadido a pantalla de inicio" en iPhone) ese valor no es
+    // fiable y puede quedarse marcado como "sin conexión" aunque sí haya
+    // internet. Mejor intentar el envío real y dejar que sea la propia
+    // respuesta del servidor la que diga si funcionó o no.
+    if(!currentUser || flushInFlight) return;
     const pending = loadPendingWrites();
     const ids = Object.keys(pending).filter(id => id.startsWith(currentUser.id + '::'));
     if(!ids.length) return;
@@ -921,13 +930,11 @@
   function updateOfflineBadge(){
     const banner = $('offlineBanner');
     if(!banner) return;
-    if(!navigator.onLine){
-      $('offlineBannerText').textContent = 'Sin conexión. Tus cambios se guardan en el dispositivo y se subirán solos.';
-      banner.classList.add('offline');
-      banner.style.display = 'flex';
-    } else if(hasPendingWrites()){
-      $('offlineBannerText').textContent = 'Subiendo cambios pendientes…';
-      banner.classList.remove('offline');
+    if(hasPendingWrites()){
+      $('offlineBannerText').textContent = navigator.onLine
+        ? 'Subiendo cambios pendientes…'
+        : 'Sin conexión. Tus cambios se guardan en el dispositivo y se subirán solos.';
+      banner.classList.toggle('offline', !navigator.onLine);
       banner.style.display = 'flex';
     } else {
       banner.style.display = 'none';
@@ -935,6 +942,20 @@
   }
   window.addEventListener('online', ()=>{ updateOfflineBadge(); flushPendingWrites(); });
   window.addEventListener('offline', updateOfflineBadge);
+
+  // Reintento periódico: además de escuchar el evento "online" (que en
+  // algunos móviles no llega o llega tarde), comprobamos cada 20s si queda
+  // algo pendiente de subir y lo reintentamos, para no quedarnos nunca
+  // "atascados" mostrando el aviso sin motivo real.
+  let pendingRetryInterval = null;
+  function startPendingRetryLoop(){
+    if(pendingRetryInterval) return;
+    pendingRetryInterval = setInterval(()=>{ if(hasPendingWrites()) flushPendingWrites(); }, 20000);
+  }
+  function stopPendingRetryLoop(){
+    clearInterval(pendingRetryInterval);
+    pendingRetryInterval = null;
+  }
 
   if('serviceWorker' in navigator){
     window.addEventListener('load', ()=>{
@@ -3205,11 +3226,13 @@
     startReminderChecks();
     updateOfflineBadge();
     flushPendingWrites();
+    startPendingRetryLoop();
   }
 
   function onLogout(){
     currentUser = null;
     window.storage = null;
+    stopPendingRetryLoop();
     $('offlineBanner').style.display = 'none';
     profileData = null;
     routineData = null;
