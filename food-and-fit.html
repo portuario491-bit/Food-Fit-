@@ -2765,25 +2765,79 @@
   // Valores MET (equivalente metabólico) típicos por deporte: kcal = MET × peso(kg) × horas.
   // Son medias orientativas, no tienen en cuenta la intensidad real de cada sesión.
   const EXTRA_SPORTS = [
-    { id:'correr', name:'Correr', met:9.8 },
-    { id:'ciclismo', name:'Ciclismo', met:7.5 },
-    { id:'boxeo', name:'Boxeo (saco/técnica)', met:8.5 },
-    { id:'padel', name:'Pádel', met:6.5 },
-    { id:'tenis', name:'Tenis', met:7.3 },
-    { id:'natacion', name:'Natación', met:7.5 },
-    { id:'futbol', name:'Fútbol', met:8.0 },
-    { id:'baloncesto', name:'Baloncesto', met:6.8 },
-    { id:'senderismo', name:'Senderismo', met:6.0 },
-    { id:'caminar', name:'Caminar rápido', met:4.5 },
-    { id:'baile', name:'Baile', met:5.5 },
-    { id:'comba', name:'Saltar a la comba', met:11.0 },
-    { id:'yoga', name:'Yoga / Pilates', met:3.0 }
+    // Deportes de equipo
+    { id:'futbol', name:'Fútbol', met:8.0, group:'Deportes de equipo' },
+    { id:'futbolsala', name:'Fútbol sala', met:8.0, group:'Deportes de equipo' },
+    { id:'baloncesto', name:'Baloncesto', met:6.8, group:'Deportes de equipo' },
+    { id:'voleibol', name:'Voleibol', met:4.0, group:'Deportes de equipo' },
+    { id:'voleiplaya', name:'Vóley playa', met:8.0, group:'Deportes de equipo' },
+    { id:'balonmano', name:'Balonmano', met:8.0, group:'Deportes de equipo' },
+    { id:'rugby', name:'Rugby', met:10.0, group:'Deportes de equipo' },
+    { id:'beisbol', name:'Béisbol / Sóftbol', met:5.0, group:'Deportes de equipo' },
+    { id:'hockeyhierba', name:'Hockey hierba', met:7.8, group:'Deportes de equipo' },
+    { id:'hockeyhielo', name:'Hockey hielo', met:8.0, group:'Deportes de equipo' },
+    { id:'waterpolo', name:'Waterpolo', met:10.0, group:'Deportes de equipo' },
+    // Raqueta y pala
+    { id:'padel', name:'Pádel', met:6.5, group:'Raqueta y pala' },
+    { id:'tenis', name:'Tenis', met:7.3, group:'Raqueta y pala' },
+    { id:'badminton', name:'Bádminton', met:5.5, group:'Raqueta y pala' },
+    { id:'squash', name:'Squash', met:12.0, group:'Raqueta y pala' },
+    { id:'pingpong', name:'Tenis de mesa', met:4.0, group:'Raqueta y pala' },
+    // Combate
+    { id:'boxeo', name:'Boxeo (saco/técnica)', met:8.5, group:'Combate' },
+    { id:'kickboxing', name:'Kickboxing / Muay Thai', met:10.0, group:'Combate' },
+    { id:'artesmarciales', name:'Artes marciales (karate, judo, taekwondo…)', met:10.3, group:'Combate' },
+    { id:'lucha', name:'Lucha', met:6.0, group:'Combate' },
+    // Cardio y resistencia
+    { id:'correr', name:'Correr', met:9.8, group:'Cardio y resistencia' },
+    { id:'trail', name:'Trail running / montaña', met:9.5, group:'Cardio y resistencia' },
+    { id:'caminar', name:'Caminar rápido', met:4.5, group:'Cardio y resistencia' },
+    { id:'ciclismo', name:'Ciclismo', met:7.5, group:'Cardio y resistencia' },
+    { id:'btt', name:'Ciclismo de montaña (BTT)', met:8.5, group:'Cardio y resistencia' },
+    { id:'spinning', name:'Spinning / ciclismo indoor', met:8.5, group:'Cardio y resistencia' },
+    { id:'remo', name:'Remo (máquina)', met:7.0, group:'Cardio y resistencia' },
+    { id:'comba', name:'Saltar a la comba', met:11.0, group:'Cardio y resistencia' },
+    { id:'crossfit', name:'CrossFit / HIIT', met:8.0, group:'Cardio y resistencia' },
+    { id:'aerobic', name:'Aeróbic / step', met:7.3, group:'Cardio y resistencia' },
+    { id:'zumba', name:'Zumba', met:6.0, group:'Cardio y resistencia' },
+    { id:'baile', name:'Baile', met:5.5, group:'Cardio y resistencia' },
+    { id:'senderismo', name:'Senderismo', met:6.0, group:'Cardio y resistencia' },
+    { id:'escalada', name:'Escalada', met:8.0, group:'Cardio y resistencia' },
+    // Acuáticos
+    { id:'natacion', name:'Natación', met:7.5, group:'Acuáticos' },
+    { id:'surf', name:'Surf', met:5.0, group:'Acuáticos' },
+    { id:'kayak', name:'Kayak / piragüismo', met:5.0, group:'Acuáticos' },
+    { id:'windsurf', name:'Windsurf', met:5.0, group:'Acuáticos' },
+    { id:'buceo', name:'Buceo', met:7.0, group:'Acuáticos' },
+    // Nieve y hielo
+    { id:'esqui', name:'Esquí alpino', met:6.0, group:'Nieve y hielo' },
+    { id:'esquifondo', name:'Esquí de fondo', met:9.0, group:'Nieve y hielo' },
+    { id:'snowboard', name:'Snowboard', met:5.3, group:'Nieve y hielo' },
+    { id:'patinajehielo', name:'Patinaje sobre hielo', met:7.0, group:'Nieve y hielo' },
+    // Otros
+    { id:'yoga', name:'Yoga / Pilates', met:3.0, group:'Otros' },
+    { id:'golf', name:'Golf (caminando)', met:4.8, group:'Otros' },
+    { id:'equitacion', name:'Equitación', met:5.5, group:'Otros' },
+    { id:'patinaje', name:'Patinaje sobre ruedas', met:7.5, group:'Otros' },
+    { id:'skate', name:'Monopatín', met:5.0, group:'Otros' },
+    { id:'bolos', name:'Bolos', met:3.0, group:'Otros' },
+    { id:'gimnasia', name:'Gimnasia', met:4.0, group:'Otros' }
   ];
   let extraSportMinutes = 30;
 
   function buildExtraSportSelect(){
     const sel = $('extraSportSelect');
-    sel.innerHTML = EXTRA_SPORTS.map(s=>'<option value="'+s.id+'">'+escapeHtml(s.name)+'</option>').join('');
+    const groupOrder = [];
+    const byGroup = {};
+    EXTRA_SPORTS.forEach(s=>{
+      if(!byGroup[s.group]){ byGroup[s.group] = []; groupOrder.push(s.group); }
+      byGroup[s.group].push(s);
+    });
+    sel.innerHTML = groupOrder.map(g=>
+      '<optgroup label="'+escapeHtml(g)+'">'+
+        byGroup[g].map(s=>'<option value="'+s.id+'">'+escapeHtml(s.name)+'</option>').join('')+
+      '</optgroup>'
+    ).join('');
   }
 
   function currentBodyWeightKg(){
