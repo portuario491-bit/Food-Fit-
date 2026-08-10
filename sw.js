@@ -4,7 +4,7 @@
 // (sin conexión) se sirve la última copia guardada. Así nunca se muestra
 // una versión vieja teniendo internet disponible.
 
-const CACHE_NAME = 'foodfit-v1';
+const CACHE_NAME = 'foodfit-v2';
 const CORE_ASSETS = [
   'food-and-fit.html',
   'index.html',
@@ -38,8 +38,16 @@ self.addEventListener('fetch', event => {
   // Supabase), para no interferir jamás con el guardado de información.
   if(req.method !== 'GET') return;
 
+  // Para los archivos propios de la app, forzamos a saltarnos la caché
+  // HTTP del propio navegador (no solo la nuestra) con cache:'no-store'.
+  // Si no, un "fetch" puede devolver "éxito" pero con una copia vieja que
+  // el navegador tenía guardada por su cuenta, y pareceria que la app
+  // sigue desactualizada aunque haya buena conexión.
+  const isOwnFile = new URL(req.url).origin === self.location.origin;
+  const fetchOptions = isOwnFile ? { cache: 'no-store' } : {};
+
   event.respondWith(
-    fetch(req)
+    fetch(req, fetchOptions)
       .then(res => {
         if(res && (res.ok || res.type === 'opaque')){
           const copy = res.clone();
