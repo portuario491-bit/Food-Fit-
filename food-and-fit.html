@@ -177,7 +177,7 @@
   .pick-add.added{background:var(--green);border-color:var(--green);color:var(--bg);}
   .empty-note{font-family:'IBM Plex Mono', monospace;font-size:11px;color:var(--muted);text-align:center;padding:24px 0;}
 
-  .save-toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);font-family:'IBM Plex Mono', monospace;font-size:11px;font-weight:600;padding:9px 16px;border-radius:999px;opacity:0;transition:all 0.25s ease;z-index:50;pointer-events:none;}
+  .save-toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);font-family:'IBM Plex Mono', monospace;font-size:11px;font-weight:600;padding:9px 16px;border-radius:999px;opacity:0;transition:all 0.25s ease;z-index:50;pointer-events:none;max-width:88vw;box-sizing:border-box;white-space:normal;text-align:center;}
   .save-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
   /* food database */
@@ -862,14 +862,18 @@
         return null; // sin conexión y sin cambios pendientes: no hay nada que mostrar todavía
       }
     },
+    // Devuelve true si el cambio quedó realmente guardado en el servidor,
+    // o false si se ha quedado en cola local (para poder avisar bien al
+    // usuario cuando pulsa un botón de "guardar" explícito).
     async set(key, value){
-      if(!currentUser) return;
+      if(!currentUser) return false;
       const pid = pendingWriteId(currentUser.id, key);
       try{
         const { error } = await sb
           .from('app_data')
           .upsert({ user_id: currentUser.id, key, value: JSON.parse(value), updated_at: new Date().toISOString() }, { onConflict: 'user_id,key' });
         if(error) throw error;
+        lastSyncError = null;
         const pending = loadPendingWrites();
         if(Object.prototype.hasOwnProperty.call(pending, pid)){
           delete pending[pid];
@@ -879,13 +883,17 @@
         // Este guardado sí llegó al servidor: aprovechamos para reintentar
         // cualquier otro cambio que estuviera pendiente de otras pantallas.
         flushPendingWrites();
+        return true;
       }catch(err){
         // Sin conexión (u otro fallo temporal): guardamos el cambio en el
         // dispositivo para no perderlo, y se subirá solo al volver la conexión.
+        lastSyncError = 'Clave: ' + key + ' — ' +
+          ((err && (err.message || err.error_description || err.hint)) || JSON.stringify(err) || 'error desconocido');
         const pending = loadPendingWrites();
         pending[pid] = value;
         savePendingWrites(pending);
         updateOfflineBadge();
+        return false;
       }
     },
     async delete(key){
@@ -1184,10 +1192,14 @@
     const prevLabel = btn.textContent;
     btn.disabled = true;
     btn.textContent = 'Guardando…';
-    await persistProfile();
+    const ok = await persistProfile();
     btn.disabled = false;
     btn.textContent = prevLabel;
-    showToast('Datos guardados');
+    if(ok){
+      showToast('Datos guardados');
+    } else {
+      showToast('No se pudo subir a la nube. Toca el aviso de arriba', 3200);
+    }
   });
 
   let nutritionTargets = { calories:0, protein:0, carbs:0, fat:0 };
@@ -1764,12 +1776,12 @@
       }
     }catch(err){ /* storage unavailable, continue without persistence */ }
   }
-  function showToast(message){
+  function showToast(message, duration){
     const t = $('saveToast');
     t.textContent = message || 'Rutina guardada';
     t.classList.add('show');
     clearTimeout(showToast._tid);
-    showToast._tid = setTimeout(()=> t.classList.remove('show'), 1400);
+    showToast._tid = setTimeout(()=> t.classList.remove('show'), duration || 1400);
   }
 
   async function initRoutine(){
@@ -2931,9 +2943,10 @@
       if(window.storage){
         if(!profileData) profileData = {};
         syncProfileFromUI();
-        await window.storage.set('foodfit:profile', JSON.stringify(profileData), false);
+        return await window.storage.set('foodfit:profile', JSON.stringify(profileData), false);
       }
     }catch(err){ /* storage unavailable */ }
+    return false;
   }
 
   function applyProfileToUI(data){
