@@ -251,6 +251,10 @@
   .streak-badge{font-family:'IBM Plex Mono', monospace;font-size:10px;font-weight:600;letter-spacing:0.3px;text-transform:uppercase;background:var(--panel-2);border:1px solid var(--yellow);color:var(--yellow);padding:4px 10px;border-radius:999px;}
   .help-btn{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);background:var(--panel-2);color:var(--ink);font-family:'IBM Plex Mono', monospace;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0;padding:0;}
 
+  .reminder-banner{display:flex;align-items:center;gap:10px;background:var(--panel-2);border:1.5px solid var(--yellow);border-radius:14px;padding:11px 13px;margin-bottom:16px;cursor:pointer;}
+  .reminder-banner span{font-size:12.5px;line-height:1.4;}
+  .reminder-banner button{background:none;border:none;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;flex-shrink:0;padding:0 2px;}
+
   /* live workout mode */
   .live-backdrop{position:fixed;inset:0;background:var(--bg);z-index:65;display:none;flex-direction:column;}
   .live-backdrop.open{display:flex;}
@@ -394,6 +398,12 @@
     </div>
   </div>
   <p class="tagline">nutrición y entrenamiento, a tu medida</p>
+
+  <div class="reminder-banner" id="reminderBanner" style="display:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;color:var(--yellow);"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+    <span id="reminderText" style="flex:1;">Aún no has registrado nada hoy. Toca para ir a Alimentos.</span>
+    <button type="button" id="reminderDismiss" title="Descartar">×</button>
+  </div>
 
   <div class="tabs" id="mainTabs">
     <button data-screen="nutrition" class="active">
@@ -778,7 +788,9 @@
       <button type="button" data-val="light">Claro</button>
     </div>
     <button class="btn primary" id="accSaveBtn" style="width:100%;padding:11px;">Guardar cambios</button>
-    <button class="danger-btn" id="exportDataBtn" style="border-color:var(--line);color:var(--ink);margin-top:10px;">Exportar mis datos</button>
+    <button class="danger-btn" id="notifPermBtn" style="border-color:var(--line);color:var(--ink);margin-top:10px;">Activar avisos</button>
+    <p class="ob-note" style="margin:4px 0 0;">Te avisamos si se acerca la noche y aún no has registrado nada, mientras tengas la app abierta.</p>
+    <button class="danger-btn" id="exportDataBtn" style="border-color:var(--line);color:var(--ink);margin-top:14px;">Exportar mis datos</button>
     <button class="danger-btn" id="accLogoutBtn" style="border-color:var(--line);color:var(--ink);margin-top:10px;">Cerrar sesión</button>
     <button class="danger-btn" id="accDeleteBtn">Borrar todos mis datos en la nube</button>
     <p class="ob-note" style="text-align:center;margin-top:14px;"><a href="privacidad.html" style="color:var(--muted);">Política de privacidad</a></p>
@@ -852,6 +864,87 @@
   $('themeSeg').addEventListener('click', e=>{
     const b = e.target.closest('button'); if(!b) return;
     applyTheme(b.dataset.val);
+  });
+
+  /* ---------- EVENING REMINDER ---------- */
+  const REMINDER_HOUR = 20; // a partir de las 20:00 hora local
+  let reminderShownForDate = null;
+  let reminderInterval = null;
+
+  function updateNotifPermBtn(){
+    const btn = $('notifPermBtn');
+    if(!btn) return;
+    if(!('Notification' in window)){
+      btn.textContent = 'Avisos no disponibles en este navegador';
+      btn.disabled = true;
+      return;
+    }
+    if(Notification.permission === 'granted'){
+      btn.textContent = 'Avisos del sistema activados';
+      btn.disabled = true;
+    } else if(Notification.permission === 'denied'){
+      btn.textContent = 'Avisos bloqueados (revisa los permisos del navegador)';
+      btn.disabled = true;
+    } else {
+      btn.textContent = 'Activar avisos';
+      btn.disabled = false;
+    }
+  }
+  $('notifPermBtn').addEventListener('click', async ()=>{
+    if(!('Notification' in window)) return;
+    try{ await Notification.requestPermission(); }catch(err){ /* ignored */ }
+    updateNotifPermBtn();
+  });
+
+  function todayHasAnyLog(){
+    const rec = historyData[todayStr()];
+    return !!(rec && ((rec.meals && rec.meals.length) || rec.workout));
+  }
+
+  function dismissReminderBanner(){
+    $('reminderBanner').style.display = 'none';
+  }
+  $('reminderDismiss').addEventListener('click', e=>{
+    e.stopPropagation();
+    dismissReminderBanner();
+  });
+  $('reminderBanner').addEventListener('click', ()=>{
+    dismissReminderBanner();
+    document.querySelector('#mainTabs button[data-screen="foods"]').click();
+  });
+
+  function maybeShowEveningReminder(){
+    if(!currentUser) return;
+    if(new Date().getHours() < REMINDER_HOUR) return;
+    const today = todayStr();
+    if(reminderShownForDate === today) return;
+    if(todayHasAnyLog()) return;
+
+    reminderShownForDate = today;
+    $('reminderBanner').style.display = 'flex';
+    if(('Notification' in window) && Notification.permission === 'granted'){
+      try{
+        new Notification('Food&Fit', {
+          body: 'Se acerca la noche y aún no has registrado nada hoy. No pierdas tu racha.',
+          icon: 'icon-512.png'
+        });
+      }catch(err){ /* notifications unavailable */ }
+    }
+  }
+
+  function startReminderChecks(){
+    maybeShowEveningReminder();
+    clearInterval(reminderInterval);
+    reminderInterval = setInterval(maybeShowEveningReminder, 15*60*1000);
+  }
+  function stopReminderChecks(){
+    clearInterval(reminderInterval);
+    reminderInterval = null;
+    reminderShownForDate = null;
+    dismissReminderBanner();
+  }
+  document.addEventListener('visibilitychange', ()=>{
+    if(!document.hidden) maybeShowEveningReminder();
   });
 
   const HTML_ESCAPE_MAP = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
@@ -2464,6 +2557,7 @@
     maybeCelebrateStreak(prevStreak, updateStreakDisplay());
     renderStrengthSelector();
     renderSummary();
+    dismissReminderBanner();
   }
 
   function logMealToday(food, grams){
@@ -2482,6 +2576,7 @@
     renderCalendar();
     maybeCelebrateStreak(prevStreak, updateStreakDisplay());
     renderSummary();
+    dismissReminderBanner();
   }
 
   function removeWorkoutLog(dateStr){
@@ -2746,6 +2841,7 @@
   $('profilePill').addEventListener('click', ()=>{
     $('accName').value = profileData ? profileData.name : '';
     $('accEmailStatic').textContent = currentUser ? currentUser.email : '';
+    updateNotifPermBtn();
     $('accountSheet').classList.add('open');
     $('accountBackdrop').classList.add('open');
   });
@@ -3000,6 +3096,8 @@
     await initTemplates();
     renderFoodList();
     resetInactivityTimer();
+    updateNotifPermBtn();
+    startReminderChecks();
   }
 
   function onLogout(){
@@ -3011,6 +3109,7 @@
     favoriteFoods = [];
     mealTemplates = [];
     stopRestTimer();
+    stopReminderChecks();
     clearTimeout(inactivityTimer);
     updateProfilePill();
     renderRoutine();
