@@ -240,6 +240,10 @@
   .water-dot{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line);background:var(--panel-2);flex-shrink:0;}
   .water-dot.filled{background:var(--blue);border-color:var(--blue);}
 
+  /* charts */
+  .chart-svg{width:100%;height:110px;display:block;}
+  #strengthExerciseSelect{margin-top:2px;}
+
   /* rest timer */
   .rest-timer{position:fixed;left:14px;right:14px;bottom:18px;max-width:432px;margin:0 auto;background:var(--panel);border:1.5px solid var(--yellow);border-radius:18px;padding:14px 18px;z-index:45;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:var(--shadow-pop);}
   .rest-timer-time{font-family:'Anton', sans-serif;font-size:28px;color:var(--yellow);flex-shrink:0;}
@@ -573,6 +577,29 @@
     </div>
 
     <div class="panel day-detail-panel" id="dayDetailPanel"></div>
+
+    <div class="panel" id="weightPanel">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <div>
+          <p class="section-title" style="margin:0;">Peso corporal</p>
+          <span class="hint" id="weightRangeLabel"></span>
+        </div>
+        <button class="btn primary" id="logWeightBtn" style="padding:9px 12px;flex-shrink:0;">Registrar hoy</button>
+      </div>
+      <svg viewBox="0 0 300 110" class="chart-svg" style="margin-top:10px;">
+        <path id="weightChartPath" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <p class="footnote" id="weightEmptyNote"></p>
+    </div>
+
+    <div class="panel" id="strengthPanel">
+      <p class="section-title" style="margin:0 0 10px;">Progreso de fuerza</p>
+      <select id="strengthExerciseSelect"></select>
+      <svg viewBox="0 0 300 110" class="chart-svg" style="margin-top:10px;">
+        <path id="strengthChartPath" fill="none" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <p class="footnote" id="strengthEmptyNote"></p>
+    </div>
   </div>
 
 </div>
@@ -1745,6 +1772,131 @@
   $('waterMinus').addEventListener('click', ()=> adjustWaterToday(-1));
   $('waterPlus').addEventListener('click', ()=> adjustWaterToday(1));
 
+  /* ---------- CHARTS (hand-rolled SVG, no external library) ---------- */
+  function buildSparklinePath(values, width, height, padding){
+    if(values.length === 0) return '';
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = (max - min) || 1;
+    const stepX = values.length > 1 ? (width - padding*2) / (values.length - 1) : 0;
+    return values.map((v,i)=>{
+      const x = padding + i*stepX;
+      const y = height - padding - ((v-min)/range)*(height-padding*2);
+      return `${i===0?'M':'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+  }
+
+  /* ---------- BODY WEIGHT TRACKING ---------- */
+  function getWeightSeries(limit){
+    limit = limit || 60;
+    const dates = Object.keys(historyData).filter(d=> historyData[d].bodyWeight != null).sort();
+    return dates.slice(-limit).map(d=>({ date:d, value:historyData[d].bodyWeight }));
+  }
+
+  function renderWeightChart(){
+    const series = getWeightSeries();
+    const path = $('weightChartPath');
+    const note = $('weightEmptyNote');
+    if(series.length < 2){
+      path.setAttribute('d','');
+      note.style.display = 'block';
+      note.textContent = series.length === 0
+        ? 'Aún no has registrado tu peso. Toca "Registrar hoy" para empezar.'
+        : `${series[0].value} kg registrados. Registra otro día para ver la evolución.`;
+      $('weightRangeLabel').textContent = '';
+      return;
+    }
+    note.style.display = 'none';
+    const values = series.map(p=>p.value);
+    path.setAttribute('d', buildSparklinePath(values, 300, 110, 14));
+    const min = Math.min(...values), max = Math.max(...values);
+    $('weightRangeLabel').textContent = `${series[0].value} kg → ${series[series.length-1].value} kg (mín ${min}, máx ${max})`;
+  }
+
+  function logWeightToday(){
+    const w = parseFloat($('weight').value);
+    if(!w || w < 20 || w > 250) return;
+    const entry = ensureDate(todayStr());
+    entry.bodyWeight = w;
+    persistHistory();
+    renderWeightChart();
+    if(selectedDate === todayStr()) renderDayDetail(selectedDate);
+  }
+  $('logWeightBtn').addEventListener('click', logWeightToday);
+
+  /* ---------- STRENGTH PROGRESS ---------- */
+  let strengthSelectedExercise = null;
+
+  function getLoggedExerciseNames(){
+    const names = new Set();
+    Object.values(historyData).forEach(rec=>{
+      if(rec.workout && rec.workout.exercises){
+        rec.workout.exercises.forEach(ex=>{ if(ex.weight) names.add(ex.name); });
+      }
+    });
+    return Array.from(names).sort();
+  }
+
+  function getStrengthSeries(exerciseName, limit){
+    limit = limit || 60;
+    const dates = Object.keys(historyData).sort();
+    const points = [];
+    dates.forEach(d=>{
+      const rec = historyData[d];
+      if(rec.workout && rec.workout.exercises){
+        const ex = rec.workout.exercises.find(e=>e.name===exerciseName);
+        if(ex && ex.weight){
+          const w = parseFloat(ex.weight);
+          if(!isNaN(w)) points.push({ date:d, value:w });
+        }
+      }
+    });
+    return points.slice(-limit);
+  }
+
+  function renderStrengthChart(){
+    const path = $('strengthChartPath');
+    const note = $('strengthEmptyNote');
+    if(!strengthSelectedExercise){
+      path.setAttribute('d','');
+      note.style.display = 'block';
+      note.textContent = 'Registra entrenos con el peso levantado para ver tu progreso aquí.';
+      return;
+    }
+    const series = getStrengthSeries(strengthSelectedExercise);
+    if(series.length < 2){
+      path.setAttribute('d','');
+      note.style.display = 'block';
+      note.textContent = series.length === 1
+        ? `${series[0].value} kg registrados en este ejercicio. Registra otro día para ver la evolución.`
+        : 'Aún no hay datos de peso para este ejercicio.';
+      return;
+    }
+    note.style.display = 'none';
+    const values = series.map(p=>p.value);
+    path.setAttribute('d', buildSparklinePath(values, 300, 110, 14));
+  }
+
+  function renderStrengthSelector(){
+    const names = getLoggedExerciseNames();
+    const sel = $('strengthExerciseSelect');
+    if(names.length === 0){
+      sel.innerHTML = '<option value="">Sin datos todavía</option>';
+      sel.disabled = true;
+      strengthSelectedExercise = null;
+      renderStrengthChart();
+      return;
+    }
+    sel.disabled = false;
+    if(!strengthSelectedExercise || !names.includes(strengthSelectedExercise)) strengthSelectedExercise = names[0];
+    sel.innerHTML = names.map(n=>`<option value="${escapeHtml(n)}"${n===strengthSelectedExercise?' selected':''}>${escapeHtml(n)}</option>`).join('');
+    renderStrengthChart();
+  }
+  $('strengthExerciseSelect').addEventListener('change', e=>{
+    strengthSelectedExercise = e.target.value;
+    renderStrengthChart();
+  });
+
   /* ---------- STREAK ---------- */
   function dayQualifiesForStreak(dStr){
     const rec = historyData[dStr];
@@ -1827,6 +1979,7 @@
     if(selectedDate === todayStr()) renderDayDetail(selectedDate);
     renderCalendar();
     maybeCelebrateStreak(prevStreak, updateStreakDisplay());
+    renderStrengthSelector();
   }
 
   function logMealToday(food, grams){
@@ -1853,6 +2006,7 @@
     renderDayDetail(dateStr);
     renderCalendar();
     updateStreakDisplay();
+    renderStrengthSelector();
   }
   function removeMealLog(dateStr, idx){
     if(historyData[dateStr]) historyData[dateStr].meals.splice(idx,1);
@@ -1984,6 +2138,10 @@
       html += `<p class="section-title">Agua</p><p class="dd-empty" style="color:var(--ink);">${rec.water} vaso${rec.water===1?'':'s'} (~${rec.water*250} ml)</p>`;
     }
 
+    if(rec.bodyWeight != null){
+      html += `<p class="section-title">Peso corporal</p><p class="dd-empty" style="color:var(--ink);">${rec.bodyWeight} kg</p>`;
+    }
+
     panel.innerHTML = html;
 
     const rmWorkoutBtn = panel.querySelector('[data-action="rm-workout"]');
@@ -2005,6 +2163,8 @@
     renderRoutine();
     updateStreakDisplay();
     renderWaterToday();
+    renderWeightChart();
+    renderStrengthSelector();
   }
 
   // initHistory() is now called from onLogin(), once a user is authenticated.
@@ -2134,6 +2294,8 @@
     renderDayDetail(selectedDate);
     updateStreakDisplay();
     renderWaterToday();
+    renderWeightChart();
+    renderStrengthSelector();
     renderFoodList();
     closeAccountSheet();
   });
@@ -2318,6 +2480,8 @@
     renderDayDetail(selectedDate);
     updateStreakDisplay();
     renderWaterToday();
+    renderWeightChart();
+    renderStrengthSelector();
     renderFoodList();
     $('authEmail').value = '';
     $('authPassword').value = '';
