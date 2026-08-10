@@ -182,6 +182,9 @@
   .food-row .fd-cat{display:block;font-family:'IBM Plex Mono', monospace;font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-top:2px;}
   .food-row .fd-kcal{font-family:'Anton', sans-serif;font-size:16px;flex-shrink:0;}
   .food-row .fd-kcal-unit{font-family:'IBM Plex Mono', monospace;font-size:9px;color:var(--muted);display:block;text-align:right;}
+  .fav-star{background:none;border:none;padding:2px;cursor:pointer;color:var(--line);flex-shrink:0;}
+  .fav-star svg{width:18px;height:18px;display:block;}
+  .fav-star.active{color:var(--yellow);}
   .food-detail{display:none;padding:0 15px 16px;border-top:1px solid var(--line);}
   .food-detail.open{display:block;}
   .food-grams{display:flex;align-items:center;justify-content:space-between;padding:12px 0 8px;}
@@ -227,6 +230,21 @@
   .streak-pill svg{width:14px;height:14px;flex-shrink:0;}
   .streak-progress-track{height:10px;border-radius:999px;background:var(--panel-2);overflow:hidden;border:1px solid var(--line);margin-top:14px;}
   .streak-progress-fill{height:100%;width:0;background:linear-gradient(90deg, var(--red), var(--yellow));border-radius:999px;transition:width .3s ease;}
+  .streak-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .streak-badge{font-family:'IBM Plex Mono', monospace;font-size:10px;font-weight:600;letter-spacing:0.3px;text-transform:uppercase;background:var(--panel-2);border:1px solid var(--yellow);color:var(--yellow);padding:4px 10px;border-radius:999px;}
+
+  /* water */
+  .water-count{font-family:'Anton', sans-serif;font-size:19px;min-width:24px;text-align:center;}
+  .water-dots{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;}
+  .water-dot{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line);background:var(--panel-2);flex-shrink:0;}
+  .water-dot.filled{background:var(--blue);border-color:var(--blue);}
+
+  /* rest timer */
+  .rest-timer{position:fixed;left:14px;right:14px;bottom:18px;max-width:432px;margin:0 auto;background:var(--panel);border:1.5px solid var(--yellow);border-radius:18px;padding:14px 18px;z-index:45;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:var(--shadow-pop);}
+  .rest-timer-time{font-family:'Anton', sans-serif;font-size:28px;color:var(--yellow);flex-shrink:0;}
+  .rest-timer-controls{display:flex;gap:6px;}
+  .rest-timer-controls button{font-family:'IBM Plex Mono', monospace;font-size:10.5px;font-weight:600;text-transform:uppercase;padding:8px 9px;border-radius:8px;border:1.5px solid var(--line);background:var(--panel-2);color:var(--ink);cursor:pointer;}
+  .rest-timer-controls button#restTimerStop{border-color:var(--red);color:var(--red);}
   .streak-reward-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:70;display:none;align-items:center;justify-content:center;padding:20px;}
   .streak-reward-backdrop.open{display:flex;}
   .streak-reward-card{width:100%;max-width:340px;background:var(--panel);border:1.5px solid var(--yellow);border-radius:20px;padding:30px 24px;text-align:center;box-shadow:var(--shadow-pop);animation:screenIn .3s ease;}
@@ -449,6 +467,21 @@
         Estimación orientativa, no un consejo médico.
       </p>
     </div>
+
+    <div class="panel">
+      <div class="field-row" style="border-bottom:none;">
+        <div>
+          <label>Agua de hoy</label>
+          <span class="hint">vasos de ~250 ml</span>
+        </div>
+        <div class="stepper" id="waterStepper">
+          <button type="button" class="stepper-btn" id="waterMinus">−</button>
+          <span class="water-count" id="waterCount">0</span>
+          <button type="button" class="stepper-btn" id="waterPlus">+</button>
+        </div>
+      </div>
+      <div class="water-dots" id="waterDots"></div>
+    </div>
   </div>
 
   <div class="screen" id="screen-routine">
@@ -483,6 +516,7 @@
     <p class="section-title">Tu semana</p>
     <div class="routine-toolbar">
       <button class="btn primary" id="regenBtn">Regenerar automática</button>
+      <button class="btn" id="restTimerBtn">Descanso 90s</button>
     </div>
     <div id="routineOut"></div>
     <button class="add-day-btn" id="addDayBtn">+ Añadir día de entrenamiento</button>
@@ -523,6 +557,8 @@
         <div class="streak-progress-fill" id="streakProgressFill" style="width:0%;"></div>
       </div>
       <p class="footnote" id="streakProgressLabel" style="padding-top:8px;"></p>
+      <p class="footnote" id="streakRecordLabel" style="padding-top:2px;"></p>
+      <div class="streak-badges" id="streakBadges"></div>
     </div>
 
     <div class="panel">
@@ -552,6 +588,15 @@
 </div>
 
 <div class="save-toast" id="saveToast">Rutina guardada</div>
+
+<div class="rest-timer" id="restTimer" style="display:none;">
+  <span class="rest-timer-time" id="restTimerTime">01:30</span>
+  <div class="rest-timer-controls">
+    <button type="button" id="restTimerMinus">−15s</button>
+    <button type="button" id="restTimerPlus">+15s</button>
+    <button type="button" id="restTimerStop">Detener</button>
+  </div>
+</div>
 
 <div class="streak-reward-backdrop" id="streakRewardBackdrop">
   <div class="streak-reward-card">
@@ -891,6 +936,71 @@
     renderRoutine();
     persist();
   });
+
+  /* ---------- REST TIMER ---------- */
+  let restTimerInterval = null;
+  let restTimerRemaining = 0;
+
+  function formatMMSS(totalSeconds){
+    const m = Math.floor(totalSeconds/60);
+    const s = totalSeconds%60;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  function playRestTimerBeep(){
+    try{
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
+    }catch(err){ /* audio unavailable */ }
+    if(navigator.vibrate) navigator.vibrate([200,100,200]);
+  }
+
+  function updateRestTimerDisplay(){
+    $('restTimerTime').textContent = formatMMSS(Math.max(restTimerRemaining,0));
+  }
+
+  function startRestTimer(seconds){
+    clearInterval(restTimerInterval);
+    restTimerRemaining = seconds;
+    $('restTimer').style.display = 'flex';
+    updateRestTimerDisplay();
+    restTimerInterval = setInterval(()=>{
+      restTimerRemaining--;
+      updateRestTimerDisplay();
+      if(restTimerRemaining <= 0){
+        clearInterval(restTimerInterval);
+        restTimerInterval = null;
+        playRestTimerBeep();
+        setTimeout(()=>{ $('restTimer').style.display = 'none'; }, 2000);
+      }
+    }, 1000);
+  }
+
+  function stopRestTimer(){
+    clearInterval(restTimerInterval);
+    restTimerInterval = null;
+    $('restTimer').style.display = 'none';
+  }
+
+  function adjustRestTimer(delta){
+    if($('restTimer').style.display === 'none') return;
+    restTimerRemaining = Math.max(0, restTimerRemaining + delta);
+    updateRestTimerDisplay();
+  }
+
+  $('restTimerBtn').addEventListener('click', ()=> startRestTimer(90));
+  $('restTimerMinus').addEventListener('click', ()=> adjustRestTimer(-15));
+  $('restTimerPlus').addEventListener('click', ()=> adjustRestTimer(15));
+  $('restTimerStop').addEventListener('click', stopRestTimer);
 
   document.getElementById('addDayBtn').addEventListener('click', ()=>{
     if(!routineData) routineData = { settings:{...rState}, days:[] };
@@ -1268,6 +1378,66 @@
     return c ? c.label : id;
   }
 
+  /* ---------- FAVORITES / RECENT FOODS ---------- */
+  let favoriteFoods = []; // [{name, cat, brand, kcal, protein, carbs, fat}]
+
+  async function persistFavorites(){
+    try{
+      if(window.storage){
+        await window.storage.set('foodfit:favorites', JSON.stringify(favoriteFoods), false);
+      }
+    }catch(err){ /* storage unavailable */ }
+  }
+
+  async function initFavorites(){
+    favoriteFoods = [];
+    try{
+      if(window.storage){
+        const res = await window.storage.get('foodfit:favorites', false);
+        if(res && res.value) favoriteFoods = JSON.parse(res.value);
+      }
+    }catch(err){ favoriteFoods = []; }
+  }
+
+  function isFavoriteFood(name){
+    return favoriteFoods.some(f=>f.name===name);
+  }
+
+  function toggleFavoriteFood(food){
+    if(isFavoriteFood(food.name)){
+      favoriteFoods = favoriteFoods.filter(f=>f.name!==food.name);
+    } else {
+      favoriteFoods.push({ name:food.name, cat:food.cat, brand:food.brand, kcal:food.kcal, protein:food.protein, carbs:food.carbs, fat:food.fat });
+    }
+    persistFavorites();
+    renderFoodList();
+  }
+
+  function getRecentFoods(limit){
+    limit = limit || 12;
+    const dates = Object.keys(historyData).sort().reverse();
+    const seen = new Set();
+    const recents = [];
+    for(const d of dates){
+      const meals = (historyData[d] && historyData[d].meals) || [];
+      for(let i=meals.length-1; i>=0; i--){
+        const m = meals[i];
+        if(seen.has(m.name)) continue;
+        seen.add(m.name);
+        const factor = m.grams ? 100/m.grams : 1;
+        recents.push({
+          name: m.name, cat: 'recientes',
+          kcal: Math.round(m.kcal*factor),
+          protein: +(m.protein*factor).toFixed(1),
+          carbs: +(m.carbs*factor).toFixed(1),
+          fat: +(m.fat*factor).toFixed(1)
+        });
+        if(recents.length >= limit) return recents;
+      }
+    }
+    return recents;
+  }
+
   function buildFoodChips(){
     const row = $('foodChipRow');
     row.innerHTML = '';
@@ -1276,6 +1446,19 @@
     all.textContent = 'Todos';
     all.dataset.val = 'all';
     row.appendChild(all);
+
+    const recientes = document.createElement('button');
+    recientes.className = 'food-chip';
+    recientes.textContent = 'Recientes';
+    recientes.dataset.val = 'recientes';
+    row.appendChild(recientes);
+
+    const favoritos = document.createElement('button');
+    favoritos.className = 'food-chip';
+    favoritos.textContent = 'Favoritos';
+    favoritos.dataset.val = 'favoritos';
+    row.appendChild(favoritos);
+
     FOOD_CATS.forEach(c=>{
       const chip = document.createElement('button');
       chip.className = 'food-chip';
@@ -1296,15 +1479,21 @@
     const card = document.createElement('div');
     card.className = 'food-card';
     const isOpen = openFoodName === food.name;
+    const isFav = isFavoriteFood(food.name);
     card.innerHTML = `
       <div class="food-row">
         <div>
           <span class="fd-name">${food.name}</span>
           <span class="fd-cat">${subtitleText}</span>
         </div>
-        <div>
-          <span class="fd-kcal">${food.kcal}</span>
-          <span class="fd-kcal-unit">kcal/100g</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button type="button" class="fav-star${isFav?' active':''}" title="Favorito">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9-6.3 3.9 1.7-7L2 9.2l7.1-.6L12 2z"/></svg>
+          </button>
+          <div style="text-align:right;">
+            <span class="fd-kcal">${food.kcal}</span>
+            <span class="fd-kcal-unit">kcal/100g</span>
+          </div>
         </div>
       </div>
       <div class="food-detail ${isOpen?'open':''}">
@@ -1326,6 +1515,10 @@
     row.addEventListener('click', ()=>{
       openFoodName = (openFoodName === food.name) ? null : food.name;
       renderFoodList();
+    });
+    card.querySelector('.fav-star').addEventListener('click', e=>{
+      e.stopPropagation();
+      toggleFavoriteFood(food);
     });
     gramsInput.addEventListener('click', e=> e.stopPropagation());
     gramsInput.addEventListener('input', ()=>{
@@ -1352,16 +1545,29 @@
     out.innerHTML = '';
     const query = $('foodSearch').value.trim().toLowerCase();
 
-    let items = foodDB;
-    if(foodCatFilter !== 'all') items = items.filter(f=>f.cat===foodCatFilter);
+    let items, subtitleFor, emptyMsg;
+    if(foodCatFilter === 'recientes'){
+      items = getRecentFoods();
+      subtitleFor = ()=> 'Reciente';
+      emptyMsg = 'Todavía no has registrado ninguna comida. Los que registres aparecerán aquí.';
+    } else if(foodCatFilter === 'favoritos'){
+      items = favoriteFoods;
+      subtitleFor = f => f.brand || catLabel(f.cat) || 'Favorito';
+      emptyMsg = 'Aún no tienes favoritos. Toca la estrella de cualquier producto para guardarlo aquí.';
+    } else {
+      items = foodDB;
+      if(foodCatFilter !== 'all') items = items.filter(f=>f.cat===foodCatFilter);
+      subtitleFor = f => catLabel(f.cat);
+      emptyMsg = 'No hay productos que coincidan.';
+    }
     if(query) items = items.filter(f=>f.name.toLowerCase().includes(query));
 
     if(items.length === 0){
-      out.innerHTML = `<p class="empty-note-food">${EMPTY_ICON}<br>No hay productos que coincidan.</p>`;
+      out.innerHTML = `<p class="empty-note-food">${EMPTY_ICON}<br>${emptyMsg}</p>`;
       return;
     }
 
-    items.forEach(food=> out.appendChild(createFoodCard(food, catLabel(food.cat))));
+    items.forEach(food=> out.appendChild(createFoodCard(food, subtitleFor(food))));
   }
 
   function renderOFFResults(){
@@ -1497,7 +1703,8 @@
     return `${y}-${m}-${day}`;
   }
   function ensureDate(dateStr){
-    if(!historyData[dateStr]) historyData[dateStr] = { workout:null, meals:[] };
+    if(!historyData[dateStr]) historyData[dateStr] = { workout:null, meals:[], water:0 };
+    if(historyData[dateStr].water === undefined) historyData[dateStr].water = 0;
     return historyData[dateStr];
   }
 
@@ -1509,6 +1716,28 @@
       }
     }catch(err){ /* storage unavailable */ }
   }
+
+  /* ---------- WATER ---------- */
+  function renderWaterToday(){
+    const rec = historyData[todayStr()];
+    const water = rec ? (rec.water||0) : 0;
+    $('waterCount').textContent = water;
+    const goal = 8;
+    let html = '';
+    for(let i=1; i<=Math.max(goal, water); i++){
+      html += `<span class="water-dot${i<=water?' filled':''}"></span>`;
+    }
+    $('waterDots').innerHTML = html;
+  }
+  function adjustWaterToday(delta){
+    const entry = ensureDate(todayStr());
+    entry.water = Math.max(0, (entry.water||0) + delta);
+    persistHistory();
+    renderWaterToday();
+    if(selectedDate === todayStr()) renderDayDetail(selectedDate);
+  }
+  $('waterMinus').addEventListener('click', ()=> adjustWaterToday(-1));
+  $('waterPlus').addEventListener('click', ()=> adjustWaterToday(1));
 
   /* ---------- STREAK ---------- */
   function dayQualifiesForStreak(dStr){
@@ -1539,6 +1768,10 @@
       pill.style.display = streak > 0 ? 'flex' : 'none';
       $('streakCount').textContent = streak;
     }
+    if(profileData && streak > (profileData.bestStreak||0)){
+      profileData.bestStreak = streak;
+      persistProfile();
+    }
     if($('streakBig')){
       $('streakBig').textContent = streak;
       const intoMilestone = streak % 10;
@@ -1549,14 +1782,27 @@
         : (intoMilestone === 0
             ? `¡Llevas ${streak} días seguidos! Racha redonda.`
             : `${remaining} día${remaining===1?'':'s'} más para tu próximo premio.`);
+      const best = (profileData && profileData.bestStreak) || streak;
+      $('streakRecordLabel').textContent = best > 0 ? `Tu récord: ${best} día${best===1?'':'s'} seguidos.` : '';
+      const milestones = (profileData && profileData.streakMilestones) || [];
+      $('streakBadges').innerHTML = milestones.slice().sort((a,b)=>b-a)
+        .map(m=>`<span class="streak-badge">${m} días</span>`).join('');
     }
     return streak;
   }
 
   function maybeCelebrateStreak(prevStreak, newStreak){
     if(newStreak > prevStreak && newStreak > 0 && newStreak % 10 === 0){
+      if(profileData){
+        profileData.streakMilestones = profileData.streakMilestones || [];
+        if(!profileData.streakMilestones.includes(newStreak)){
+          profileData.streakMilestones.push(newStreak);
+          persistProfile();
+        }
+      }
       $('streakRewardTitle').textContent = `¡Racha de ${newStreak} días!`;
       $('streakRewardBackdrop').classList.add('open');
+      updateStreakDisplay();
     }
   }
   $('streakRewardClose').addEventListener('click', ()=>{
@@ -1728,6 +1974,10 @@
       html += `<p class="dd-empty">No hay comidas registradas este día. Añádelas desde la pestaña Alimentos.</p>`;
     }
 
+    if(rec.water){
+      html += `<p class="section-title">Agua</p><p class="dd-empty" style="color:var(--ink);">${rec.water} vaso${rec.water===1?'':'s'} (~${rec.water*250} ml)</p>`;
+    }
+
     panel.innerHTML = html;
 
     const rmWorkoutBtn = panel.querySelector('[data-action="rm-workout"]');
@@ -1748,6 +1998,7 @@
     renderDayDetail(selectedDate);
     renderRoutine();
     updateStreakDisplay();
+    renderWaterToday();
   }
 
   // initHistory() is now called from onLogin(), once a user is authenticated.
@@ -1866,13 +2117,18 @@
     await safeDelete('foodfit:profile');
     await safeDelete('foodfit:routine');
     await safeDelete('foodfit:history');
+    await safeDelete('foodfit:favorites');
 
     routineData = generateRoutine();
     historyData = {};
+    favoriteFoods = [];
     await initProfile();
     renderRoutine();
     renderCalendar();
     renderDayDetail(selectedDate);
+    updateStreakDisplay();
+    renderWaterToday();
+    renderFoodList();
     closeAccountSheet();
   });
 
@@ -2019,6 +2275,8 @@
     await initProfile();
     await initRoutine();
     await initHistory();
+    await initFavorites();
+    renderFoodList();
   }
 
   function onLogout(){
@@ -2027,11 +2285,15 @@
     profileData = null;
     routineData = null;
     historyData = {};
+    favoriteFoods = [];
+    stopRestTimer();
     updateProfilePill();
     renderRoutine();
     renderCalendar();
     renderDayDetail(selectedDate);
     updateStreakDisplay();
+    renderWaterToday();
+    renderFoodList();
     $('authEmail').value = '';
     $('authPassword').value = '';
     recoveryMode = false;
