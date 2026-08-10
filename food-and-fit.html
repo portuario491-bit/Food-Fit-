@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co https://world.openfoodfacts.org https://search.openfoodfacts.org; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co https://world.openfoodfacts.org https://search.openfoodfacts.org; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self';">
 <title>Food&amp;Fit</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -255,6 +255,10 @@
   .reminder-banner span{font-size:12.5px;line-height:1.4;}
   .reminder-banner button{background:none;border:none;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;flex-shrink:0;padding:0 2px;}
 
+  .offline-banner{display:flex;align-items:center;gap:10px;background:var(--panel-2);border:1.5px solid var(--blue);color:var(--blue);border-radius:14px;padding:11px 13px;margin-bottom:16px;}
+  .offline-banner span{font-size:12.5px;line-height:1.4;color:var(--ink);}
+  .offline-banner.offline{border-color:var(--muted);color:var(--muted);}
+
   /* live workout mode */
   .live-backdrop{position:fixed;inset:0;background:var(--bg);z-index:65;display:none;flex-direction:column;}
   .live-backdrop.open{display:flex;}
@@ -403,6 +407,11 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;color:var(--yellow);"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
     <span id="reminderText" style="flex:1;">Aún no has registrado nada hoy. Toca para ir a Alimentos.</span>
     <button type="button" id="reminderDismiss" title="Descartar">×</button>
+  </div>
+
+  <div class="offline-banner" id="offlineBanner" style="display:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+    <span id="offlineBannerText" style="flex:1;">Sin conexión. Tus cambios se guardan en el dispositivo y se subirán solos.</span>
   </div>
 
   <div class="tabs" id="mainTabs">
@@ -810,32 +819,128 @@
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   let currentUser = null;
 
+  // Local queue of writes that couldn't reach Supabase yet (no connection).
+  // Keyed by "userId::storageKey" so it's safe even if several accounts
+  // have used the same device. Only the latest value per key is kept.
+  const PENDING_WRITES_KEY = 'foodfit-pending-writes';
+  function loadPendingWrites(){
+    try{ return JSON.parse(localStorage.getItem(PENDING_WRITES_KEY) || '{}'); }
+    catch(err){ return {}; }
+  }
+  function savePendingWrites(obj){
+    try{ localStorage.setItem(PENDING_WRITES_KEY, JSON.stringify(obj)); }
+    catch(err){ /* storage unavailable */ }
+  }
+  function pendingWriteId(userId, key){ return userId + '::' + key; }
+  function hasPendingWrites(){
+    if(!currentUser) return false;
+    const pending = loadPendingWrites();
+    return Object.keys(pending).some(id => id.startsWith(currentUser.id + '::'));
+  }
+
   // Same get/set/delete interface the app already used for local storage,
-  // now backed by the "app_data" table in Supabase (one row per user+key).
+  // now backed by the "app_data" table in Supabase (one row per user+key),
+  // with a local fallback queue so nothing gets lost without internet.
   const AppStorage = {
     async get(key){
       if(!currentUser) return null;
-      const { data, error } = await sb
-        .from('app_data')
-        .select('value')
-        .eq('user_id', currentUser.id)
-        .eq('key', key)
-        .maybeSingle();
-      if(error || !data) return null;
-      return { value: JSON.stringify(data.value) };
+      const pid = pendingWriteId(currentUser.id, key);
+      const pending = loadPendingWrites();
+      if(Object.prototype.hasOwnProperty.call(pending, pid)){
+        return { value: pending[pid] };
+      }
+      try{
+        const { data, error } = await sb
+          .from('app_data')
+          .select('value')
+          .eq('user_id', currentUser.id)
+          .eq('key', key)
+          .maybeSingle();
+        if(error || !data) return null;
+        return { value: JSON.stringify(data.value) };
+      }catch(err){
+        return null; // sin conexión y sin cambios pendientes: no hay nada que mostrar todavía
+      }
     },
     async set(key, value){
       if(!currentUser) return;
-      const { error } = await sb
-        .from('app_data')
-        .upsert({ user_id: currentUser.id, key, value: JSON.parse(value), updated_at: new Date().toISOString() }, { onConflict: 'user_id,key' });
-      if(error) throw error;
+      const pid = pendingWriteId(currentUser.id, key);
+      try{
+        const { error } = await sb
+          .from('app_data')
+          .upsert({ user_id: currentUser.id, key, value: JSON.parse(value), updated_at: new Date().toISOString() }, { onConflict: 'user_id,key' });
+        if(error) throw error;
+        const pending = loadPendingWrites();
+        if(Object.prototype.hasOwnProperty.call(pending, pid)){
+          delete pending[pid];
+          savePendingWrites(pending);
+        }
+      }catch(err){
+        // Sin conexión (u otro fallo temporal): guardamos el cambio en el
+        // dispositivo para no perderlo, y se subirá solo al volver la conexión.
+        const pending = loadPendingWrites();
+        pending[pid] = value;
+        savePendingWrites(pending);
+      }
+      updateOfflineBadge();
     },
     async delete(key){
       if(!currentUser) return;
-      await sb.from('app_data').delete().eq('user_id', currentUser.id).eq('key', key);
+      try{ await sb.from('app_data').delete().eq('user_id', currentUser.id).eq('key', key); }
+      catch(err){ /* sin conexión: no hay nada más que hacer con un borrado */ }
     }
   };
+
+  let flushInFlight = false;
+  async function flushPendingWrites(){
+    if(!currentUser || !navigator.onLine || flushInFlight) return;
+    const pending = loadPendingWrites();
+    const ids = Object.keys(pending).filter(id => id.startsWith(currentUser.id + '::'));
+    if(!ids.length) return;
+    flushInFlight = true;
+    for(const id of ids){
+      const key = id.slice(currentUser.id.length + 2);
+      const value = pending[id];
+      try{
+        const { error } = await sb
+          .from('app_data')
+          .upsert({ user_id: currentUser.id, key, value: JSON.parse(value), updated_at: new Date().toISOString() }, { onConflict: 'user_id,key' });
+        if(error) throw error;
+        const stillPending = loadPendingWrites();
+        delete stillPending[id];
+        savePendingWrites(stillPending);
+      }catch(err){ /* sigue fallando (sin conexión u otro motivo), se reintentará más tarde */ }
+    }
+    flushInFlight = false;
+    updateOfflineBadge();
+  }
+
+  // Solo refleja el estado en la pantalla; nunca dispara un intento de
+  // sincronización por sí misma (eso evita que un fallo repetido de guardado
+  // haga que esta función y flushPendingWrites() se llamen sin parar).
+  function updateOfflineBadge(){
+    const banner = $('offlineBanner');
+    if(!banner) return;
+    if(!navigator.onLine){
+      $('offlineBannerText').textContent = 'Sin conexión. Tus cambios se guardan en el dispositivo y se subirán solos.';
+      banner.classList.add('offline');
+      banner.style.display = 'flex';
+    } else if(hasPendingWrites()){
+      $('offlineBannerText').textContent = 'Subiendo cambios pendientes…';
+      banner.classList.remove('offline');
+      banner.style.display = 'flex';
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+  window.addEventListener('online', ()=>{ updateOfflineBadge(); flushPendingWrites(); });
+  window.addEventListener('offline', updateOfflineBadge);
+
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', ()=>{
+      navigator.serviceWorker.register('sw.js').catch(()=>{ /* sin service worker no hay caché offline, pero la app sigue funcionando online */ });
+    });
+  }
 
   document.querySelectorAll('#mainTabs button').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -3098,11 +3203,14 @@
     resetInactivityTimer();
     updateNotifPermBtn();
     startReminderChecks();
+    updateOfflineBadge();
+    flushPendingWrites();
   }
 
   function onLogout(){
     currentUser = null;
     window.storage = null;
+    $('offlineBanner').style.display = 'none';
     profileData = null;
     routineData = null;
     historyData = {};
