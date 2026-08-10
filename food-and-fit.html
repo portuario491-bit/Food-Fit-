@@ -566,6 +566,21 @@
       <div class="streak-badges" id="streakBadges"></div>
     </div>
 
+    <div class="panel" id="summaryPanel">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <p class="section-title" style="margin:0;">Resumen</p>
+        <div class="segmented" id="summaryRangeSeg" style="width:150px;">
+          <button type="button" data-val="7" class="active">7 días</button>
+          <button type="button" data-val="30">30 días</button>
+        </div>
+      </div>
+      <div class="macro-row"><span class="name">Días entrenados</span><span class="grams" id="sumWorkoutDays" style="font-size:15px;">—</span></div>
+      <div class="macro-row"><span class="name">Días con comida registrada</span><span class="grams" id="sumMealDays" style="font-size:15px;">—</span></div>
+      <div class="macro-row"><span class="name">Calorías medias</span><span class="grams" id="sumAvgKcal" style="font-size:15px;">—</span></div>
+      <div class="macro-row"><span class="name">Agua media</span><span class="grams" id="sumAvgWater" style="font-size:15px;">—</span></div>
+      <div class="macro-row" style="border-bottom:none;"><span class="name">Cambio de peso</span><span class="grams" id="sumWeightChange" style="font-size:15px;">—</span></div>
+    </div>
+
     <div class="panel">
       <div class="cal-nav">
         <button id="calPrev">‹</button>
@@ -646,6 +661,7 @@
     <input type="text" id="accName" style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel-2);color:var(--ink);font-size:14px;font-family:'Inter', sans-serif;margin-bottom:12px;">
     <p class="ob-note" style="margin:0 0 12px;">Cuenta: <strong id="accEmailStatic" style="color:var(--ink);"></strong></p>
     <button class="btn primary" id="accSaveBtn" style="width:100%;padding:11px;">Guardar cambios</button>
+    <button class="danger-btn" id="exportDataBtn" style="border-color:var(--line);color:var(--ink);margin-top:10px;">Exportar mis datos</button>
     <button class="danger-btn" id="accLogoutBtn" style="border-color:var(--line);color:var(--ink);margin-top:10px;">Cerrar sesión</button>
     <button class="danger-btn" id="accDeleteBtn">Borrar todos mis datos en la nube</button>
     <p class="ob-note" style="text-align:center;margin-top:14px;"><a href="privacidad.html" style="color:var(--muted);">Política de privacidad</a></p>
@@ -1265,8 +1281,9 @@
       }
     }catch(err){ /* storage unavailable, continue without persistence */ }
   }
-  function showToast(){
+  function showToast(message){
     const t = $('saveToast');
+    t.textContent = message || 'Rutina guardada';
     t.classList.add('show');
     clearTimeout(showToast._tid);
     showToast._tid = setTimeout(()=> t.classList.remove('show'), 1400);
@@ -1446,6 +1463,53 @@
     renderFoodList();
   }
 
+  /* ---------- MEAL TEMPLATES ---------- */
+  let mealTemplates = []; // [{id, name, items:[{name,grams,kcal,protein,carbs,fat}]}]
+
+  async function persistTemplates(){
+    try{
+      if(window.storage){
+        await window.storage.set('foodfit:templates', JSON.stringify(mealTemplates), false);
+      }
+    }catch(err){ /* storage unavailable */ }
+  }
+
+  async function initTemplates(){
+    mealTemplates = [];
+    try{
+      if(window.storage){
+        const res = await window.storage.get('foodfit:templates', false);
+        if(res && res.value) mealTemplates = JSON.parse(res.value);
+      }
+    }catch(err){ mealTemplates = []; }
+  }
+
+  function saveDayAsTemplate(dateStr, name){
+    const rec = historyData[dateStr];
+    if(!rec || !rec.meals || !rec.meals.length) return;
+    mealTemplates.push({
+      id: Date.now()+'-'+Math.random().toString(36).slice(2,8),
+      name: name,
+      items: rec.meals.map(m=>({ name:m.name, grams:m.grams, kcal:m.kcal, protein:m.protein, carbs:m.carbs, fat:m.fat }))
+    });
+    persistTemplates();
+    renderFoodList();
+  }
+
+  function removeTemplate(id){
+    mealTemplates = mealTemplates.filter(t=>t.id!==id);
+    persistTemplates();
+    renderFoodList();
+  }
+
+  function applyTemplateToday(id){
+    const tpl = mealTemplates.find(t=>t.id===id);
+    if(!tpl) return;
+    tpl.items.forEach(item=>{
+      logMealToday({ name:item.name, kcal:item.kcal/(item.grams/100), protein:item.protein/(item.grams/100), carbs:item.carbs/(item.grams/100), fat:item.fat/(item.grams/100) }, item.grams);
+    });
+  }
+
   function getRecentFoods(limit){
     limit = limit || 12;
     const dates = Object.keys(historyData).sort().reverse();
@@ -1492,6 +1556,12 @@
     favoritos.dataset.val = 'favoritos';
     row.appendChild(favoritos);
 
+    const plantillas = document.createElement('button');
+    plantillas.className = 'food-chip';
+    plantillas.textContent = 'Plantillas';
+    plantillas.dataset.val = 'plantillas';
+    row.appendChild(plantillas);
+
     FOOD_CATS.forEach(c=>{
       const chip = document.createElement('button');
       chip.className = 'food-chip';
@@ -1506,6 +1576,36 @@
       foodCatFilter = c.dataset.val;
       renderFoodList();
     });
+  }
+
+  function createTemplateCard(tpl){
+    const card = document.createElement('div');
+    card.className = 'food-card';
+    const totalKcal = tpl.items.reduce((s,i)=>s+i.kcal, 0);
+    card.innerHTML = `
+      <div class="food-row" style="cursor:default;">
+        <div>
+          <span class="fd-name">${escapeHtml(tpl.name)}</span>
+          <span class="fd-cat">${tpl.items.map(i=>escapeHtml(i.name)).join(', ')}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button type="button" class="remove-ex" title="Eliminar plantilla" data-tpl-remove>×</button>
+          <div style="text-align:right;">
+            <span class="fd-kcal">${Math.round(totalKcal)}</span>
+            <span class="fd-kcal-unit">kcal total</span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:0 15px 14px;">
+        <button class="log-btn" data-tpl-apply>+ Registrar todo hoy</button>
+      </div>
+    `;
+    card.querySelector('[data-tpl-remove]').addEventListener('click', ()=> removeTemplate(tpl.id));
+    card.querySelector('[data-tpl-apply]').addEventListener('click', ()=>{
+      applyTemplateToday(tpl.id);
+      showToast('Plantilla registrada');
+    });
+    return card;
   }
 
   function createFoodCard(food, subtitleText){
@@ -1577,6 +1677,17 @@
     const out = $('foodListOut');
     out.innerHTML = '';
     const query = $('foodSearch').value.trim().toLowerCase();
+
+    if(foodCatFilter === 'plantillas'){
+      let templates = mealTemplates;
+      if(query) templates = templates.filter(t=>t.name.toLowerCase().includes(query));
+      if(templates.length === 0){
+        out.innerHTML = `<p class="empty-note-food">${EMPTY_ICON}<br>Aún no tienes plantillas. Guarda las comidas de un día desde su detalle en Historial para crear una.</p>`;
+        return;
+      }
+      templates.forEach(tpl=> out.appendChild(createTemplateCard(tpl)));
+      return;
+    }
 
     let items, subtitleFor, emptyMsg;
     if(foodCatFilter === 'recientes'){
@@ -1767,6 +1878,7 @@
     entry.water = Math.max(0, (entry.water||0) + delta);
     persistHistory();
     renderWaterToday();
+    renderSummary();
     if(selectedDate === todayStr()) renderDayDetail(selectedDate);
   }
   $('waterMinus').addEventListener('click', ()=> adjustWaterToday(-1));
@@ -1820,6 +1932,7 @@
     entry.bodyWeight = w;
     persistHistory();
     renderWeightChart();
+    renderSummary();
     if(selectedDate === todayStr()) renderDayDetail(selectedDate);
   }
   $('logWeightBtn').addEventListener('click', logWeightToday);
@@ -1895,6 +2008,58 @@
   $('strengthExerciseSelect').addEventListener('change', e=>{
     strengthSelectedExercise = e.target.value;
     renderStrengthChart();
+  });
+
+  /* ---------- WEEKLY / MONTHLY SUMMARY ---------- */
+  let summaryRangeDays = 7;
+
+  function computeSummary(days){
+    const today = new Date();
+    const dates = [];
+    for(let i=0; i<days; i++){
+      const d = new Date(today);
+      d.setDate(d.getDate()-i);
+      dates.push(dateToStr(d));
+    }
+    let workoutDays=0, mealDays=0, totalKcal=0, kcalDaysCount=0, totalWater=0, waterDaysCount=0;
+    let firstWeight=null, lastWeight=null;
+    dates.slice().reverse().forEach(d=>{
+      const rec = historyData[d];
+      if(!rec) return;
+      if(rec.workout) workoutDays++;
+      if(rec.meals && rec.meals.length){
+        mealDays++;
+        totalKcal += rec.meals.reduce((s,m)=>s+m.kcal,0);
+        kcalDaysCount++;
+      }
+      if(rec.water){ totalWater += rec.water; waterDaysCount++; }
+      if(rec.bodyWeight != null){
+        if(firstWeight == null) firstWeight = rec.bodyWeight;
+        lastWeight = rec.bodyWeight;
+      }
+    });
+    return {
+      workoutDays, mealDays,
+      avgKcal: kcalDaysCount ? Math.round(totalKcal/kcalDaysCount) : null,
+      avgWater: waterDaysCount ? (totalWater/waterDaysCount).toFixed(1) : null,
+      weightChange: (firstWeight != null && lastWeight != null) ? +(lastWeight-firstWeight).toFixed(1) : null
+    };
+  }
+
+  function renderSummary(){
+    const s = computeSummary(summaryRangeDays);
+    $('sumWorkoutDays').textContent = `${s.workoutDays} / ${summaryRangeDays}`;
+    $('sumMealDays').textContent = `${s.mealDays} / ${summaryRangeDays}`;
+    $('sumAvgKcal').textContent = s.avgKcal != null ? `${s.avgKcal} kcal` : '—';
+    $('sumAvgWater').textContent = s.avgWater != null ? `${s.avgWater} vasos` : '—';
+    $('sumWeightChange').textContent = s.weightChange != null ? `${s.weightChange>0?'+':''}${s.weightChange} kg` : '—';
+  }
+  $('summaryRangeSeg').addEventListener('click', e=>{
+    const b = e.target.closest('button'); if(!b) return;
+    document.querySelectorAll('#summaryRangeSeg button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    summaryRangeDays = parseInt(b.dataset.val);
+    renderSummary();
   });
 
   /* ---------- STREAK ---------- */
@@ -1980,6 +2145,7 @@
     renderCalendar();
     maybeCelebrateStreak(prevStreak, updateStreakDisplay());
     renderStrengthSelector();
+    renderSummary();
   }
 
   function logMealToday(food, grams){
@@ -1997,6 +2163,7 @@
     if(selectedDate === todayStr()) renderDayDetail(selectedDate);
     renderCalendar();
     maybeCelebrateStreak(prevStreak, updateStreakDisplay());
+    renderSummary();
   }
 
   function removeWorkoutLog(dateStr){
@@ -2007,6 +2174,7 @@
     renderCalendar();
     updateStreakDisplay();
     renderStrengthSelector();
+    renderSummary();
   }
   function removeMealLog(dateStr, idx){
     if(historyData[dateStr]) historyData[dateStr].meals.splice(idx,1);
@@ -2014,6 +2182,7 @@
     renderDayDetail(dateStr);
     renderCalendar();
     updateStreakDisplay();
+    renderSummary();
   }
 
   const MONTH_NAMES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
@@ -2129,6 +2298,10 @@
         <div class="totals-pill"><span class="tp-val" style="color:var(--red)">${totP.toFixed(0)}${nutritionTargets.protein ? '/'+nutritionTargets.protein : ''}</span><span class="tp-lbl">proteína</span></div>
         <div class="totals-pill"><span class="tp-val" style="color:var(--yellow)">${totC.toFixed(0)}${nutritionTargets.carbs ? '/'+nutritionTargets.carbs : ''}</span><span class="tp-lbl">carbos</span></div>
         <div class="totals-pill"><span class="tp-val" style="color:var(--blue)">${totF.toFixed(0)}${nutritionTargets.fat ? '/'+nutritionTargets.fat : ''}</span><span class="tp-lbl">grasas</span></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:10px;">
+        <input type="text" id="templateNameInput" placeholder="Nombre de la plantilla (ej. Mi desayuno)" style="flex:1;padding:9px 11px;border-radius:8px;border:1.5px solid var(--line);background:var(--panel-2);color:var(--ink);font-size:13px;font-family:'Inter', sans-serif;">
+        <button class="btn" id="saveTemplateBtn" type="button">Guardar plantilla</button>
       </div>`;
     } else {
       html += `<p class="dd-empty">No hay comidas registradas este día. Añádelas desde la pestaña Alimentos.</p>`;
@@ -2149,6 +2322,16 @@
     panel.querySelectorAll('[data-action="rm-meal"]').forEach(btn=>{
       btn.addEventListener('click', ()=> removeMealLog(dStr, parseInt(btn.dataset.idx)));
     });
+    const saveTplBtn = panel.querySelector('#saveTemplateBtn');
+    if(saveTplBtn){
+      saveTplBtn.addEventListener('click', ()=>{
+        const nameInput = $('templateNameInput');
+        const name = nameInput.value.trim();
+        if(!name){ nameInput.focus(); return; }
+        saveDayAsTemplate(dStr, name);
+        showToast('Plantilla guardada');
+      });
+    }
   }
 
   async function initHistory(){
@@ -2165,6 +2348,7 @@
     renderWaterToday();
     renderWeightChart();
     renderStrengthSelector();
+    renderSummary();
   }
 
   // initHistory() is now called from onLogin(), once a user is authenticated.
@@ -2263,6 +2447,25 @@
     closeAccountSheet();
   });
 
+  $('exportDataBtn').addEventListener('click', ()=>{
+    const payload = {
+      exportado: new Date().toISOString(),
+      perfil: profileData,
+      rutina: routineData,
+      historial: historyData,
+      favoritos: favoriteFoods
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `foodfit-datos-${todayStr()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
   $('accLogoutBtn').addEventListener('click', async ()=>{
     closeAccountSheet();
     await sb.auth.signOut();
@@ -2284,10 +2487,12 @@
     await safeDelete('foodfit:routine');
     await safeDelete('foodfit:history');
     await safeDelete('foodfit:favorites');
+    await safeDelete('foodfit:templates');
 
     routineData = generateRoutine();
     historyData = {};
     favoriteFoods = [];
+    mealTemplates = [];
     await initProfile();
     renderRoutine();
     renderCalendar();
@@ -2296,6 +2501,7 @@
     renderWaterToday();
     renderWeightChart();
     renderStrengthSelector();
+    renderSummary();
     renderFoodList();
     closeAccountSheet();
   });
@@ -2461,6 +2667,7 @@
     await initRoutine();
     await initHistory();
     await initFavorites();
+    await initTemplates();
     renderFoodList();
     resetInactivityTimer();
   }
@@ -2472,6 +2679,7 @@
     routineData = null;
     historyData = {};
     favoriteFoods = [];
+    mealTemplates = [];
     stopRestTimer();
     clearTimeout(inactivityTimer);
     updateProfilePill();
@@ -2482,6 +2690,7 @@
     renderWaterToday();
     renderWeightChart();
     renderStrengthSelector();
+    renderSummary();
     renderFoodList();
     $('authEmail').value = '';
     $('authPassword').value = '';
