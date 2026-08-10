@@ -453,6 +453,8 @@
           <button data-val="gain">Ganar músculo</button>
         </div>
       </div>
+      <button class="btn primary" id="saveProfileBtn" style="width:100%;padding:12px;margin-top:16px;">Guardar mis datos</button>
+      <p class="footnote" style="padding:8px 0 0;">Estos datos se guardan solos mientras los cambias, pero puedes tocar aquí para asegurarte de que han quedado guardados.</p>
     </div>
 
     <div class="panel">
@@ -940,6 +942,17 @@
   makeStepper($('age'), {step:1});
   makeStepper($('weight'), {step:1});
   makeStepper($('height'), {step:1});
+
+  $('saveProfileBtn').addEventListener('click', async ()=>{
+    const btn = $('saveProfileBtn');
+    const prevLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Guardando…';
+    await persistProfile();
+    btn.disabled = false;
+    btn.textContent = prevLabel;
+    showToast('Datos guardados');
+  });
 
   let nutritionTargets = { calories:0, protein:0, carbs:0, fat:0 };
 
@@ -2677,7 +2690,8 @@
 
   async function persistProfile(){
     try{
-      if(window.storage && profileData){
+      if(window.storage){
+        if(!profileData) profileData = {};
         syncProfileFromUI();
         await window.storage.set('foodfit:profile', JSON.stringify(profileData), false);
       }
