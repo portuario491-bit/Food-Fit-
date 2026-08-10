@@ -2604,7 +2604,63 @@
   let barcodeScanner = null;
   let scanInProgress = false;
 
-  function openScanner(){
+  // Escáner nativo del propio navegador (Shape Detection API), sin
+  // ninguna librería externa de por medio. Cuando está disponible es la
+  // opción más fiable, porque no depende de que un script de terceros
+  // haya cargado bien ni de cómo gestione internamente la cámara.
+  let nativeStream = null;
+  let nativeScanLoopActive = false;
+
+  function stopNativeScanner(){
+    nativeScanLoopActive = false;
+    if(nativeStream){
+      nativeStream.getTracks().forEach(t=> t.stop());
+      nativeStream = null;
+    }
+  }
+
+  async function tryNativeBarcodeScanner(){
+    if(!('BarcodeDetector' in window) || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
+    try{
+      const supported = await BarcodeDetector.getSupportedFormats();
+      const formats = ['ean_13','ean_8','upc_a','upc_e'].filter(f=> supported.includes(f));
+      if(!formats.length) return false;
+
+      nativeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      const video = document.createElement('video');
+      video.setAttribute('playsinline', ''); // en iPhone, para que la cámara no ocupe toda la pantalla
+      video.muted = true;
+      video.style.width = '100%';
+      video.style.display = 'block';
+      video.srcObject = nativeStream;
+      $('scannerReader').innerHTML = '';
+      $('scannerReader').appendChild(video);
+      await video.play();
+
+      const detector = new BarcodeDetector({ formats });
+      nativeScanLoopActive = true;
+      const loop = async ()=>{
+        if(!nativeScanLoopActive) return;
+        try{
+          const codes = await detector.detect(video);
+          if(codes && codes.length){
+            nativeScanLoopActive = false;
+            onBarcodeDetected(codes[0].rawValue);
+            return;
+          }
+        }catch(err){ /* fotograma no legible; seguimos intentando */ }
+        requestAnimationFrame(loop);
+      };
+      requestAnimationFrame(loop);
+      $('scannerStatus').textContent = 'Apunta la cámara al código de barras del producto.';
+      return true;
+    }catch(err){
+      stopNativeScanner();
+      return false;
+    }
+  }
+
+  async function openScanner(){
     $('scannerResultOut').innerHTML = '';
     $('scannerRetryBtn').style.display = 'none';
     $('scannerReader').style.display = 'block';
@@ -2613,27 +2669,28 @@
     $('scannerBackdrop').classList.add('open');
     scanInProgress = false;
 
+    const usedNative = await tryNativeBarcodeScanner();
+    if(usedNative) return;
+
+    // Si el navegador no trae lector nativo, probamos con la librería.
     if(typeof Html5QrcodeScanner === 'undefined'){
-      $('scannerStatus').textContent = 'No se pudo cargar el lector de códigos de barras. Comprueba tu conexión y vuelve a intentarlo.';
+      $('scannerStatus').textContent = 'No se pudo cargar el lector de códigos de barras. Escribe el código a mano más abajo.';
       return;
     }
     try{
       const config = { fps: 10, qrbox: { width: 260, height: 150 } };
-      // Solo cámara: quitamos la opción de "elegir una foto" de la propia
-      // librería, que en algunos móviles aparecía en vez de la cámara y
-      // tampoco funcionaba bien. Para eso está ahora el campo de escribir
-      // el código a mano.
       if(typeof Html5QrcodeScanType !== 'undefined'){
         config.supportedScanTypes = [ Html5QrcodeScanType.SCAN_TYPE_CAMERA ];
       }
       barcodeScanner = new Html5QrcodeScanner('scannerReader', config, false);
       barcodeScanner.render(onBarcodeDetected, ()=>{ /* fotograma sin código detectado: normal, se ignora */ });
     }catch(err){
-      $('scannerStatus').textContent = 'No se pudo iniciar el lector de códigos de barras.';
+      $('scannerStatus').textContent = 'No se pudo iniciar el lector de códigos de barras. Escribe el código a mano más abajo.';
     }
   }
 
   function stopScannerCamera(){
+    stopNativeScanner();
     if(barcodeScanner){
       const s = barcodeScanner;
       barcodeScanner = null;
