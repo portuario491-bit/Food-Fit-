@@ -636,6 +636,10 @@
       <button data-val="local" class="active">Mi lista</button>
       <button data-val="off">Buscar en Open Food Facts</button>
     </div>
+    <button type="button" class="btn" id="openScannerBtn" style="width:100%;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8M10 8v8M13 8v3M13 14v2M16 8v8M19 8v8"/></svg>
+      Escanear código de barras
+    </button>
     <input class="food-search" id="foodSearch" type="text" placeholder="Buscar producto…">
     <div class="food-chip-row" id="foodChipRow"></div>
     <div id="foodListOut"></div>
@@ -774,6 +778,21 @@
   </div>
 </div>
 
+<div class="live-backdrop" id="scannerBackdrop">
+  <div class="live-header">
+    <div>
+      <p class="live-day-name">Escanear producto</p>
+      <span class="hint" id="scannerStatus">Apunta la cámara al código de barras del producto.</span>
+    </div>
+    <button class="sheet-close" id="scannerClose">×</button>
+  </div>
+  <div class="live-body">
+    <div id="scannerReader" style="border-radius:14px;overflow:hidden;background:var(--panel-2);min-height:220px;"></div>
+    <button type="button" class="btn" id="scannerRetryBtn" style="width:100%;margin-top:14px;display:none;">Escanear otro código</button>
+    <div id="scannerResultOut" style="margin-top:14px;"></div>
+  </div>
+</div>
+
 <div class="sheet-backdrop" id="helpBackdrop"></div>
 <div class="sheet" id="helpSheet">
   <div class="sheet-head">
@@ -805,6 +824,7 @@
       <li><strong>Recientes:</strong> se rellena sola con lo último que hayas registrado.</li>
       <li><strong>Plantillas:</strong> guarda las comidas de un día entero (desde Historial) y regístralas todas de un toque otro día.</li>
       <li><strong>Aviso al registrar:</strong> cada vez que registras una comida, un destello verde y un sonido te confirman que sigues dentro de tu objetivo de calorías del día; si te pasas, el aviso es rojo.</li>
+      <li><strong>Escanear código de barras:</strong> apunta la cámara al código de un producto envasado para traer sus datos desde Open Food Facts sin buscarlo a mano. Toca la estrella para guardarlo en tus favoritos.</li>
     </ul>
 
     <p class="section-title">Recetas</p>
@@ -864,6 +884,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.2/dist/umd/supabase.js" integrity="sha384-OUpie84zd1LdwNlK9uJJQRwab0BLqo3eKYKFh7hSVL58FSk7wPp2l0kfUMIIoaQd" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
   /* ---------- SUPABASE ---------- */
   if(typeof window.supabase === 'undefined'){
@@ -2515,6 +2536,101 @@
     }
     offLoading = false;
     renderFoodList();
+  }
+
+  /* ---------- BARCODE SCANNER ---------- */
+  let barcodeScanner = null;
+  let scanInProgress = false;
+
+  function openScanner(){
+    $('scannerResultOut').innerHTML = '';
+    $('scannerRetryBtn').style.display = 'none';
+    $('scannerReader').style.display = 'block';
+    $('scannerStatus').textContent = 'Apunta la cámara al código de barras del producto.';
+    $('scannerBackdrop').classList.add('open');
+
+    if(typeof Html5Qrcode === 'undefined'){
+      $('scannerStatus').textContent = 'No se pudo cargar el lector de códigos de barras. Comprueba tu conexión y vuelve a intentarlo.';
+      return;
+    }
+    try{
+      barcodeScanner = new Html5Qrcode('scannerReader', {
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E
+        ],
+        verbose: false
+      });
+      barcodeScanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 260, height: 140 } },
+        onBarcodeDetected,
+        ()=>{ /* fotograma sin código detectado: se ignora, es normal */ }
+      ).catch(()=>{
+        $('scannerStatus').textContent = 'No se pudo acceder a la cámara. Revisa que le hayas dado permiso a la app en el navegador.';
+      });
+    }catch(err){
+      $('scannerStatus').textContent = 'No se pudo iniciar el lector de códigos de barras.';
+    }
+  }
+
+  function stopScannerCamera(){
+    if(barcodeScanner){
+      const s = barcodeScanner;
+      barcodeScanner = null;
+      s.stop().then(()=> s.clear()).catch(()=>{});
+    }
+  }
+
+  function closeScanner(){
+    $('scannerBackdrop').classList.remove('open');
+    stopScannerCamera();
+    scanInProgress = false;
+  }
+  $('openScannerBtn').addEventListener('click', openScanner);
+  $('scannerClose').addEventListener('click', closeScanner);
+  $('scannerRetryBtn').addEventListener('click', openScanner);
+
+  async function onBarcodeDetected(code){
+    if(scanInProgress) return;
+    scanInProgress = true;
+    stopScannerCamera();
+    $('scannerReader').style.display = 'none';
+    $('scannerStatus').textContent = 'Buscando el producto (código ' + code + ')…';
+    try{
+      const url = 'https://world.openfoodfacts.org/api/v2/product/' + encodeURIComponent(code) + '.json?fields=product_name,brands,nutriments';
+      const res = await fetch(url);
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if(!data || data.status !== 1 || !data.product){
+        $('scannerStatus').textContent = 'No encontramos ese producto en Open Food Facts. Prueba a buscarlo por nombre, o escanea otro código.';
+        $('scannerRetryBtn').style.display = 'block';
+        return;
+      }
+      const parsed = parseOFFProducts([data.product]);
+      if(!parsed.length){
+        $('scannerStatus').textContent = 'Encontramos el producto, pero le faltan datos nutricionales completos.';
+        $('scannerRetryBtn').style.display = 'block';
+        return;
+      }
+      $('scannerStatus').textContent = 'Producto encontrado. Toca la estrella si quieres guardarlo en tus favoritos para la próxima vez.';
+      $('scannerRetryBtn').style.display = 'block';
+      showScannedProduct(parsed[0]);
+    }catch(err){
+      $('scannerStatus').textContent = 'No se pudo consultar Open Food Facts. Comprueba tu conexión e inténtalo de nuevo.';
+      $('scannerRetryBtn').style.display = 'block';
+    }finally{
+      scanInProgress = false;
+    }
+  }
+
+  function showScannedProduct(food){
+    openFoodName = food.name;
+    const out = $('scannerResultOut');
+    out.innerHTML = '';
+    out.appendChild(createFoodCard(food, food.brand || 'Escaneado'));
   }
 
   $('foodSourceToggle').addEventListener('click', e=>{
