@@ -262,6 +262,17 @@
 
   /* streak */
   .streak-pill{display:flex;align-items:center;gap:5px;background:var(--panel-2);border:1.5px solid var(--line);border-radius:999px;padding:5px 11px;flex-shrink:0;font-family:'IBM Plex Mono', monospace;font-size:12px;font-weight:700;color:var(--yellow);}
+  .streak-pill.tick{animation:streakTickPulse .8s ease-out;}
+  @keyframes streakTickPulse{
+    0%{box-shadow:0 0 0 0 rgba(227,167,46,0.65);}
+    60%{box-shadow:0 0 0 9px rgba(227,167,46,0);}
+    100%{box-shadow:0 0 0 0 rgba(227,167,46,0);}
+  }
+  .feedback-flash{position:fixed;inset:0;pointer-events:none;z-index:70;opacity:0;}
+  .feedback-flash.ok{background:radial-gradient(circle at 50% 18%, rgba(92,154,92,0.4), transparent 65%);}
+  .feedback-flash.fail{background:radial-gradient(circle at 50% 18%, rgba(214,72,63,0.4), transparent 65%);}
+  .feedback-flash.show{animation:feedbackFlashAnim .7s ease-out;}
+  @keyframes feedbackFlashAnim{0%{opacity:0;}15%{opacity:1;}100%{opacity:0;}}
   .streak-pill svg{width:14px;height:14px;flex-shrink:0;}
   .streak-progress-track{height:10px;border-radius:999px;background:var(--panel-2);overflow:hidden;border:1px solid var(--line);margin-top:14px;}
   .streak-progress-fill{height:100%;width:0;background:linear-gradient(90deg, var(--red), var(--yellow));border-radius:999px;transition:width .3s ease;}
@@ -716,6 +727,8 @@
 
 </div>
 
+<div class="feedback-flash" id="feedbackFlash"></div>
+
 <div class="sheet-backdrop" id="sheetBackdrop"></div>
 <div class="sheet" id="sheet">
   <div class="sheet-head">
@@ -791,6 +804,7 @@
       <li><strong>Favoritos:</strong> toca la estrella de cualquier producto para guardarlo.</li>
       <li><strong>Recientes:</strong> se rellena sola con lo último que hayas registrado.</li>
       <li><strong>Plantillas:</strong> guarda las comidas de un día entero (desde Historial) y regístralas todas de un toque otro día.</li>
+      <li><strong>Aviso al registrar:</strong> cada vez que registras una comida, un destello verde y un sonido te confirman que sigues dentro de tu objetivo de calorías del día; si te pasas, el aviso es rojo.</li>
     </ul>
 
     <p class="section-title">Recetas</p>
@@ -798,7 +812,7 @@
 
     <p class="section-title">Historial</p>
     <ul>
-      <li><strong>Racha:</strong> cuenta los días seguidos en los que registras entreno y comida el mismo día. Tu personaje va cambiando según la racha, y cada 10 días consigues un premio.</li>
+      <li><strong>Racha:</strong> cuenta los días seguidos en los que registras entreno y comida el mismo día. Cada día que avanza tienes un pequeño aviso con sonido; tu personaje va cambiando según la racha, y cada 10 días consigues un premio grande con su propia música.</li>
       <li><strong>Resumen:</strong> tus datos medios de los últimos 7 o 30 días.</li>
       <li><strong>Calendario:</strong> toca cualquier día para ver o borrar lo que registraste.</li>
       <li><strong>Peso corporal y progreso de fuerza:</strong> gráficas de tu evolución.</li>
@@ -2854,6 +2868,89 @@
     }catch(err){ /* audio unavailable */ }
   }
 
+  // Sonido corto para cuando la racha avanza un día más (sin ser un múltiplo de 10).
+  function playStreakTickChime(){
+    try{
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      const start = ctx.currentTime;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.18, start+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start+0.28);
+      osc.start(start);
+      osc.stop(start+0.3);
+    }catch(err){ /* audio unavailable */ }
+  }
+
+  // Sonido de aprobación al registrar una comida dentro de tu objetivo de calorías.
+  function playSuccessChime(){
+    try{
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioCtx();
+      const notes = [659.25, 987.77]; // mi, si — corto y ascendente
+      notes.forEach((freq, i)=>{
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        const start = ctx.currentTime + i*0.09;
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(0.2, start+0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start+0.22);
+        osc.start(start);
+        osc.stop(start+0.24);
+      });
+    }catch(err){ /* audio unavailable */ }
+  }
+
+  // Sonido de aviso al pasarte de tu objetivo de calorías del día.
+  function playWarningChime(){
+    try{
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioCtx();
+      const notes = [392.0, 311.13]; // sol, mi bemol — corto y descendente
+      notes.forEach((freq, i)=>{
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'sawtooth';
+        osc.frequency.value = freq;
+        const start = ctx.currentTime + i*0.11;
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(0.16, start+0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start+0.26);
+        osc.start(start);
+        osc.stop(start+0.28);
+      });
+    }catch(err){ /* audio unavailable */ }
+  }
+
+  // Destello de pantalla completa (verde = vas bien, rojo = te has pasado).
+  function triggerFeedbackFlash(kind){
+    const el = $('feedbackFlash');
+    if(!el) return;
+    el.classList.remove('ok', 'fail', 'show');
+    void el.offsetWidth; // reinicia la animación si se dispara dos veces seguidas
+    el.classList.add(kind, 'show');
+    setTimeout(()=>{ el.classList.remove(kind, 'show'); }, 750);
+  }
+
+  // Pequeño destello en la pastilla de racha cuando avanza un día más.
+  function tickStreakPill(){
+    const pill = $('streakPill');
+    if(!pill) return;
+    pill.classList.remove('tick');
+    void pill.offsetWidth;
+    pill.classList.add('tick');
+    setTimeout(()=> pill.classList.remove('tick'), 850);
+  }
+
   function updateStreakDisplay(){
     const streak = calcStreak();
     const pill = $('streakPill');
@@ -2901,6 +2998,11 @@
       $('streakRewardBackdrop').classList.add('open');
       playStreakMotif();
       updateStreakDisplay();
+    } else if(newStreak > prevStreak && newStreak > 0){
+      // Un día más de racha que no llega a ser un múltiplo de 10: un aviso
+      // pequeño (destello + sonido corto) en vez del premio grande.
+      tickStreakPill();
+      playStreakTickChime();
     }
   }
   $('streakRewardClose').addEventListener('click', ()=>{
@@ -2924,6 +3026,22 @@
     dismissReminderBanner();
   }
 
+  // Compara el total de calorías del día (ya con la comida que acabas de
+  // registrar) contra tu objetivo, y avisa con un destello y un sonido:
+  // verde si sigues dentro (con un pequeño margen), rojo si te has pasado.
+  function maybeShowNutritionFeedback(entry){
+    if(!nutritionTargets.calories) return;
+    const totalKcal = entry.meals.reduce((s,m)=>s+m.kcal, 0);
+    const limit = nutritionTargets.calories;
+    if(totalKcal > limit*1.05){
+      triggerFeedbackFlash('fail');
+      playWarningChime();
+    } else {
+      triggerFeedbackFlash('ok');
+      playSuccessChime();
+    }
+  }
+
   function logMealToday(food, grams){
     const prevStreak = calcStreak();
     const entry = ensureDate(todayStr());
@@ -2938,6 +3056,7 @@
     persistHistory();
     if(selectedDate === todayStr()) renderDayDetail(selectedDate);
     renderCalendar();
+    maybeShowNutritionFeedback(entry);
     maybeCelebrateStreak(prevStreak, updateStreakDisplay());
     renderSummary();
     dismissReminderBanner();
