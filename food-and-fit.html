@@ -255,7 +255,7 @@
   .reminder-banner span{font-size:12.5px;line-height:1.4;}
   .reminder-banner button{background:none;border:none;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;flex-shrink:0;padding:0 2px;}
 
-  .offline-banner{display:flex;align-items:center;gap:10px;background:var(--panel-2);border:1.5px solid var(--blue);color:var(--blue);border-radius:14px;padding:11px 13px;margin-bottom:16px;}
+  .offline-banner{display:flex;align-items:center;gap:10px;background:var(--panel-2);border:1.5px solid var(--blue);color:var(--blue);border-radius:14px;padding:11px 13px;margin-bottom:16px;cursor:pointer;}
   .offline-banner span{font-size:12.5px;line-height:1.4;color:var(--ink);}
   .offline-banner.offline{border-color:var(--muted);color:var(--muted);}
 
@@ -895,6 +895,11 @@
     }
   };
 
+  // Guarda el motivo técnico del último intento fallido, solo para poder
+  // enseñarlo si alguien toca el aviso (así se puede diagnosticar un fallo
+  // real de guardado, no solo "sin conexión", sin necesidad de mirar la
+  // consola del navegador).
+  let lastSyncError = null;
   let flushInFlight = false;
   async function flushPendingWrites(){
     // No comprobamos navigator.onLine aquí: en algunos móviles (sobre todo
@@ -915,10 +920,14 @@
           .from('app_data')
           .upsert({ user_id: currentUser.id, key, value: JSON.parse(value), updated_at: new Date().toISOString() }, { onConflict: 'user_id,key' });
         if(error) throw error;
+        lastSyncError = null;
         const stillPending = loadPendingWrites();
         delete stillPending[id];
         savePendingWrites(stillPending);
-      }catch(err){ /* sigue fallando (sin conexión u otro motivo), se reintentará más tarde */ }
+      }catch(err){
+        lastSyncError = 'Clave: ' + key + ' — ' +
+          ((err && (err.message || err.error_description || err.hint)) || JSON.stringify(err) || 'error desconocido');
+      }
     }
     flushInFlight = false;
     updateOfflineBadge();
@@ -931,9 +940,10 @@
     const banner = $('offlineBanner');
     if(!banner) return;
     if(hasPendingWrites()){
-      $('offlineBannerText').textContent = navigator.onLine
+      $('offlineBannerText').textContent = (navigator.onLine
         ? 'Subiendo cambios pendientes…'
-        : 'Sin conexión. Tus cambios se guardan en el dispositivo y se subirán solos.';
+        : 'Sin conexión. Tus cambios se guardan en el dispositivo y se subirán solos.')
+        + (lastSyncError ? ' Toca para ver el detalle.' : '');
       banner.classList.toggle('offline', !navigator.onLine);
       banner.style.display = 'flex';
     } else {
@@ -942,6 +952,13 @@
   }
   window.addEventListener('online', ()=>{ updateOfflineBadge(); flushPendingWrites(); });
   window.addEventListener('offline', updateOfflineBadge);
+  document.getElementById('offlineBanner').addEventListener('click', ()=>{
+    if(lastSyncError){
+      alert('Detalle técnico (para enviar como captura si el aviso no desaparece):\n\n' + lastSyncError);
+    } else {
+      alert('Todavía no hay ningún error guardado; se sigue intentando subir el cambio automáticamente.');
+    }
+  });
 
   // Reintento periódico: además de escuchar el evento "online" (que en
   // algunos móviles no llega o llega tarde), comprobamos cada 20s si queda
