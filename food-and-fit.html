@@ -2550,6 +2550,7 @@
   /* ---------- BARCODE SCANNER ---------- */
   let barcodeScanner = null;
   let scanInProgress = false;
+  let scanFrameCount = 0;
 
   function openScanner(){
     $('scannerResultOut').innerHTML = '';
@@ -2557,26 +2558,30 @@
     $('scannerReader').style.display = 'block';
     $('scannerStatus').textContent = 'Apunta la cámara al código de barras del producto.';
     $('scannerBackdrop').classList.add('open');
+    scanFrameCount = 0;
 
     if(typeof Html5Qrcode === 'undefined'){
       $('scannerStatus').textContent = 'No se pudo cargar el lector de códigos de barras. Comprueba tu conexión y vuelve a intentarlo.';
       return;
     }
     try{
-      barcodeScanner = new Html5Qrcode('scannerReader', {
-        formatsToSupport: [
-          Html5QrcodeSupportedFormats.EAN_13,
-          Html5QrcodeSupportedFormats.EAN_8,
-          Html5QrcodeSupportedFormats.UPC_A,
-          Html5QrcodeSupportedFormats.UPC_E
-        ],
-        verbose: false
-      });
+      // Sin restringir formatos: dejamos que detecte cualquier tipo de
+      // código (no solo EAN/UPC) para no arriesgarnos a que una lista de
+      // formatos mal soportada bloquee la detección por completo.
+      barcodeScanner = new Html5Qrcode('scannerReader', { verbose: false });
       barcodeScanner.start(
         { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 260, height: 140 } },
+        { fps: 10 }, // sin "qrbox": escanea todo el fotograma, no solo un recuadro central
         onBarcodeDetected,
-        ()=>{ /* fotograma sin código detectado: se ignora, es normal */ }
+        ()=>{
+          // Se llama muchas veces por segundo mientras no detecta nada; lo
+          // usamos solo para confirmar (en el texto de estado) que la
+          // cámara y el lector están realmente funcionando.
+          scanFrameCount++;
+          if($('scannerStatus').textContent.indexOf('Apunta la cámara') === 0){
+            $('scannerStatus').textContent = 'Apunta la cámara al código de barras del producto. (buscando… ' + scanFrameCount + ')';
+          }
+        }
       ).catch(()=>{
         $('scannerStatus').textContent = 'No se pudo acceder a la cámara. Revisa que le hayas dado permiso a la app en el navegador.';
       });
