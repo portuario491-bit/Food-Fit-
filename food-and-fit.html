@@ -352,13 +352,13 @@
         <input type="number" id="height" value="170" min="120" max="230">
       </div>
       <div class="field-row" style="display:block;">
-        <label style="display:block;margin-bottom:6px;">Nivel de actividad</label>
+        <label style="display:block;margin-bottom:6px;">Actividad diaria</label>
+        <span class="hint" style="display:block;margin:-4px 0 6px;">sin contar tus entrenos, eso ya lo tomamos de tu rutina</span>
         <select id="activity">
-          <option value="1.2">Sedentario — poco o nada de ejercicio</option>
-          <option value="1.375">Ligero — 1–3 días/semana</option>
-          <option value="1.55" selected>Moderado — 3–5 días/semana</option>
-          <option value="1.725">Alto — 6–7 días/semana</option>
-          <option value="1.9">Muy alto — trabajo físico o 2x/día</option>
+          <option value="1.15">Sedentario — oficina, coche, poco caminar</option>
+          <option value="1.25">Ligero — de pie a ratos, algo de tareas</option>
+          <option value="1.35" selected>Moderado — camina bastante durante el día</option>
+          <option value="1.45">Alto — trabajo físico o muchos pasos</option>
         </select>
       </div>
       <div class="field-row" style="display:block; border-bottom:none;">
@@ -400,9 +400,33 @@
         </div>
       </div>
 
+      <p class="section-title" style="margin:22px 0 4px;">Cómo se calcula tu gasto</p>
+      <div class="macro-row">
+        <span class="name">TMB — metabolismo basal</span>
+        <span class="grams" id="bdBmr" style="font-size:14px;">—</span>
+      </div>
+      <div class="macro-row">
+        <span class="name">Actividad diaria (NEAT)</span>
+        <span class="grams" id="bdNeat" style="font-size:14px;">—</span>
+      </div>
+      <div class="macro-row">
+        <span class="name">Ejercicio — según tu rutina</span>
+        <span class="grams" id="bdEat" style="font-size:14px;">—</span>
+      </div>
+      <div class="macro-row">
+        <span class="name">Efecto térmico de los alimentos</span>
+        <span class="grams" id="bdTef" style="font-size:14px;">—</span>
+      </div>
+      <div class="macro-row" style="border-bottom:none;">
+        <span class="name" style="font-weight:700;">Total (antes de tu objetivo)</span>
+        <span class="grams" id="bdTotal">—</span>
+      </div>
+
       <p class="footnote">
-        TMB calculada con la fórmula Mifflin-St Jeor. Gasto diario = TMB × nivel de actividad.
-        Bajar peso aplica un déficit del 20%, ganar músculo un superávit del 12%.
+        TMB calculada con la fórmula Mifflin-St Jeor. El ejercicio se estima a partir de los días
+        y el nivel configurados en la pestaña Rutina, y el efecto térmico de los alimentos (energía
+        que gasta tu cuerpo en digerir) se calcula como un 10% del resto. Bajar peso aplica un
+        déficit del 20% sobre ese total, ganar músculo un superávit del 12%.
         Proteína entre 1.8–2.2 g/kg, grasas ~25% de las calorías, el resto en carbohidratos.
         Estimación orientativa, no un consejo médico.
       </p>
@@ -653,12 +677,22 @@
 
   function calcNutrition(){
     const age=parseFloat($('age').value), weight=parseFloat($('weight').value),
-          height=parseFloat($('height').value), activity=parseFloat($('activity').value);
+          height=parseFloat($('height').value), neatFactor=parseFloat($('activity').value);
     if(!age||!weight||!height||age<10||weight<20||height<80){ $('calOut').textContent='—'; return; }
 
     let bmr=(10*weight)+(6.25*height)-(5*age);
     bmr += nState.sex==='male' ? 5 : -161;
-    let tdee = bmr*activity;
+
+    // TDEE = TMB + NEAT (actividad diaria fuera del entreno) + EAT (ejercicio) + TEF (efecto térmico de los alimentos)
+    const restPlusNeat = bmr*neatFactor;
+    const neatKcal = restPlusNeat - bmr;
+
+    const eatPerSession = { beginner:220, intermediate:320, advanced:420 };
+    const eatKcal = Math.round((eatPerSession[rState.level] || 320) * rState.days / 7);
+
+    const beforeTef = restPlusNeat + eatKcal;
+    const tefKcal = Math.round(beforeTef*0.1);
+    let tdee = beforeTef + tefKcal;
 
     let calories = tdee, goalLabel='Mantenimiento';
     if(nState.goal==='lose'){ calories=tdee*0.8; goalLabel='Déficit — bajar peso'; }
@@ -688,6 +722,12 @@
     $('carbsPct').textContent = pC+'%';
     $('fatPct').textContent = pF+'%';
 
+    $('bdBmr').textContent = Math.round(bmr).toLocaleString('es-ES')+' kcal';
+    $('bdNeat').textContent = Math.round(neatKcal).toLocaleString('es-ES')+' kcal';
+    $('bdEat').textContent = Math.round(eatKcal).toLocaleString('es-ES')+' kcal';
+    $('bdTef').textContent = Math.round(tefKcal).toLocaleString('es-ES')+' kcal';
+    $('bdTotal').textContent = Math.round(tdee).toLocaleString('es-ES')+' kcal';
+
     const ring = document.getElementById('ring');
     const redEnd = pP;
     const yellowEnd = pP+pC;
@@ -696,7 +736,6 @@
     nutritionTargets = { calories: Math.round(calories), protein: proteinG, carbs: carbsG, fat: fatG };
     if(selectedDate) renderDayDetail(selectedDate);
   }
-  calcNutrition();
 
   const MUSCLES = [
     {id:'pecho', label:'Pecho'},
@@ -795,12 +834,16 @@
     const b=e.target.closest('button'); if(!b) return;
     document.querySelectorAll('#daysSeg button').forEach(x=>x.classList.remove('active'));
     b.classList.add('active'); rState.days=parseInt(b.dataset.val);
+    calcNutrition();
   });
   document.getElementById('levelSeg').addEventListener('click', e=>{
     const b=e.target.closest('button'); if(!b) return;
     document.querySelectorAll('#levelSeg button').forEach(x=>x.classList.remove('active'));
     b.classList.add('active'); rState.level=b.dataset.val;
+    calcNutrition();
   });
+
+  calcNutrition(); // now that rState exists, compute the initial estimate
 
   document.getElementById('regenBtn').addEventListener('click', ()=>{
     routineData = generateRoutine();
