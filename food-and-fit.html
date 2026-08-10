@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co https://world.openfoodfacts.org https://search.openfoodfacts.org; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self';">
 <title>Food&amp;Fit</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -306,7 +307,7 @@
       <input type="email" id="authEmail" placeholder="tu@email.com" autocomplete="email">
 
       <label for="authPassword">Contraseña</label>
-      <input type="password" id="authPassword" placeholder="Mínimo 6 caracteres" autocomplete="current-password">
+      <input type="password" id="authPassword" placeholder="Mínimo 8 caracteres" autocomplete="current-password">
       <p class="ob-note" id="authForgotRow" style="text-align:right;margin:-10px 0 16px;">
         <a href="#" id="authForgotLink" style="color:var(--yellow);text-decoration:none;">¿Olvidaste tu contraseña?</a>
       </p>
@@ -321,7 +322,7 @@
     <div id="authRecoveryForm" style="display:none;">
       <p class="ob-note" style="margin:0 0 20px;">Escribe tu nueva contraseña para tu cuenta.</p>
       <label for="authNewPassword">Nueva contraseña</label>
-      <input type="password" id="authNewPassword" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+      <input type="password" id="authNewPassword" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
       <p class="ob-note" id="authRecoveryError" style="display:none;color:var(--red);"></p>
       <button class="btn primary" id="authRecoverySaveBtn" style="width:100%;padding:12px;">Guardar nueva contraseña</button>
     </div>
@@ -624,7 +625,7 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.2/dist/umd/supabase.js" integrity="sha384-OUpie84zd1LdwNlK9uJJQRwab0BLqo3eKYKFh7hSVL58FSk7wPp2l0kfUMIIoaQd" crossorigin="anonymous"></script>
 <script>
   /* ---------- SUPABASE ---------- */
   if(typeof window.supabase === 'undefined'){
@@ -674,6 +675,11 @@
   });
 
   const $ = id => document.getElementById(id);
+
+  const HTML_ESCAPE_MAP = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
+  function escapeHtml(str){
+    return String(str==null ? '' : str).replace(/[&<>"']/g, c => HTML_ESCAPE_MAP[c]);
+  }
 
   const EMPTY_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="opacity:.55;width:26px;height:26px;"><circle cx="12" cy="12" r="8"/><path d="M8 12h8"/></svg>';
 
@@ -1052,7 +1058,7 @@
       const head = document.createElement('div');
       head.className = 'day-head';
       head.innerHTML = `
-        <input class="day-name-input" type="text" value="${day.name.replace(/"/g,'&quot;')}">
+        <input class="day-name-input" type="text" value="${escapeHtml(day.name)}">
         <div class="day-head-right">
           <span class="day-num">Día ${dayIdx+1}</span>
           <button class="remove-day" title="Eliminar día">×</button>
@@ -1075,15 +1081,15 @@
         row.className = 'exercise';
         row.innerHTML = `
           <div class="ex-main">
-            <span class="ex-name">${ex.name}</span>
-            <span class="ex-muscle">${muscleLabel(ex.muscle)}</span>
+            <span class="ex-name">${escapeHtml(ex.name)}</span>
+            <span class="ex-muscle">${escapeHtml(muscleLabel(ex.muscle))}</span>
           </div>
           <div class="ex-controls">
-            <input class="mini-input weight weight-input" type="number" min="0" step="0.5" placeholder="0" value="${ex.weight ?? ''}">
+            <input class="mini-input weight weight-input" type="number" min="0" step="0.5" placeholder="0" value="${escapeHtml(ex.weight ?? '')}">
             <span class="ex-unit">kg</span>
-            <input class="mini-input sets-input" type="number" min="1" max="8" value="${ex.sets}">
+            <input class="mini-input sets-input" type="number" min="1" max="8" value="${escapeHtml(ex.sets)}">
             <span class="ex-x">×</span>
-            <input class="mini-input reps reps-input" type="text" value="${ex.reps}">
+            <input class="mini-input reps reps-input" type="text" value="${escapeHtml(ex.reps)}">
             <button class="remove-ex" title="Quitar">×</button>
           </div>
         `;
@@ -1205,8 +1211,8 @@
       row.className = 'pick-row';
       row.innerHTML = `
         <div>
-          <span class="pk-name">${item.name}</span>
-          <span class="pk-muscle">${muscleLabel(item.muscle)}</span>
+          <span class="pk-name">${escapeHtml(item.name)}</span>
+          <span class="pk-muscle">${escapeHtml(muscleLabel(item.muscle))}</span>
         </div>
         <button class="pick-add ${added?'added':''}">${added?'Añadido':'+ Añadir'}</button>
       `;
@@ -1483,8 +1489,8 @@
     card.innerHTML = `
       <div class="food-row">
         <div>
-          <span class="fd-name">${food.name}</span>
-          <span class="fd-cat">${subtitleText}</span>
+          <span class="fd-name">${escapeHtml(food.name)}</span>
+          <span class="fd-cat">${escapeHtml(subtitleText)}</span>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <button type="button" class="fav-star${isFav?' active':''}" title="Favorito">
@@ -1947,10 +1953,10 @@
     // workout section
     html += `<p class="section-title" style="margin-top:0;">Entrenamiento</p>`;
     if(rec.workout){
-      html += `<div class="log-entry"><div><span class="le-name">${rec.workout.dayName}</span><span class="le-sub">${rec.workout.exercises.length} ejercicios registrados</span></div><button class="le-remove" data-action="rm-workout">×</button></div>`;
+      html += `<div class="log-entry"><div><span class="le-name">${escapeHtml(rec.workout.dayName)}</span><span class="le-sub">${rec.workout.exercises.length} ejercicios registrados</span></div><button class="le-remove" data-action="rm-workout">×</button></div>`;
       rec.workout.exercises.forEach(ex=>{
-        const w = ex.weight ? ex.weight+' kg · ' : '';
-        html += `<div class="log-entry"><div><span class="le-name" style="font-size:12.5px;">${ex.name}</span><span class="le-sub">${w}${ex.sets}×${ex.reps}</span></div></div>`;
+        const w = ex.weight ? escapeHtml(ex.weight)+' kg · ' : '';
+        html += `<div class="log-entry"><div><span class="le-name" style="font-size:12.5px;">${escapeHtml(ex.name)}</span><span class="le-sub">${w}${escapeHtml(ex.sets)}×${escapeHtml(ex.reps)}</span></div></div>`;
       });
     } else {
       html += `<p class="dd-empty">No hay entrenamiento registrado este día.</p>`;
@@ -1962,7 +1968,7 @@
       let totK=0, totP=0, totC=0, totF=0;
       rec.meals.forEach((m,idx)=>{
         totK+=m.kcal; totP+=m.protein; totC+=m.carbs; totF+=m.fat;
-        html += `<div class="log-entry"><div><span class="le-name">${m.name}</span><span class="le-sub">${m.grams} g · ${m.kcal} kcal</span></div><button class="le-remove" data-action="rm-meal" data-idx="${idx}">×</button></div>`;
+        html += `<div class="log-entry"><div><span class="le-name">${escapeHtml(m.name)}</span><span class="le-sub">${m.grams} g · ${m.kcal} kcal</span></div><button class="le-remove" data-action="rm-meal" data-idx="${idx}">×</button></div>`;
       });
       html += `<div class="totals-bar">
         <div class="totals-pill"><span class="tp-val">${Math.round(totK)}${nutritionTargets.calories ? '/'+nutritionTargets.calories : ''}</span><span class="tp-lbl">kcal</span></div>
@@ -2153,7 +2159,7 @@
     const msg = (err && err.message) || '';
     if(/invalid login credentials/i.test(msg)) return 'Email o contraseña incorrectos.';
     if(/already registered|already exists|User already registered/i.test(msg)) return 'Ya existe una cuenta con ese email. Inicia sesión.';
-    if(/password should be at least/i.test(msg)) return 'La contraseña debe tener al menos 6 caracteres.';
+    if(/password should be at least/i.test(msg)) return 'La contraseña debe tener al menos 8 caracteres.';
     if(/unable to validate email|invalid email/i.test(msg)) return 'Ese email no parece válido.';
     return msg || 'Ha ocurrido un error. Inténtalo de nuevo.';
   }
@@ -2189,7 +2195,7 @@
       if(authMode === 'signup'){
         const name = $('authName').value.trim();
         if(!name){ showAuthError('Escribe tu nombre.'); return; }
-        if(password.length < 6){ showAuthError('La contraseña debe tener al menos 6 caracteres.'); return; }
+        if(password.length < 8){ showAuthError('La contraseña debe tener al menos 8 caracteres.'); return; }
         const { data, error } = await sb.auth.signUp({ email, password, options:{ data:{ full_name: name } } });
         if(error){ showAuthError(translateAuthError(error)); return; }
         if(!data.session){
@@ -2242,8 +2248,8 @@
     const errEl = $('authRecoveryError');
     errEl.style.display = 'none';
     const pw = $('authNewPassword').value;
-    if(!pw || pw.length < 6){
-      errEl.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+    if(!pw || pw.length < 8){
+      errEl.textContent = 'La contraseña debe tener al menos 8 caracteres.';
       errEl.style.display = 'block';
       return;
     }
@@ -2268,6 +2274,23 @@
     }
   });
 
+  /* ---------- AUTO-LOGOUT ON INACTIVITY ---------- */
+  const INACTIVITY_LOGOUT_MS = 30 * 60 * 1000; // 30 minutos
+  let inactivityTimer = null;
+
+  function resetInactivityTimer(){
+    if(!currentUser) return;
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(async ()=>{
+      if(!currentUser) return;
+      await sb.auth.signOut();
+      showAuthInfo('Se cerró tu sesión por inactividad, para proteger tus datos.');
+    }, INACTIVITY_LOGOUT_MS);
+  }
+  ['click','keydown','touchstart','mousemove','scroll'].forEach(evt=>{
+    document.addEventListener(evt, resetInactivityTimer, { passive:true });
+  });
+
   async function onLogin(user){
     currentUser = user;
     window.storage = AppStorage;
@@ -2277,6 +2300,7 @@
     await initHistory();
     await initFavorites();
     renderFoodList();
+    resetInactivityTimer();
   }
 
   function onLogout(){
@@ -2287,6 +2311,7 @@
     historyData = {};
     favoriteFoods = [];
     stopRestTimer();
+    clearTimeout(inactivityTimer);
     updateProfilePill();
     renderRoutine();
     renderCalendar();
