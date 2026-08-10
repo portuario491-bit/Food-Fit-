@@ -824,7 +824,7 @@
       <li><strong>Recientes:</strong> se rellena sola con lo último que hayas registrado.</li>
       <li><strong>Plantillas:</strong> guarda las comidas de un día entero (desde Historial) y regístralas todas de un toque otro día.</li>
       <li><strong>Aviso al registrar:</strong> cada vez que registras una comida, un destello verde y un sonido te confirman que sigues dentro de tu objetivo de calorías del día; si te pasas, el aviso es rojo.</li>
-      <li><strong>Escanear código de barras:</strong> apunta la cámara al código de un producto envasado para traer sus datos desde Open Food Facts sin buscarlo a mano. Toca la estrella para guardarlo en tus favoritos.</li>
+      <li><strong>Escanear código de barras:</strong> apunta la cámara al código de un producto envasado para traer sus datos desde Open Food Facts sin buscarlo a mano. Se guarda solo en tus favoritos, así la próxima vez lo tienes ya en tu lista sin volver a escanear.</li>
     </ul>
 
     <p class="section-title">Recetas</p>
@@ -2202,6 +2202,15 @@
     renderFoodList();
   }
 
+  // Añade el producto a favoritos si todavía no estaba (a diferencia de
+  // toggleFavoriteFood, nunca lo quita) — se usa para guardar solo los
+  // productos escaneados sin que haga falta tocar la estrella a mano.
+  function ensureFavoriteFood(food){
+    if(isFavoriteFood(food.name)) return;
+    favoriteFoods.push({ name:food.name, cat:food.cat, brand:food.brand, kcal:food.kcal, protein:food.protein, carbs:food.carbs, fat:food.fat });
+    persistFavorites();
+  }
+
   /* ---------- MEAL TEMPLATES ---------- */
   let mealTemplates = []; // [{id, name, items:[{name,grams,kcal,protein,carbs,fat}]}]
 
@@ -2615,7 +2624,8 @@
         $('scannerRetryBtn').style.display = 'block';
         return;
       }
-      $('scannerStatus').textContent = 'Producto encontrado. Toca la estrella si quieres guardarlo en tus favoritos para la próxima vez.';
+      ensureFavoriteFood(parsed[0]);
+      $('scannerStatus').textContent = 'Producto encontrado y guardado en tu lista. La próxima vez lo tendrás directamente en Favoritos, sin escanear.';
       $('scannerRetryBtn').style.display = 'block';
       showScannedProduct(parsed[0]);
     }catch(err){
