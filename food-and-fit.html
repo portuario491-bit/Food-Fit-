@@ -196,6 +196,7 @@
   .food-row:active{background:rgba(243,240,232,0.04);}
   .food-row{display:flex;justify-content:space-between;align-items:center;padding:13px 15px;cursor:pointer;gap:10px;}
   .food-row .fd-name{font-size:14px;font-weight:600;}
+  .nutriscore-badge{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:5px;font-family:'IBM Plex Mono', monospace;font-size:10px;font-weight:700;color:#17160f;margin-left:6px;vertical-align:1px;}
   .food-row .fd-cat{display:block;font-family:'IBM Plex Mono', monospace;font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-top:2px;}
   .food-row .fd-kcal{font-family:'Anton', sans-serif;font-size:16px;flex-shrink:0;}
   .food-row .fd-kcal-unit{font-family:'IBM Plex Mono', monospace;font-size:9px;color:var(--muted);display:block;text-align:right;}
@@ -787,7 +788,7 @@
     <button class="sheet-close" id="scannerClose">×</button>
   </div>
   <div class="live-body">
-    <div id="scannerReader" style="border-radius:14px;overflow:hidden;background:var(--panel-2);min-height:220px;"></div>
+    <div id="scannerReader" style="border-radius:14px;overflow:hidden;background:#f3f0e8;min-height:220px;color:#211a08;"></div>
     <button type="button" class="btn" id="scannerRetryBtn" style="width:100%;margin-top:14px;display:none;">Escanear otro código</button>
     <div id="scannerResultOut" style="margin-top:14px;"></div>
   </div>
@@ -2364,7 +2365,7 @@
     card.innerHTML = `
       <div class="food-row">
         <div>
-          <span class="fd-name">${escapeHtml(food.name)}</span>
+          <span class="fd-name">${escapeHtml(food.name)}${nutriscoreBadgeHTML(food.grade)}</span>
           <span class="fd-cat">${escapeHtml(subtitleText)}</span>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
@@ -2486,6 +2487,16 @@
     offResults.forEach(food=> out.appendChild(createFoodCard(food, food.brand || 'Open Food Facts')));
   }
 
+  // Letras A-E del Nutri-Score que ya calcula Open Food Facts para sus
+  // productos (excelente a mala calidad nutricional), tal cual la conoce
+  // la gente por las etiquetas de los supermercados.
+  const NUTRISCORE_LABELS = { a: 'Excelente', b: 'Buena', c: 'Regular', d: 'Mala', e: 'Muy mala' };
+  function nutriscoreBadgeHTML(grade){
+    if(!grade || !NUTRISCORE_LABELS[grade]) return '';
+    const color = (grade==='a'||grade==='b') ? 'var(--green)' : (grade==='c' ? 'var(--yellow)' : 'var(--red)');
+    return '<span class="nutriscore-badge" style="background:'+color+';" title="Calidad nutricional: '+NUTRISCORE_LABELS[grade]+'">'+grade.toUpperCase()+'</span>';
+  }
+
   function parseOFFProducts(list){
     return (list || [])
       .map(p => (p && p.product) ? p.product : p)
@@ -2493,13 +2504,15 @@
       .map(p => {
         const n = p.nutriments;
         const kcalRaw = n['energy-kcal_100g'] ?? n['energy-kcal_value'] ?? n['energy-kcal'] ?? 0;
+        const rawGrade = (p.nutriscore_grade || p.nutrition_grades || '').toLowerCase();
         return {
           name: p.product_name,
           brand: p.brands ? p.brands.split(',')[0].trim() : 'Open Food Facts',
           kcal: Math.round(Number(kcalRaw) || 0),
           protein: +(Number(n['proteins_100g'] || 0).toFixed(1)),
           carbs: +(Number(n['carbohydrates_100g'] || 0).toFixed(1)),
-          fat: +(Number(n['fat_100g'] || 0).toFixed(1))
+          fat: +(Number(n['fat_100g'] || 0).toFixed(1)),
+          grade: NUTRISCORE_LABELS[rawGrade] ? rawGrade : null
         };
       })
       .slice(0, 20);
@@ -2529,7 +2542,7 @@
 
     // Attempt 2: legacy v1 search endpoint, as fallback
     try{
-      const url2 = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,brands,nutriments&lc=es`;
+      const url2 = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,brands,nutriments,nutriscore_grade&lc=es`;
       const res2 = await fetch(url2);
       if(!res2.ok) throw new Error('HTTP ' + res2.status);
       const data2 = await res2.json();
@@ -2548,43 +2561,29 @@
   }
 
   /* ---------- BARCODE SCANNER ---------- */
+  // Usamos Html5QrcodeScanner (el widget de más alto nivel de la
+  // librería, con su propio botón de "dar permiso a la cámara" y su
+  // propio recuadro de escaneo) en vez de construir la cámara a mano,
+  // porque es la forma más probada y con más gente usándola con éxito.
   let barcodeScanner = null;
   let scanInProgress = false;
-  let scanFrameCount = 0;
 
   function openScanner(){
     $('scannerResultOut').innerHTML = '';
     $('scannerRetryBtn').style.display = 'none';
     $('scannerReader').style.display = 'block';
-    $('scannerStatus').textContent = 'Apunta la cámara al código de barras del producto.';
+    $('scannerReader').innerHTML = '';
+    $('scannerStatus').textContent = 'Dale permiso a la cámara si te lo pide, y apunta al código de barras.';
     $('scannerBackdrop').classList.add('open');
-    scanFrameCount = 0;
+    scanInProgress = false;
 
-    if(typeof Html5Qrcode === 'undefined'){
+    if(typeof Html5QrcodeScanner === 'undefined'){
       $('scannerStatus').textContent = 'No se pudo cargar el lector de códigos de barras. Comprueba tu conexión y vuelve a intentarlo.';
       return;
     }
     try{
-      // Sin restringir formatos: dejamos que detecte cualquier tipo de
-      // código (no solo EAN/UPC) para no arriesgarnos a que una lista de
-      // formatos mal soportada bloquee la detección por completo.
-      barcodeScanner = new Html5Qrcode('scannerReader', { verbose: false });
-      barcodeScanner.start(
-        { facingMode: 'environment' },
-        { fps: 10 }, // sin "qrbox": escanea todo el fotograma, no solo un recuadro central
-        onBarcodeDetected,
-        ()=>{
-          // Se llama muchas veces por segundo mientras no detecta nada; lo
-          // usamos solo para confirmar (en el texto de estado) que la
-          // cámara y el lector están realmente funcionando.
-          scanFrameCount++;
-          if($('scannerStatus').textContent.indexOf('Apunta la cámara') === 0){
-            $('scannerStatus').textContent = 'Apunta la cámara al código de barras del producto. (buscando… ' + scanFrameCount + ')';
-          }
-        }
-      ).catch(()=>{
-        $('scannerStatus').textContent = 'No se pudo acceder a la cámara. Revisa que le hayas dado permiso a la app en el navegador.';
-      });
+      barcodeScanner = new Html5QrcodeScanner('scannerReader', { fps: 10, qrbox: { width: 260, height: 150 } }, false);
+      barcodeScanner.render(onBarcodeDetected, ()=>{ /* fotograma sin código detectado: normal, se ignora */ });
     }catch(err){
       $('scannerStatus').textContent = 'No se pudo iniciar el lector de códigos de barras.';
     }
@@ -2594,7 +2593,7 @@
     if(barcodeScanner){
       const s = barcodeScanner;
       barcodeScanner = null;
-      s.stop().then(()=> s.clear()).catch(()=>{});
+      try{ s.clear().catch(()=>{}); }catch(err){ /* ya podría estar detenido */ }
     }
   }
 
@@ -2614,7 +2613,7 @@
     $('scannerReader').style.display = 'none';
     $('scannerStatus').textContent = 'Buscando el producto (código ' + code + ')…';
     try{
-      const url = 'https://world.openfoodfacts.org/api/v2/product/' + encodeURIComponent(code) + '.json?fields=product_name,brands,nutriments';
+      const url = 'https://world.openfoodfacts.org/api/v2/product/' + encodeURIComponent(code) + '.json?fields=product_name,brands,nutriments,nutriscore_grade';
       const res = await fetch(url);
       if(!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
