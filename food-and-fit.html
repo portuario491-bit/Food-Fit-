@@ -628,6 +628,33 @@
       Calienta 5–10 min antes de cada sesión. Progresa el peso cuando completes todas las series con buena técnica.
       Toca "+ Añadir ejercicio" para sustituir o completar cualquier día con lo que tengas disponible.
     </p>
+
+    <p class="section-title">Deporte extra</p>
+    <span class="hint">correr, ciclismo, pádel, boxeo… cualquier cosa aparte de tu rutina de pesas</span>
+    <div class="panel" style="margin-top:10px;">
+      <div class="field-row" style="display:block;">
+        <label style="display:block;margin-bottom:6px;">Elige el deporte</label>
+        <select id="extraSportSelect" style="width:100%;padding:11px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel-2);color:var(--ink);font-size:14px;font-family:'Inter', sans-serif;"></select>
+      </div>
+      <div class="field-row" style="border-bottom:none;">
+        <div>
+          <label>Duración</label>
+          <span class="hint">minutos</span>
+        </div>
+        <div class="stepper" id="extraSportStepper">
+          <button type="button" class="stepper-btn" id="extraSportMinus">−</button>
+          <span class="water-count" id="extraSportMinutes">30</span>
+          <button type="button" class="stepper-btn" id="extraSportPlus">+</button>
+        </div>
+      </div>
+      <div class="macro-row" style="border-bottom:none;">
+        <span class="name">Calorías estimadas</span>
+        <span class="grams" id="extraSportKcalOut">—</span>
+      </div>
+      <button class="btn primary" id="logExtraSportBtn" type="button" style="width:100%;margin-top:12px;">Registrar sesión de hoy</button>
+      <div id="extraSportLogOut"></div>
+      <p class="footnote" style="padding-top:10px;">Estimación a partir de tu peso, la duración y el esfuerzo típico de cada deporte (fórmula MET). Orientativa, varía según intensidad real.</p>
+    </div>
   </div>
 
   <!-- ===================== FOODS ===================== -->
@@ -816,6 +843,7 @@
     <ul>
       <li><strong>Descanso 90s:</strong> cronómetro de descanso entre series, ajustable, con aviso al terminar.</li>
       <li><strong>Marcar como completado:</strong> registra el entreno de hoy en tu historial.</li>
+      <li><strong>Deporte extra:</strong> al final de la pestaña, registra cualquier deporte aparte de las pesas (correr, ciclismo, pádel, boxeo…) con su duración; calcula las calorías quemadas según tu peso. También cuenta para tu racha del día.</li>
     </ul>
 
     <p class="section-title">Alimentos</p>
@@ -1128,7 +1156,7 @@
 
   function todayHasAnyLog(){
     const rec = historyData[todayStr()];
-    return !!(rec && ((rec.meals && rec.meals.length) || rec.workout));
+    return !!(rec && ((rec.meals && rec.meals.length) || rec.workout || (rec.extraSports && rec.extraSports.length)));
   }
 
   function dismissReminderBanner(){
@@ -2695,8 +2723,9 @@
     return `${y}-${m}-${day}`;
   }
   function ensureDate(dateStr){
-    if(!historyData[dateStr]) historyData[dateStr] = { workout:null, meals:[], water:0 };
+    if(!historyData[dateStr]) historyData[dateStr] = { workout:null, meals:[], water:0, extraSports:[] };
     if(historyData[dateStr].water === undefined) historyData[dateStr].water = 0;
+    if(historyData[dateStr].extraSports === undefined) historyData[dateStr].extraSports = [];
     return historyData[dateStr];
   }
 
@@ -2731,6 +2760,115 @@
   }
   $('waterMinus').addEventListener('click', ()=> adjustWaterToday(-1));
   $('waterPlus').addEventListener('click', ()=> adjustWaterToday(1));
+
+  /* ---------- DEPORTE EXTRA (cardio y otros deportes, aparte de las pesas) ---------- */
+  // Valores MET (equivalente metabólico) típicos por deporte: kcal = MET × peso(kg) × horas.
+  // Son medias orientativas, no tienen en cuenta la intensidad real de cada sesión.
+  const EXTRA_SPORTS = [
+    { id:'correr', name:'Correr', met:9.8 },
+    { id:'ciclismo', name:'Ciclismo', met:7.5 },
+    { id:'boxeo', name:'Boxeo (saco/técnica)', met:8.5 },
+    { id:'padel', name:'Pádel', met:6.5 },
+    { id:'tenis', name:'Tenis', met:7.3 },
+    { id:'natacion', name:'Natación', met:7.5 },
+    { id:'futbol', name:'Fútbol', met:8.0 },
+    { id:'baloncesto', name:'Baloncesto', met:6.8 },
+    { id:'senderismo', name:'Senderismo', met:6.0 },
+    { id:'caminar', name:'Caminar rápido', met:4.5 },
+    { id:'baile', name:'Baile', met:5.5 },
+    { id:'comba', name:'Saltar a la comba', met:11.0 },
+    { id:'yoga', name:'Yoga / Pilates', met:3.0 }
+  ];
+  let extraSportMinutes = 30;
+
+  function buildExtraSportSelect(){
+    const sel = $('extraSportSelect');
+    sel.innerHTML = EXTRA_SPORTS.map(s=>'<option value="'+s.id+'">'+escapeHtml(s.name)+'</option>').join('');
+  }
+
+  function currentBodyWeightKg(){
+    const fromProfile = profileData && parseFloat(profileData.weight);
+    if(fromProfile) return fromProfile;
+    const fromField = parseFloat($('weight') ? $('weight').value : '');
+    return fromField || 0;
+  }
+
+  function estimateExtraSportKcal(sportId, minutes){
+    const sport = EXTRA_SPORTS.find(s=>s.id===sportId);
+    const weight = currentBodyWeightKg();
+    if(!sport || !weight || !minutes) return 0;
+    return Math.round(sport.met * weight * (minutes/60));
+  }
+
+  function updateExtraSportKcalOut(){
+    const kcal = estimateExtraSportKcal($('extraSportSelect').value, extraSportMinutes);
+    $('extraSportKcalOut').textContent = kcal ? kcal.toLocaleString('es-ES')+' kcal' : '—';
+  }
+
+  function renderExtraSportMinutes(){
+    $('extraSportMinutes').textContent = extraSportMinutes;
+    updateExtraSportKcalOut();
+  }
+
+  $('extraSportMinus').addEventListener('click', ()=>{
+    extraSportMinutes = Math.max(5, extraSportMinutes - 5);
+    renderExtraSportMinutes();
+  });
+  $('extraSportPlus').addEventListener('click', ()=>{
+    extraSportMinutes = Math.min(300, extraSportMinutes + 5);
+    renderExtraSportMinutes();
+  });
+  $('extraSportSelect').addEventListener('change', updateExtraSportKcalOut);
+
+  function renderExtraSportLog(){
+    const out = $('extraSportLogOut');
+    if(!out) return;
+    const entry = historyData[todayStr()];
+    const sessions = (entry && entry.extraSports) || [];
+    if(!sessions.length){ out.innerHTML = ''; return; }
+    out.innerHTML = '<p class="section-title">Hoy</p>' + sessions.map((s,idx)=>
+      '<div class="log-entry"><div><span class="le-name">'+escapeHtml(s.name)+'</span><span class="le-sub">'+s.minutes+' min · '+s.kcal+' kcal</span></div><button type="button" class="le-remove" data-idx="'+idx+'">×</button></div>'
+    ).join('');
+    out.querySelectorAll('.le-remove').forEach(btn=>{
+      btn.addEventListener('click', ()=> removeExtraSportLog(todayStr(), parseInt(btn.dataset.idx)));
+    });
+  }
+
+  function logExtraSportToday(){
+    const sportId = $('extraSportSelect').value;
+    const sport = EXTRA_SPORTS.find(s=>s.id===sportId);
+    if(!sport) return;
+    const kcal = estimateExtraSportKcal(sportId, extraSportMinutes);
+    const prevStreak = calcStreak();
+    const entry = ensureDate(todayStr());
+    entry.extraSports = entry.extraSports || [];
+    entry.extraSports.push({ sportId: sport.id, name: sport.name, minutes: extraSportMinutes, kcal });
+    persistHistory();
+    renderExtraSportLog();
+    renderCalendar();
+    if(selectedDate === todayStr()) renderDayDetail(selectedDate);
+    maybeCelebrateStreak(prevStreak, updateStreakDisplay());
+    renderSummary();
+    dismissReminderBanner();
+    showToast('Sesión registrada: +' + kcal + ' kcal quemadas');
+  }
+  $('logExtraSportBtn').addEventListener('click', logExtraSportToday);
+
+  function removeExtraSportLog(dateStr, idx){
+    if(historyData[dateStr] && historyData[dateStr].extraSports) historyData[dateStr].extraSports.splice(idx, 1);
+    persistHistory();
+    renderExtraSportLog();
+    renderDayDetail(dateStr);
+    renderCalendar();
+    updateStreakDisplay();
+    renderSummary();
+  }
+
+  buildExtraSportSelect();
+  renderExtraSportLog();
+  // renderExtraSportMinutes() se llama más adelante, desde initHistory()/
+  // onLogout() — no aquí, porque necesita leer profileData (el peso), que
+  // todavía no está declarado en este punto del script.
 
   /* ---------- CHARTS (hand-rolled SVG, no external library) ---------- */
   function buildSparklinePath(values, width, height, padding){
@@ -2913,7 +3051,8 @@
   /* ---------- STREAK ---------- */
   function dayQualifiesForStreak(dStr){
     const rec = historyData[dStr];
-    return !!(rec && rec.workout && rec.meals && rec.meals.length > 0);
+    const trained = !!(rec && (rec.workout || (rec.extraSports && rec.extraSports.length > 0)));
+    return !!(rec && trained && rec.meals && rec.meals.length > 0);
   }
 
   function calcStreak(){
@@ -3258,13 +3397,19 @@
       cell.appendChild(dayNum);
 
       const rec = historyData[dStr];
-      if(rec && (rec.workout || (rec.meals && rec.meals.length))){
+      if(rec && (rec.workout || (rec.extraSports && rec.extraSports.length) || (rec.meals && rec.meals.length))){
         const dots = document.createElement('div');
         dots.className = 'cal-dots';
         if(rec.workout){
           const dot = document.createElement('span');
           dot.className = 'cal-dot';
           dot.style.background = 'var(--green)';
+          dots.appendChild(dot);
+        }
+        if(rec.extraSports && rec.extraSports.length){
+          const dot = document.createElement('span');
+          dot.className = 'cal-dot';
+          dot.style.background = 'var(--blue)';
           dots.appendChild(dot);
         }
         if(rec.meals && rec.meals.length){
@@ -3311,6 +3456,14 @@
       html += `<p class="dd-empty">No hay entrenamiento registrado este día.</p>`;
     }
 
+    // extra sports section
+    if(rec.extraSports && rec.extraSports.length){
+      html += `<p class="section-title">Deporte extra</p>`;
+      rec.extraSports.forEach((s,idx)=>{
+        html += `<div class="log-entry"><div><span class="le-name">${escapeHtml(s.name)}</span><span class="le-sub">${s.minutes} min · ${s.kcal} kcal</span></div><button class="le-remove" data-action="rm-extra-sport" data-idx="${idx}">×</button></div>`;
+      });
+    }
+
     // meals section
     html += `<p class="section-title">Comidas</p>`;
     if(rec.meals && rec.meals.length){
@@ -3348,6 +3501,9 @@
     panel.querySelectorAll('[data-action="rm-meal"]').forEach(btn=>{
       btn.addEventListener('click', ()=> removeMealLog(dStr, parseInt(btn.dataset.idx)));
     });
+    panel.querySelectorAll('[data-action="rm-extra-sport"]').forEach(btn=>{
+      btn.addEventListener('click', ()=> removeExtraSportLog(dStr, parseInt(btn.dataset.idx)));
+    });
     const saveTplBtn = panel.querySelector('#saveTemplateBtn');
     if(saveTplBtn){
       saveTplBtn.addEventListener('click', ()=>{
@@ -3372,6 +3528,8 @@
     renderRoutine();
     updateStreakDisplay();
     renderWaterToday();
+    renderExtraSportLog();
+    renderExtraSportMinutes();
     renderWeightChart();
     renderStrengthSelector();
     renderSummary();
@@ -3539,6 +3697,9 @@
     renderDayDetail(selectedDate);
     updateStreakDisplay();
     renderWaterToday();
+    extraSportMinutes = 30;
+    renderExtraSportLog();
+    renderExtraSportMinutes();
     renderWeightChart();
     renderStrengthSelector();
     renderSummary();
@@ -3736,6 +3897,9 @@
     renderDayDetail(selectedDate);
     updateStreakDisplay();
     renderWaterToday();
+    extraSportMinutes = 30;
+    renderExtraSportLog();
+    renderExtraSportMinutes();
     renderWeightChart();
     renderStrengthSelector();
     renderSummary();
