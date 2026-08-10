@@ -233,6 +233,9 @@
   .streak-progress-fill{height:100%;width:0;background:linear-gradient(90deg, var(--red), var(--yellow));border-radius:999px;transition:width .3s ease;}
   .streak-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
   .streak-badge{font-family:'IBM Plex Mono', monospace;font-size:10px;font-weight:600;letter-spacing:0.3px;text-transform:uppercase;background:var(--panel-2);border:1px solid var(--yellow);color:var(--yellow);padding:4px 10px;border-radius:999px;}
+  .streak-avatar{width:64px;height:64px;flex-shrink:0;}
+  .streak-avatar-svg{width:100%;height:100%;display:block;}
+  .streak-avatar-big{width:96px;height:96px;margin:0 auto 12px;}
 
   /* water */
   .water-count{font-family:'Anton', sans-serif;font-size:19px;min-width:24px;text-align:center;}
@@ -551,10 +554,12 @@
   <!-- ===================== HISTORY ===================== -->
   <div class="screen" id="screen-history">
     <div class="panel" id="streakPanel">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-        <div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div class="streak-avatar" id="streakAvatar"></div>
+        <div style="flex:1;min-width:0;">
           <p class="section-title" style="margin:0;">Racha</p>
           <span class="hint">días seguidos con entreno y comida registrados</span>
+          <p class="footnote" id="streakAvatarLabel" style="padding-top:4px;margin:0;"></p>
         </div>
         <span style="font-family:'Anton', sans-serif;font-size:34px;color:var(--yellow);flex-shrink:0;" id="streakBig">0</span>
       </div>
@@ -643,9 +648,9 @@
 
 <div class="streak-reward-backdrop" id="streakRewardBackdrop">
   <div class="streak-reward-card">
-    <svg class="streak-reward-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1 3.5-3.5 5-3.5 9.5a3.5 3.5 0 0 0 7 0c0-1.3-.7-2.2-1-3.3C16 9.5 17 11.5 17 14a5 5 0 0 1-10 0C7 8 10 6 12 2z"/></svg>
+    <div class="streak-avatar streak-avatar-big" id="streakRewardAvatar"></div>
     <p class="streak-reward-title" id="streakRewardTitle">¡Racha de 10 días!</p>
-    <p class="streak-reward-sub">Has registrado tu entreno y tu comida 10 días seguidos. Sigue así.</p>
+    <p class="streak-reward-sub" id="streakRewardSub">Has registrado tu entreno y tu comida 10 días seguidos. Sigue así.</p>
     <button class="btn primary" id="streakRewardClose" style="width:100%;padding:12px;margin-top:16px;">Genial</button>
   </div>
 </div>
@@ -2084,6 +2089,72 @@
     return count;
   }
 
+  const STREAK_TIER_LABELS = [
+    'Aún dormido — empieza tu racha',
+    'Despertando la llama',
+    'Con gafas de sol, qué estilo',
+    'Corona conseguida',
+    '¡Nivel máximo, en llamas!'
+  ];
+
+  function getStreakTier(streak){
+    if(streak >= 30) return 4;
+    if(streak >= 20) return 3;
+    if(streak >= 10) return 2;
+    if(streak >= 1) return 1;
+    return 0;
+  }
+
+  function getStreakAvatarSVG(streak){
+    const tier = getStreakTier(streak);
+    const bodyColor = tier === 0 ? 'var(--muted)' : 'var(--yellow)';
+    const bodyOpacity = tier === 0 ? 0.35 : 1;
+
+    const eyesClosed = `
+      <path d="M38 58 q4 -4 8 0" stroke="var(--bg)" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M54 58 q4 -4 8 0" stroke="var(--bg)" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    const eyesOpen = `
+      <circle cx="42" cy="58" r="4" fill="var(--bg)"/>
+      <circle cx="58" cy="58" r="4" fill="var(--bg)"/>`;
+    const mouthFlat = `<path d="M42 72 q8 4 16 0" stroke="var(--bg)" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    const mouthSmile = `<path d="M40 70 q10 11 20 0" stroke="var(--bg)" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;
+
+    let inner = '';
+    inner += tier === 0 ? eyesClosed : eyesOpen;
+    inner += tier === 0 ? mouthFlat : mouthSmile;
+    if(tier >= 2) inner += `<rect x="34" y="53" width="32" height="9" rx="4" fill="var(--bg)"/>`;
+    if(tier >= 3) inner += `<path d="M32 24 L40 36 L50 20 L60 36 L68 24 L64 42 L36 42 Z" fill="var(--red)"/>`;
+    if(tier >= 4) inner += `
+      <path d="M14 42 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2 z" fill="var(--blue)"/>
+      <path d="M86 52 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 z" fill="var(--blue)"/>`;
+
+    return `<svg viewBox="0 0 100 100" class="streak-avatar-svg">
+      <path d="M50 10 C 30 25, 20 45, 20 65 C 20 85, 35 95, 50 95 C 65 95, 80 85, 80 65 C 80 45, 70 25, 50 10 Z" fill="${bodyColor}" opacity="${bodyOpacity}"/>
+      ${inner}
+    </svg>`;
+  }
+
+  function playStreakMotif(){
+    try{
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioCtx();
+      const notes = [523.25, 659.25, 783.99, 1046.5]; // do-mi-sol-do agudo
+      notes.forEach((freq, i)=>{
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        const start = ctx.currentTime + i*0.14;
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(0.22, start+0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start+0.32);
+        osc.start(start);
+        osc.stop(start+0.34);
+      });
+    }catch(err){ /* audio unavailable */ }
+  }
+
   function updateStreakDisplay(){
     const streak = calcStreak();
     const pill = $('streakPill');
@@ -2097,6 +2168,8 @@
     }
     if($('streakBig')){
       $('streakBig').textContent = streak;
+      $('streakAvatar').innerHTML = getStreakAvatarSVG(streak);
+      $('streakAvatarLabel').textContent = STREAK_TIER_LABELS[getStreakTier(streak)];
       const intoMilestone = streak % 10;
       $('streakProgressFill').style.width = (streak > 0 && intoMilestone === 0 ? 100 : intoMilestone*10) + '%';
       const remaining = 10 - intoMilestone;
@@ -2124,7 +2197,10 @@
         }
       }
       $('streakRewardTitle').textContent = `¡Racha de ${newStreak} días!`;
+      $('streakRewardAvatar').innerHTML = getStreakAvatarSVG(newStreak);
+      $('streakRewardSub').textContent = STREAK_TIER_LABELS[getStreakTier(newStreak)] + '. Has registrado tu entreno y tu comida ' + newStreak + ' días seguidos.';
       $('streakRewardBackdrop').classList.add('open');
+      playStreakMotif();
       updateStreakDisplay();
     }
   }
