@@ -1,0 +1,85 @@
+const { page, escapeHtml } = require('./layout');
+const { DIMENSIONS, DIM_LABELS } = require('../lib/questions');
+
+function photoThumb(photo) {
+  return `
+  <div class="photo-thumb ${photo.is_primary ? 'primary' : ''}">
+    <img src="/fotos/${photo.id}" alt="Foto de perfil">
+    ${photo.is_primary ? '<span class="badge">Principal</span>' : ''}
+    <form method="POST" action="/perfil/foto/${photo.id}/eliminar" onsubmit="return confirm('¿Eliminar esta foto?');">
+      <button class="del-btn" type="submit" title="Eliminar">✕</button>
+    </form>
+  </div>`;
+}
+
+function dimensionBars(scores) {
+  return DIMENSIONS.map((d) => {
+    const pct = Math.round((scores[d] / 4) * 100);
+    return `
+    <div class="dim-row">
+      <div class="dim-head"><span>${DIM_LABELS[d]}</span><span>${pct}%</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderProfile({ user, photos, profileScores, answeredCount, total, error, success }) {
+  const onboardingDone = !!user.onboarding_completed;
+
+  const body = `
+  <div class="card">
+    <div class="summary-title">Mi perfil</div>
+    <div class="summary-sub">Esto es lo que verán las demás personas del piloto cuando aparezcas como una compatibilidad.</div>
+    ${error ? `<div class="alert error">${escapeHtml(error)}</div>` : ''}
+    ${success ? `<div class="alert success">${escapeHtml(success)}</div>` : ''}
+
+    <div class="section-title">Fotos</div>
+    <div class="photo-grid">
+      ${photos.map(photoThumb).join('') || ''}
+    </div>
+    <form method="POST" action="/perfil/foto" enctype="multipart/form-data" class="upload-box">
+      <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required>
+      <div style="margin-top:12px;">
+        <button class="btn secondary" type="submit">Subir foto</button>
+      </div>
+      <div class="hint">JPG, PNG o WEBP · máx. 5 MB. La primera foto que subas será tu foto principal.</div>
+    </form>
+
+    <div class="section-title">Datos básicos</div>
+    <form method="POST" action="/perfil">
+      <div class="form-group">
+        <label for="name">Nombre</label>
+        <input type="text" id="name" name="name" required maxlength="60" value="${escapeHtml(user.name)}">
+      </div>
+      <div class="form-group">
+        <label for="age">Edad</label>
+        <input type="number" id="age" name="age" min="18" max="99" value="${user.age || ''}">
+      </div>
+      <div class="form-group">
+        <label for="bio">Sobre ti</label>
+        <textarea id="bio" name="bio" maxlength="400" placeholder="Un par de frases sobre ti...">${escapeHtml(user.bio)}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-checkbox">
+          <input type="checkbox" name="hijos_no_negociable" ${user.hijos_no_negociable ? 'checked' : ''}>
+          <span>Tener hijos (o no tenerlos) es, para mí, un criterio <b>no negociable</b> en una relación.</span>
+        </label>
+      </div>
+      <button class="btn" type="submit">Guardar cambios</button>
+    </form>
+
+    <div class="section-title">Cuestionario de compatibilidad</div>
+    ${onboardingDone
+      ? `<div class="dim-row"></div>${dimensionBars(profileScores)}
+         <div class="row-btns" style="margin-top:16px;justify-content:flex-start;">
+           <a class="btn secondary" href="/cuestionario">Revisar mis respuestas</a>
+         </div>`
+      : `<div class="alert info">Has respondido ${answeredCount} de ${total} preguntas. Complétalo para aparecer en las compatibilidades de las demás personas.</div>
+         <a class="btn" href="/cuestionario">${answeredCount > 0 ? 'Continuar cuestionario' : 'Empezar cuestionario'} →</a>`
+    }
+  </div>`;
+
+  return page({ title: 'Mi perfil', user, activeNav: 'perfil', body });
+}
+
+module.exports = { renderProfile };

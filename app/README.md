@@ -1,0 +1,94 @@
+# BlueHeart — app piloto
+
+App funcional mínima para probar BlueHeart con un grupo reducido de
+personas (10-20) antes de invertir en una versión de producción: cuenta,
+foto y perfil, cuestionario de compatibilidad y comparación con el resto
+de personas que ya hayan completado el suyo.
+
+No es la versión final. Es deliberadamente pequeña para poder validar
+rápido y barato — ver `docs/blueheart/` para el manual completo del
+proyecto y `blueheart-demo.html` para el prototipo de producto sin backend.
+
+## Qué incluye
+
+- Registro / inicio de sesión (email + contraseña, con `bcryptjs`).
+- Perfil con foto (subida, foto principal, borrado) y datos básicos.
+- El cuestionario reducido del prototipo (8 dimensiones × 3 preguntas),
+  guardado por usuario y reanudable.
+- Lista de compatibilidades con el resto de personas del piloto que ya
+  hayan terminado el cuestionario, y una vista detallada por persona
+  (gráfico, fortalezas, aspectos a vigilar, y el desglose del cálculo).
+- Todo en un único proceso Node.js con SQLite embebido (`node:sqlite`,
+  nativo desde Node 22.5) — sin bases de datos ni servicios externos que
+  dar de alta para el piloto.
+
+## Qué NO incluye todavía (a propósito)
+
+- **El algoritmo real (Bloque 6).** `lib/algorithm.js` usa la misma lógica
+  simplificada que `blueheart-demo.html` (similitud ponderada por
+  dimensión + una regla de incompatibilidad crítica para "hijos" cuando
+  ambas personas lo marcan como no negociable). Cuando esté listo el
+  Bloque 6, se sustituye este archivo — el resto de la app no cambia,
+  porque solo depende de `computeCompatibility(a, b)`.
+- Recuperación de contraseña, verificación de email, moderación de fotos,
+  bloqueo/denuncia de usuarios — nada de esto es necesario para un piloto
+  cerrado con gente de confianza, pero sí antes de abrir la app a
+  desconocidos.
+- Despliegue / hosting: esto corre en local. Para que las 10-20 personas
+  puedan entrar desde fuera hace falta desplegarlo en algún sitio (Railway,
+  Render, Fly.io, un VPS...) — es la siguiente decisión, no técnica sino
+  de "dónde queremos que viva esto".
+
+## Cómo ejecutarlo en local
+
+```bash
+cd app
+npm install
+cp .env.example .env   # y rellena SESSION_SECRET (ver instrucciones dentro)
+npm start
+```
+
+Abre `http://localhost:3000`.
+
+En desarrollo, si no defines `SESSION_SECRET` la app arranca igualmente
+con una clave temporal (verás un aviso en la consola) — las sesiones se
+cerrarán al reiniciar el servidor, lo cual es aceptable para probar en
+local pero no para el piloto real.
+
+## Variables de entorno
+
+Ver `.env.example`. Las importantes:
+
+- `SESSION_SECRET` — clave para firmar las cookies de sesión.
+- `BLUEHEART_INVITE_CODE` — si la defines, el registro pedirá ese código
+  (útil para que solo entren las personas invitadas al piloto).
+- `PORT` — puerto del servidor (por defecto 3000).
+
+## Estructura
+
+```
+app/
+  server.js          # arranque, sesiones, montaje de rutas
+  lib/
+    db.js            # capa de datos (SQLite embebido)
+    algorithm.js      # algoritmo de compatibilidad (sustituible por el Bloque 6)
+    questions.js      # banco de preguntas (compartido con blueheart-demo.html)
+    upload.js         # subida de fotos (multer, validación de tipo/tamaño)
+    middleware.js     # requireAuth
+  routes/             # auth, profile, quiz, matches
+  views/              # HTML server-rendered (sin framework de plantillas)
+  public/style.css    # misma identidad visual que blueheart-demo.html
+  data/               # SQLite (no se sube a git)
+  uploads/<userId>/   # fotos subidas (no se sube a git)
+```
+
+## Notas de seguridad para un piloto con datos reales
+
+- Las fotos se sirven solo a usuarios autenticados (`GET /fotos/:id`), no
+  hay una carpeta pública de imágenes.
+- Contraseñas con `bcryptjs`, cookies de sesión `httpOnly`.
+- Los datos que se recogen (incluyendo respuestas sobre sexualidad,
+  valores, etc.) son datos sensibles — antes de invitar a nadie, comparte
+  con las personas del piloto un texto breve de consentimiento: qué se
+  recoge, para qué, que es una prueba, y que pueden pedir borrar su cuenta
+  cuando quieran.
