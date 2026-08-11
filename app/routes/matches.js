@@ -1,7 +1,8 @@
 const express = require('express');
 const db = require('../lib/db');
-const { requireAuth } = require('../lib/middleware');
+const { requireAuth, requireProfileBasics } = require('../lib/middleware');
 const { computeCompatibility } = require('../lib/algorithm');
+const { isMutualMatch } = require('../lib/matchFilter');
 const { QUESTIONS } = require('../lib/questions');
 const { renderMatchList, renderMatchDetail } = require('../views/matches');
 
@@ -12,11 +13,11 @@ function requireOnboarding(req, res, next) {
   next();
 }
 
-router.get('/matches', requireAuth, requireOnboarding, (req, res) => {
+router.get('/matches', requireAuth, requireProfileBasics, requireOnboarding, (req, res) => {
   const me = db.computeProfileScores(req.user.id, QUESTIONS);
   const meProfile = { scores: me.scores, hijosNoNegociable: !!req.user.hijos_no_negociable };
 
-  const others = db.listCompletedUsersExcept(req.user.id);
+  const others = db.listCompletedUsersExcept(req.user.id).filter((other) => isMutualMatch(req.user, other));
   const matches = others
     .map((other) => {
       const otherScores = db.computeProfileScores(other.id, QUESTIONS);
@@ -37,9 +38,14 @@ router.get('/matches', requireAuth, requireOnboarding, (req, res) => {
   res.send(renderMatchList({ user: req.user, matches }));
 });
 
-router.get('/matches/:id', requireAuth, requireOnboarding, (req, res) => {
+router.get('/matches/:id', requireAuth, requireProfileBasics, requireOnboarding, (req, res) => {
   const other = db.getUserById(req.params.id);
-  if (!other || !other.onboarding_completed || String(other.id) === String(req.user.id)) {
+  if (
+    !other ||
+    !other.onboarding_completed ||
+    String(other.id) === String(req.user.id) ||
+    !isMutualMatch(req.user, other)
+  ) {
     return res.redirect('/matches');
   }
 

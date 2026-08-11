@@ -1,6 +1,6 @@
 const express = require('express');
 const db = require('../lib/db');
-const { requireAuth } = require('../lib/middleware');
+const { requireAuth, requireProfileBasics } = require('../lib/middleware');
 const { renderQuestion } = require('../views/quiz');
 const { QUESTIONS } = require('../lib/questions');
 
@@ -14,7 +14,7 @@ function firstUnansweredIndex(userId) {
   return QUESTIONS.length - 1;
 }
 
-router.get('/cuestionario', requireAuth, (req, res) => {
+router.get('/cuestionario', requireAuth, requireProfileBasics, (req, res) => {
   let index = req.query.q !== undefined ? parseInt(req.query.q, 10) : firstUnansweredIndex(req.user.id);
   if (Number.isNaN(index) || index < 0) index = 0;
   if (index >= QUESTIONS.length) index = QUESTIONS.length - 1;
@@ -23,7 +23,7 @@ router.get('/cuestionario', requireAuth, (req, res) => {
   res.send(renderQuestion({ user: req.user, index, existingChoice: answers[index] }));
 });
 
-router.post('/cuestionario', requireAuth, (req, res) => {
+router.post('/cuestionario', requireAuth, requireProfileBasics, (req, res) => {
   const index = parseInt(req.body.question_index, 10);
   const choice = parseInt(req.body.choice_index, 10);
   if (Number.isNaN(index) || Number.isNaN(choice) || index < 0 || index >= QUESTIONS.length || choice < 0 || choice > 4) {

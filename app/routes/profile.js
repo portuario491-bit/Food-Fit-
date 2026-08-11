@@ -6,22 +6,22 @@ const { requireAuth } = require('../lib/middleware');
 const { uploadPhoto, UPLOAD_ROOT } = require('../lib/upload');
 const { renderProfile } = require('../views/profile');
 const { QUESTIONS } = require('../lib/questions');
+const { GENDERS, SEEKING_OPTIONS } = require('../lib/matchFilter');
 
 const router = express.Router();
+const VALID_GENDERS = GENDERS.map((g) => g.value);
+const VALID_SEEKING = SEEKING_OPTIONS.map((s) => s.value);
 
-router.get('/perfil', requireAuth, (req, res) => {
+function renderProfilePage(req, res, status, extra) {
   const photos = db.getPhotos(req.user.id);
   const { scores, answeredCount, total } = db.computeProfileScores(req.user.id, QUESTIONS);
-  res.send(
-    renderProfile({
-      user: req.user,
-      photos,
-      profileScores: scores,
-      answeredCount,
-      total,
-      success: req.query.saved ? 'Perfil actualizado.' : null,
-    })
+  res.status(status).send(
+    renderProfile({ user: req.user, photos, profileScores: scores, answeredCount, total, ...extra })
   );
+}
+
+router.get('/perfil', requireAuth, (req, res) => {
+  renderProfilePage(req, res, 200, { success: req.query.saved ? 'Perfil actualizado.' : null });
 });
 
 router.post('/perfil', requireAuth, (req, res) => {
@@ -29,33 +29,40 @@ router.post('/perfil', requireAuth, (req, res) => {
   const age = req.body.age ? parseInt(req.body.age, 10) : null;
   const bio = (req.body.bio || '').trim().slice(0, 400);
   const hijosNoNegociable = !!req.body.hijos_no_negociable;
+  const gender = req.body.gender || '';
+  const seekingGender = req.body.seeking_gender || '';
+  let ageMin = req.body.age_min ? parseInt(req.body.age_min, 10) : 18;
+  let ageMax = req.body.age_max ? parseInt(req.body.age_max, 10) : 99;
 
   if (!name || name.length < 2) {
-    const photos = db.getPhotos(req.user.id);
-    const { scores, answeredCount, total } = db.computeProfileScores(req.user.id, QUESTIONS);
-    return res
-      .status(400)
-      .send(renderProfile({ user: req.user, photos, profileScores: scores, answeredCount, total, error: 'Escribe tu nombre.' }));
+    return renderProfilePage(req, res, 400, { error: 'Escribe tu nombre.' });
+  }
+  if (!VALID_GENDERS.includes(gender)) {
+    return renderProfilePage(req, res, 400, { error: 'Selecciona tu género.' });
+  }
+  if (!VALID_SEEKING.includes(seekingGender)) {
+    return renderProfilePage(req, res, 400, { error: 'Selecciona a quién te gustaría conocer.' });
+  }
+  ageMin = Number.isFinite(ageMin) ? Math.min(Math.max(ageMin, 18), 99) : 18;
+  ageMax = Number.isFinite(ageMax) ? Math.min(Math.max(ageMax, 18), 99) : 99;
+  if (ageMin > ageMax) {
+    return renderProfilePage(req, res, 400, { error: 'El rango de edad no es válido (el mínimo es mayor que el máximo).' });
   }
 
-  db.updateUserProfile(req.user.id, { name, age, bio, hijosNoNegociable });
+  db.updateUserProfile(req.user.id, { name, age, bio, hijosNoNegociable, gender, seekingGender, ageMin, ageMax });
+  req.user = db.getUserById(req.user.id);
   res.redirect('/perfil?saved=1');
 });
 
 router.post('/perfil/foto', requireAuth, (req, res) => {
   uploadPhoto.single('photo')(req, res, (err) => {
-    const photos = db.getPhotos(req.user.id);
-    const { scores, answeredCount, total } = db.computeProfileScores(req.user.id, QUESTIONS);
     if (err) {
-      return res
-        .status(400)
-        .send(renderProfile({ user: req.user, photos, profileScores: scores, answeredCount, total, error: err.message }));
+      return renderProfilePage(req, res, 400, { error: err.message });
     }
     if (!req.file) {
-      return res
-        .status(400)
-        .send(renderProfile({ user: req.user, photos, profileScores: scores, answeredCount, total, error: 'Selecciona una imagen.' }));
+      return renderProfilePage(req, res, 400, { error: 'Selecciona una imagen.' });
     }
+    const photos = db.getPhotos(req.user.id);
     db.addPhoto(req.user.id, req.file.filename, photos.length === 0);
     res.redirect('/perfil?saved=1');
   });

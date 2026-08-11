@@ -240,11 +240,13 @@
 .form-group input[type=email],
 .form-group input[type=password],
 .form-group input[type=number],
+.form-group select,
 .form-group textarea{
   width:100%;background:#0c1122;border:1px solid var(--card-border);color:var(--text);
   padding:12px 14px;border-radius:10px;font-size:14.5px;font-family:inherit;
 }
-.form-group input:focus,.form-group textarea:focus{outline:none;border-color:var(--blue-2);}
+.form-group select{appearance:auto;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--blue-2);}
 .form-group textarea{resize:vertical;min-height:90px;}
 .form-checkbox{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:var(--text-dim);}
 .form-checkbox input{margin-top:3px;}

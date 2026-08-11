@@ -1,5 +1,13 @@
 const { page, escapeHtml } = require('./layout');
 const { DIMENSIONS, DIM_LABELS } = require('../lib/questions');
+const { GENDERS, SEEKING_OPTIONS } = require('../lib/matchFilter');
+
+function selectOptions(options, current) {
+  return (
+    `<option value="" ${!current ? 'selected' : ''} disabled>Selecciona...</option>` +
+    options.map((o) => `<option value="${o.value}" ${current === o.value ? 'selected' : ''}>${o.label}</option>`).join('')
+  );
+}
 
 function photoThumb(photo) {
   return `
@@ -69,6 +77,27 @@ function renderProfile({ user, photos, profileScores, answeredCount, total, erro
           <span>Tener hijos (o no tenerlos) es, para mí, un criterio <b>no negociable</b> en una relación.</span>
         </label>
       </div>
+
+      <div class="section-title" style="margin-top:8px;">A quién conocer</div>
+      <div class="form-group">
+        <label for="gender">Tu género</label>
+        <select id="gender" name="gender" required>${selectOptions(GENDERS, user.gender)}</select>
+      </div>
+      <div class="form-group">
+        <label for="seeking_gender">¿A quién te gustaría conocer?</label>
+        <select id="seeking_gender" name="seeking_gender" required>${selectOptions(SEEKING_OPTIONS, user.seeking_gender)}</select>
+      </div>
+      <div class="form-group">
+        <label>Rango de edad que buscas</label>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input type="number" name="age_min" min="18" max="99" style="width:90px;" value="${user.age_min || 18}">
+          <span class="hint" style="margin:0;">y</span>
+          <input type="number" name="age_max" min="18" max="99" style="width:90px;" value="${user.age_max || 99}">
+          <span class="hint" style="margin:0;">años</span>
+        </div>
+        <div class="hint">Solo se muestran compatibilidades cuando el interés y el rango de edad son mutuos en los dos sentidos.</div>
+      </div>
+
       <button class="btn" type="submit">Guardar cambios</button>
     </form>
 

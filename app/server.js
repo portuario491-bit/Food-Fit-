@@ -46,7 +46,7 @@ app.get('/', (req, res) => {
   if (!req.session.userId) return res.send(renderHome());
   const user = db.getUserById(req.session.userId);
   if (!user) return res.send(renderHome());
-  if (!user.age || db.getPhotos(user.id).length === 0) return res.redirect('/perfil');
+  if (!db.hasCompleteBasics(user, db.getPhotos(user.id).length)) return res.redirect('/perfil');
   if (!user.onboarding_completed) return res.redirect('/cuestionario');
   return res.redirect('/matches');
 });

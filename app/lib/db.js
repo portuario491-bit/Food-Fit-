@@ -48,6 +48,25 @@ CREATE TABLE IF NOT EXISTS answers (
 );
 `);
 
+/** Añade una columna si todavía no existe — permite evolucionar el esquema
+ *  sin perder los datos ya guardados de un piloto en marcha. */
+function addColumnIfMissing(table, columnDef) {
+  try {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${columnDef}`);
+  } catch (e) {
+    if (!/duplicate column/i.test(e.message)) throw e;
+  }
+}
+
+// Género, orientación (expresada como "a quién buscas") y rango de edad
+// deseado. Son criterios de emparejamiento (filtro duro), no dimensiones
+// psicológicas — por eso viven en `users`, junto al resto del perfil básico,
+// y no en `answers`.
+addColumnIfMissing('users', 'gender TEXT');
+addColumnIfMissing('users', 'seeking_gender TEXT');
+addColumnIfMissing('users', 'age_min INTEGER');
+addColumnIfMissing('users', 'age_max INTEGER');
+
 /* ---------- users ---------- */
 function createUser({ name, email, passwordHash, inviteCode }) {
   const stmt = db.prepare(
@@ -65,11 +84,18 @@ function getUserById(id) {
   return db.prepare(`SELECT * FROM users WHERE id = ?`).get(id);
 }
 
-function updateUserProfile(id, { name, age, bio, hijosNoNegociable }) {
+function updateUserProfile(id, { name, age, bio, hijosNoNegociable, gender, seekingGender, ageMin, ageMax }) {
   db.prepare(
-    `UPDATE users SET name = ?, age = ?, bio = ?, hijos_no_negociable = ? WHERE id = ?`
-  ).run(name, age, bio, hijosNoNegociable ? 1 : 0, id);
+    `UPDATE users SET name = ?, age = ?, bio = ?, hijos_no_negociable = ?,
+       gender = ?, seeking_gender = ?, age_min = ?, age_max = ? WHERE id = ?`
+  ).run(name, age, bio, hijosNoNegociable ? 1 : 0, gender, seekingGender, ageMin, ageMax, id);
   return getUserById(id);
+}
+
+/** Perfil "usable": lo mínimo para aparecer en compatibilidades de otras
+ *  personas y para que el filtro de género/edad tenga sentido. */
+function hasCompleteBasics(user, photosCount) {
+  return !!(user && user.age && user.gender && user.seeking_gender && photosCount > 0);
 }
 
 function markOnboardingCompleted(id) {
@@ -169,6 +195,7 @@ module.exports = {
   getUserByEmail,
   getUserById,
   updateUserProfile,
+  hasCompleteBasics,
   markOnboardingCompleted,
   listCompletedUsersExcept,
   countUsers,

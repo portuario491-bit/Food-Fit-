@@ -13,11 +13,18 @@ proyecto y `blueheart-demo.html` para el prototipo de producto sin backend.
 
 - Registro / inicio de sesión (email + contraseña, con `bcryptjs`).
 - Perfil con foto (subida, foto principal, borrado) y datos básicos.
+- Género, a quién te gustaría conocer (hombres/mujeres/ambos) y rango de
+  edad, como **filtro duro de emparejamiento** (`lib/matchFilter.js`) —
+  independiente del algoritmo de compatibilidad, y siempre comprobado en
+  los dos sentidos (que a ti te encaje alguien no basta, tiene que ser
+  mutuo). Incluye "prefiero no especificarlo" para quien no se reconozca
+  en hombre/mujer.
 - El cuestionario reducido del prototipo (8 dimensiones × 3 preguntas),
   guardado por usuario y reanudable.
 - Lista de compatibilidades con el resto de personas del piloto que ya
-  hayan terminado el cuestionario, y una vista detallada por persona
-  (gráfico, fortalezas, aspectos a vigilar, y el desglose del cálculo).
+  hayan terminado el cuestionario y pasen el filtro de emparejamiento, y
+  una vista detallada por persona (gráfico, fortalezas, aspectos a
+  vigilar, y el desglose del cálculo).
 - Todo en un único proceso Node.js con SQLite embebido (`node:sqlite`,
   nativo desde Node 22.5) — sin bases de datos ni servicios externos que
   dar de alta para el piloto.
