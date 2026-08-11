@@ -5,7 +5,7 @@ function logoDataUri() {
   if (!LOGO_DATA_URI_CACHE.value) {
     const fs = require('node:fs');
     const path = require('node:path');
-    const p = path.join(__dirname, '..', '..', 'assets', 'blueheart-logo-256.png');
+    const p = path.join(__dirname, '..', 'assets', 'blueheart-logo-256.png');
     const b64 = fs.readFileSync(p).toString('base64');
     LOGO_DATA_URI_CACHE.value = `data:image/png;base64,${b64}`;
   }
