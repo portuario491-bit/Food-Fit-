@@ -14,6 +14,8 @@ Esta carpeta contiene la documentación fundacional del proyecto **BlueHeart**, 
    La metodología de evaluación, los principios del sistema y el cuestionario completo utilizado para construir el Perfil de Compatibilidad de cada usuario.
 5. [Bloque 5 — La IA](./bloque-5-ia.md)
    Cómo se comporta la inteligencia artificial de BlueHeart, qué funciones desempeña, qué límites tiene, cómo conversa, cómo construye perfiles, cómo compara personas y cómo explica sus recomendaciones.
+6. [Bloque 6 — El Algoritmo](./bloque-6-algoritmo.md)
+   El sistema de decisión que transforma dos Perfiles de Compatibilidad en un resultado cuantificable, reproducible y explicable: cómo se representan y clasifican las variables, cómo se ponderan, cómo se comparan, criterios no negociables e incompatibilidades críticas, compensaciones, cálculo del porcentaje global y del nivel de confianza, umbral de recomendación, ranking, reproducibilidad, versionado, trazabilidad, validación y límites del algoritmo.
 
 ## Resumen del proyecto
 
