@@ -5,8 +5,12 @@ function photoThumb(photo) {
   return `
   <div class="photo-thumb ${photo.is_primary ? 'primary' : ''}">
     <img src="/fotos/${photo.id}" alt="Foto de perfil">
-    ${photo.is_primary ? '<span class="badge">Principal</span>' : ''}
-    <form method="POST" action="/perfil/foto/${photo.id}/eliminar" onsubmit="return confirm('¿Eliminar esta foto?');">
+    ${photo.is_primary
+      ? '<span class="badge">Principal</span>'
+      : `<form class="photo-action-primary" method="POST" action="/perfil/foto/${photo.id}/principal">
+           <button class="make-primary-btn" type="submit">Hacer principal</button>
+         </form>`}
+    <form class="photo-action-delete" method="POST" action="/perfil/foto/${photo.id}/eliminar" onsubmit="return confirm('¿Eliminar esta foto?');">
       <button class="del-btn" type="submit" title="Eliminar">✕</button>
     </form>
   </div>`;

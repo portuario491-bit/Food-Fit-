@@ -61,6 +61,11 @@ router.post('/perfil/foto', requireAuth, (req, res) => {
   });
 });
 
+router.post('/perfil/foto/:id/principal', requireAuth, (req, res) => {
+  db.setPrimaryPhoto(req.user.id, req.params.id);
+  res.redirect('/perfil?saved=1');
+});
+
 router.post('/perfil/foto/:id/eliminar', requireAuth, (req, res) => {
   const photos = db.getPhotos(req.user.id);
   const photo = photos.find((p) => String(p.id) === req.params.id);

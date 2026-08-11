@@ -111,6 +111,14 @@ function getPrimaryPhoto(userId) {
   return db.prepare(`SELECT * FROM photos WHERE user_id = ? ORDER BY is_primary DESC, created_at ASC LIMIT 1`).get(userId);
 }
 
+function setPrimaryPhoto(userId, photoId) {
+  const owns = db.prepare(`SELECT id FROM photos WHERE id = ? AND user_id = ?`).get(photoId, userId);
+  if (!owns) return false;
+  db.prepare(`UPDATE photos SET is_primary = 0 WHERE user_id = ?`).run(userId);
+  db.prepare(`UPDATE photos SET is_primary = 1 WHERE id = ?`).run(photoId);
+  return true;
+}
+
 function deletePhoto(userId, photoId) {
   const result = db.prepare(`DELETE FROM photos WHERE id = ? AND user_id = ?`).run(photoId, userId);
   const stillHasPrimary = db.prepare(`SELECT COUNT(*) AS n FROM photos WHERE user_id = ? AND is_primary = 1`).get(userId).n > 0;
@@ -167,6 +175,7 @@ module.exports = {
   addPhoto,
   getPhotos,
   getPrimaryPhoto,
+  setPrimaryPhoto,
   deletePhoto,
   saveAnswer,
   getAnswers,
