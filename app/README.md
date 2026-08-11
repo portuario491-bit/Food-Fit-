@@ -22,21 +22,24 @@ proyecto y `blueheart-demo.html` para el prototipo de producto sin backend.
 - El cuestionario reducido del prototipo (8 dimensiones × 3 preguntas),
   guardado por usuario y reanudable.
 - Lista de compatibilidades con el resto de personas del piloto que ya
-  hayan terminado el cuestionario y pasen el filtro de emparejamiento, y
-  una vista detallada por persona (gráfico, fortalezas, aspectos a
-  vigilar, y el desglose del cálculo).
+  hayan terminado el cuestionario y pasen el filtro de emparejamiento —
+  separadas en "recomendadas" y "otras personas" (visibles con su motivo,
+  por transparencia durante el piloto) — y una vista detallada por persona
+  (gráfico, estado de elegibilidad, fortalezas, aspectos a vigilar, y el
+  desglose completo del cálculo).
+- El **algoritmo de compatibilidad real** (`lib/algorithm/`), implementando
+  la arquitectura del Bloque 6: comparación de variables, reglas críticas
+  independientes del sistema de pesos, cálculo por dimensión y global,
+  nivel de confianza separado del porcentaje, y un motor de elegibilidad
+  con cinco estados (`RECOMMENDED`, `RECOMMENDED_WITH_NOTES`,
+  `BELOW_THRESHOLD`, `PENDING_INFORMATION`, `CRITICAL_CONFLICT`). Ver
+  `lib/algorithm/README.md` para el detalle y sus limitaciones honestas.
 - Todo en un único proceso Node.js con SQLite embebido (`node:sqlite`,
   nativo desde Node 22.5) — sin bases de datos ni servicios externos que
   dar de alta para el piloto.
 
 ## Qué NO incluye todavía (a propósito)
 
-- **El algoritmo real (Bloque 6).** `lib/algorithm.js` usa la misma lógica
-  simplificada que `blueheart-demo.html` (similitud ponderada por
-  dimensión + una regla de incompatibilidad crítica para "hijos" cuando
-  ambas personas lo marcan como no negociable). Cuando esté listo el
-  Bloque 6, se sustituye este archivo — el resto de la app no cambia,
-  porque solo depende de `computeCompatibility(a, b)`.
 - Recuperación de contraseña, verificación de email, moderación de fotos,
   bloqueo/denuncia de usuarios — nada de esto es necesario para un piloto
   cerrado con gente de confianza, pero sí antes de abrir la app a
@@ -78,10 +81,11 @@ app/
   server.js          # arranque, sesiones, montaje de rutas
   lib/
     db.js            # capa de datos (SQLite embebido)
-    algorithm.js      # algoritmo de compatibilidad (sustituible por el Bloque 6)
+    algorithm/        # motor de compatibilidad real (Bloque 6) — ver su README
+    matchFilter.js     # filtro duro de género/orientación/edad (independiente del algoritmo)
     questions.js      # banco de preguntas (compartido con blueheart-demo.html)
     upload.js         # subida de fotos (multer, validación de tipo/tamaño)
-    middleware.js     # requireAuth
+    middleware.js     # requireAuth, requireProfileBasics
   routes/             # auth, profile, quiz, matches
   views/              # HTML server-rendered (sin framework de plantillas)
   public/style.css    # misma identidad visual que blueheart-demo.html

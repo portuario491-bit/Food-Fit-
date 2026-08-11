@@ -310,6 +310,14 @@
   font-variant-numeric:tabular-nums;
 }
 
+.status-pill{
+  display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;
+  border-radius:999px;margin-top:4px;letter-spacing:.2px;
+}
+.status-pill.status-good{color:var(--green);background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);}
+.status-pill.status-neutral{color:var(--amber);background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);}
+.status-pill.status-bad{color:var(--red);background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);}
+
 .result-avatar-row{display:flex;align-items:center;justify-content:center;gap:-10px;margin-bottom:6px;}
 .result-avatar-row img{
   width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid var(--bg-2);
