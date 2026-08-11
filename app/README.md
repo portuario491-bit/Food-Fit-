@@ -44,10 +44,10 @@ proyecto y `blueheart-demo.html` para el prototipo de producto sin backend.
   bloqueo/denuncia de usuarios — nada de esto es necesario para un piloto
   cerrado con gente de confianza, pero sí antes de abrir la app a
   desconocidos.
-- Despliegue / hosting: esto corre en local. Para que las 10-20 personas
-  puedan entrar desde fuera hace falta desplegarlo en algún sitio (Railway,
-  Render, Fly.io, un VPS...) — es la siguiente decisión, no técnica sino
-  de "dónde queremos que viva esto".
+- Despliegue / hosting: por defecto esto corre en local. Ver
+  [`DEPLOY.md`](./DEPLOY.md) para la guía paso a paso de cómo ponerlo en
+  Railway (o Render) con un volumen persistente para no perder los datos
+  del piloto en cada reinicio.
 
 ## Cómo ejecutarlo en local
 

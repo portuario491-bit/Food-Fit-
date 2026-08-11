@@ -3,7 +3,9 @@ const fs = require('node:fs');
 const crypto = require('node:crypto');
 const multer = require('multer');
 
-const UPLOAD_ROOT = path.join(__dirname, '..', 'uploads');
+// UPLOADS_DIR es configurable por el mismo motivo que DATA_DIR en lib/db.js:
+// tiene que poder apuntar a un volumen persistente en producción.
+const UPLOAD_ROOT = process.env.UPLOADS_DIR || path.join(__dirname, '..', 'uploads');
 fs.mkdirSync(UPLOAD_ROOT, { recursive: true });
 
 const ALLOWED_MIME = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };

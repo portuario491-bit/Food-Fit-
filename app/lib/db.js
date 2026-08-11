@@ -9,7 +9,10 @@ const fs = require('node:fs');
 const { DatabaseSync } = require('node:sqlite');
 const { DIMENSIONS } = require('./questions');
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
+// DATA_DIR es configurable para poder apuntarlo a un volumen persistente en
+// producción (el disco de la mayoría de plataformas de hosting se borra en
+// cada despliegue/reinicio si no se monta un volumen ahí).
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 fs.mkdirSync(DATA_DIR, { recursive: true });
 const DB_PATH = path.join(DATA_DIR, 'blueheart-pilot.db');
 
