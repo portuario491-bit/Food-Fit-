@@ -1,0 +1,6 @@
+# Fija la versión de Node que usa Railway (Nixpacks) para construir y
+# ejecutar la app. Es necesaria la 22.5+ porque el código usa el módulo
+# nativo `node:sqlite` (ver lib/db.js) — sin esto, Nixpacks podría elegir
+# por defecto una versión de Node más antigua.
+[phases.setup]
+nixPkgs = ["nodejs_22"]

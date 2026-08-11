@@ -82,6 +82,23 @@ Railway) con un punto de montaje, y configura las mismas variables de
 entorno del paso 5 de arriba apuntando `DATA_DIR`/`UPLOADS_DIR` a ese
 disco.
 
+## Si el build falla
+
+Railway a veces solo muestra "Failed to build an image. Please check the
+build logs for more details." sin más contexto en el resumen — el detalle
+real está en la pestaña de logs del build (o en el botón "Diagnose" si
+aparece). Antes de mirar el log línea a línea, descarta esto:
+
+- **Root Directory mal puesto.** Si no está en `app` (paso 3), Railway
+  intenta construir desde la raíz del repositorio, que no tiene
+  `package.json`, y el build falla casi instantáneamente (unos segundos).
+  Es la causa más común. Revísalo en Settings → Root Directory.
+- **Versión de Node.** El código necesita Node ≥22.5 por `node:sqlite`
+  (`app/package.json` lo declara en `engines`). El repo incluye
+  `app/nixpacks.toml` para forzar Node 22 explícitamente en el build de
+  Railway — si sigue sin coger la versión correcta, revisa que ese fichero
+  esté en `app/` (mismo nivel que `package.json`) y no en la raíz.
+
 ## Notas
 
 - No definas `NODE_ENV=production` a menos que sirvas la app por HTTPS
