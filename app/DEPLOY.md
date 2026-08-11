@@ -50,9 +50,12 @@ Decide y ten a mano:
    ```
    SESSION_SECRET=<la clave que generaste arriba>
    BLUEHEART_INVITE_CODE=<tu código de invitación>
+   ADMIN_PASSWORD=<una contraseña distinta, solo para ti>
    DATA_DIR=/data/db
    UPLOADS_DIR=/data/uploads
    ```
+   `ADMIN_PASSWORD` da acceso a `/admin`: la lista de personas registradas
+   y la matriz completa de compatibilidad. No la compartas con el piloto.
    (`DATA_DIR` y `UPLOADS_DIR` son subcarpetas dentro del volumen que
    montaste en el paso 4 — Railway las crea solas al arrancar la app.)
    No hace falta que definas `PORT`: Railway lo asigna automáticamente y

@@ -21,4 +21,11 @@ function requireProfileBasics(req, res, next) {
   next();
 }
 
-module.exports = { requireAuth, requireProfileBasics };
+/** Protege el panel de administración del piloto — sesión separada de la de
+ *  usuarios normales, con su propia contraseña (ADMIN_PASSWORD). */
+function requireAdmin(req, res, next) {
+  if (!req.session.isAdmin) return res.redirect('/admin/login');
+  next();
+}
+
+module.exports = { requireAuth, requireProfileBasics, requireAdmin };

@@ -37,6 +37,11 @@ proyecto y `blueheart-demo.html` para el prototipo de producto sin backend.
 - Todo en un único proceso Node.js con SQLite embebido (`node:sqlite`,
   nativo desde Node 22.5) — sin bases de datos ni servicios externos que
   dar de alta para el piloto.
+- **Panel de administración** (`/admin`, protegido por `ADMIN_PASSWORD`,
+  separado del código de invitación): lista de personas registradas con su
+  estado de perfil/cuestionario, la **matriz completa de compatibilidad**
+  entre todas las parejas que pasan el filtro de género/edad (no solo la
+  vista individual de cada persona), y borrado de cuentas.
 
 ## Qué NO incluye todavía (a propósito)
 
@@ -72,6 +77,9 @@ Ver `.env.example`. Las importantes:
 - `SESSION_SECRET` — clave para firmar las cookies de sesión.
 - `BLUEHEART_INVITE_CODE` — si la defines, el registro pedirá ese código
   (útil para que solo entren las personas invitadas al piloto).
+- `ADMIN_PASSWORD` — contraseña para entrar en `/admin` (panel de gestión
+  del piloto). Sin ella, `/admin` no deja pasar a nadie. Usa una distinta
+  del código de invitación.
 - `PORT` — puerto del servidor (por defecto 3000).
 
 ## Estructura

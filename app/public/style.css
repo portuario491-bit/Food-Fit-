@@ -340,3 +340,13 @@
    (para funcionar sin JavaScript) — normalizamos el <button>. */
 .options form{margin:0;}
 .options .option{width:100%;font-family:inherit;display:block;}
+
+/* Panel de administración */
+.admin-table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap;}
+.admin-table th{
+  text-align:left;color:var(--text-faint);font-size:11px;text-transform:uppercase;
+  letter-spacing:.4px;padding:8px 10px;border-bottom:1px solid var(--card-border);
+}
+.admin-table td{padding:8px 10px;border-bottom:1px solid var(--card-border);color:var(--text-dim);}
+.admin-table tbody tr:hover{background:#0c1122;}
+.admin-table form{margin:0;}

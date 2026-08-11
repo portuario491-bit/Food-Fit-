@@ -115,6 +115,25 @@ function countUsers() {
   return db.prepare(`SELECT COUNT(*) AS n FROM users`).get().n;
 }
 
+/** Todas las personas registradas con sus datos básicos, para el panel de
+ *  administración del piloto (Bloque 12 — control de usuarios). */
+function listAllUsersWithStats() {
+  return db
+    .prepare(
+      `SELECT u.*, COUNT(p.id) AS photo_count
+       FROM users u LEFT JOIN photos p ON p.user_id = u.id
+       GROUP BY u.id ORDER BY u.created_at DESC`
+    )
+    .all();
+}
+
+/** Borra una cuenta y todo lo asociado (fotos, respuestas — vía ON DELETE
+ *  CASCADE). El llamador es responsable de borrar también los ficheros de
+ *  fotos en disco (ver routes/admin.js). */
+function deleteUser(id) {
+  return db.prepare(`DELETE FROM users WHERE id = ?`).run(id);
+}
+
 /* ---------- photos ---------- */
 function addPhoto(userId, filename, makePrimary) {
   if (makePrimary) {
@@ -202,6 +221,8 @@ module.exports = {
   markOnboardingCompleted,
   listCompletedUsersExcept,
   countUsers,
+  listAllUsersWithStats,
+  deleteUser,
   addPhoto,
   getPhotos,
   getPrimaryPhoto,
