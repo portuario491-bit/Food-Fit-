@@ -3928,7 +3928,12 @@
         const name = $('authName').value.trim();
         if(!name){ showAuthError('Escribe tu nombre.'); return; }
         if(password.length < 8){ showAuthError('La contraseña debe tener al menos 8 caracteres.'); return; }
-        const { data, error } = await sb.auth.signUp({ email, password, options:{ data:{ full_name: name } } });
+        // Le decimos a Supabase a qué dirección exacta debe devolver a la
+        // persona tras confirmar su email (si no, usa la "Site URL" que
+        // tengas configurada en el panel de Supabase, y si esa no está
+        // bien puesta, el enlace del email lleva a una página rota).
+        const confirmRedirectTo = window.location.origin + window.location.pathname;
+        const { data, error } = await sb.auth.signUp({ email, password, options:{ data:{ full_name: name }, emailRedirectTo: confirmRedirectTo } });
         if(error){ showAuthError(translateAuthError(error)); return; }
         if(!data.session){
           showAuthInfo('Cuenta creada. Revisa tu email para confirmarla y luego inicia sesión.');
