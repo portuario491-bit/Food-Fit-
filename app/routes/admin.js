@@ -41,6 +41,7 @@ router.post('/admin/logout', (req, res) => {
 
 router.get('/admin', requireAdmin, (req, res) => {
   const users = db.listAllUsersWithStats();
+  const screeningResponses = db.listScreeningResponses();
 
   // Matriz de compatibilidad: solo entre personas con perfil completo y
   // cuestionario terminado, y solo los pares que además pasan el filtro
@@ -64,7 +65,7 @@ router.get('/admin', requireAdmin, (req, res) => {
   }
   pairs.sort((x, y) => y.pct - x.pct);
 
-  res.send(renderAdminDashboard({ users, pairs }));
+  res.send(renderAdminDashboard({ users, pairs, screeningResponses }));
 });
 
 router.post('/admin/usuarios/:id/eliminar', requireAdmin, (req, res) => {

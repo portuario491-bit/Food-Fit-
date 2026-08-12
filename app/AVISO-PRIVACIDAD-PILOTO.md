@@ -8,10 +8,10 @@ prueba cerrada, sin constituir todavía una empresa.
 
 ## ¿Quién es responsable de tus datos?
 
-**[Tu nombre completo]**, organizador/a de este piloto, a título personal —
-no existe todavía una empresa registrada detrás de BlueHeart. Puedes
-contactar en cualquier momento en **[tu email de contacto]** para cualquier
-duda o para ejercer tus derechos.
+**Miguel Ángel Sánchez**, CEO de BlueHeart, a título personal — no existe
+todavía una empresa registrada detrás de BlueHeart. Puedes contactar en
+cualquier momento en **portuario491@hotmail.com** para cualquier duda o
+para ejercer tus derechos.
 
 ## ¿Qué datos se recogen?
 
@@ -65,7 +65,7 @@ eliminarán por completo.
 
 ## Tus derechos
 
-Puedes pedir en cualquier momento, escribiendo a **[tu email de contacto]**:
+Puedes pedir en cualquier momento, escribiendo a **portuario491@hotmail.com**:
 - **Acceso**: saber qué datos tuyos se han guardado.
 - **Rectificación**: corregir algún dato incorrecto.
 - **Supresión**: borrar tu cuenta y todos tus datos.

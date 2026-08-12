@@ -49,6 +49,29 @@ CREATE TABLE IF NOT EXISTS answers (
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),
   PRIMARY KEY (user_id, question_index)
 );
+
+/** Respuestas del formulario público de selección de candidatos (antes de
+ *  invitarles al piloto en sí) — ver FORMULARIO-SELECCION.md. Separado de
+ *  "users" a propósito: esto es reclutamiento, no una cuenta de la app. */
+CREATE TABLE IF NOT EXISTS screening_responses (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  age TEXT,
+  location TEXT,
+  gender TEXT,
+  orientation TEXT,
+  seeking TEXT,
+  age_min TEXT,
+  age_max TEXT,
+  looking_for TEXT,
+  dating_apps_experience TEXT,
+  would_meet_match TEXT,
+  would_fill_questionnaire TEXT,
+  wants_to_participate TEXT,
+  name TEXT,
+  contact_method TEXT,
+  contact_value TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 `);
 
 /** Añade una columna si todavía no existe — permite evolucionar el esquema
@@ -132,6 +155,31 @@ function listAllUsersWithStats() {
  *  fotos en disco (ver routes/admin.js). */
 function deleteUser(id) {
   return db.prepare(`DELETE FROM users WHERE id = ?`).run(id);
+}
+
+/* ---------- screening_responses (formulario de selección) ---------- */
+function createScreeningResponse(fields) {
+  const stmt = db.prepare(
+    `INSERT INTO screening_responses
+       (age, location, gender, orientation, seeking, age_min, age_max,
+        looking_for, dating_apps_experience, would_meet_match,
+        would_fill_questionnaire, wants_to_participate)
+     VALUES (@age, @location, @gender, @orientation, @seeking, @age_min, @age_max,
+             @looking_for, @dating_apps_experience, @would_meet_match,
+             @would_fill_questionnaire, @wants_to_participate)`
+  );
+  const info = stmt.run(fields);
+  return Number(info.lastInsertRowid);
+}
+
+function addScreeningContact(id, { name, contactMethod, contactValue }) {
+  db.prepare(
+    `UPDATE screening_responses SET name = ?, contact_method = ?, contact_value = ? WHERE id = ?`
+  ).run(name, contactMethod, contactValue, id);
+}
+
+function listScreeningResponses() {
+  return db.prepare(`SELECT * FROM screening_responses ORDER BY created_at DESC`).all();
 }
 
 /* ---------- photos ---------- */
@@ -223,6 +271,9 @@ module.exports = {
   countUsers,
   listAllUsersWithStats,
   deleteUser,
+  createScreeningResponse,
+  addScreeningContact,
+  listScreeningResponses,
   addPhoto,
   getPhotos,
   getPrimaryPhoto,

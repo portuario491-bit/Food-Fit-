@@ -56,6 +56,7 @@ app.use('/', require('./routes/profile'));
 app.use('/', require('./routes/quiz'));
 app.use('/', require('./routes/matches'));
 app.use('/', require('./routes/admin'));
+app.use('/', require('./routes/screening'));
 
 app.use((req, res) => {
   res.status(404).send('Página no encontrada. <a href="/">Volver al inicio</a>');

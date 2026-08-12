@@ -73,7 +73,7 @@ Opciones: Sí / Quizá, quiero recibir más información / No
 > RGPD. Usamos esta información únicamente para valorar tu candidatura al
 > piloto y contactar contigo sobre él; no se usa con fines publicitarios ni
 > se comparte con terceros. Puedes pedir en cualquier momento que
-> eliminemos tus respuestas escribiendo a **[tu email de contacto]**. Al
+> eliminemos tus respuestas escribiendo a **portuario491@hotmail.com**. Al
 > continuar, entendemos que lo aceptas.
 
 **13. Nombre**

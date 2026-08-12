@@ -69,7 +69,24 @@ function pairRow(p) {
   </tr>`;
 }
 
-function renderAdminDashboard({ users, pairs }) {
+function screeningRow(s) {
+  return `
+  <tr>
+    <td>${escapeHtml(s.name || '(sin contacto todavía)')}</td>
+    <td>${escapeHtml(s.age)}</td>
+    <td>${escapeHtml(s.location)}</td>
+    <td>${escapeHtml(s.gender)}</td>
+    <td>${escapeHtml(s.orientation)}</td>
+    <td>${escapeHtml(s.seeking)}</td>
+    <td>${escapeHtml(s.age_min)}–${escapeHtml(s.age_max)}</td>
+    <td>${escapeHtml(s.looking_for)}</td>
+    <td>${escapeHtml(s.wants_to_participate)}</td>
+    <td>${s.contact_method ? `${escapeHtml(s.contact_method)}: ${escapeHtml(s.contact_value)}` : '—'}</td>
+    <td>${escapeHtml((s.created_at || '').replace('T', ' ').slice(0, 16))}</td>
+  </tr>`;
+}
+
+function renderAdminDashboard({ users, pairs, screeningResponses = [] }) {
   const body = `
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
@@ -77,6 +94,18 @@ function renderAdminDashboard({ users, pairs }) {
       <form method="POST" action="/admin/logout"><button class="logout-btn" type="submit">Salir</button></form>
     </div>
     <div class="summary-sub">${users.length} persona${users.length === 1 ? '' : 's'} registrada${users.length === 1 ? '' : 's'} · ${pairs.length} pareja${pairs.length === 1 ? '' : 's'} con emparejamiento mutuo calculado.</div>
+
+    <div class="section-title">Candidatas del formulario de selección (${screeningResponses.length})</div>
+    <p class="summary-sub" style="margin-top:-6px;">Respuestas de <code>/seleccion</code>, antes de invitar a nadie al piloto.</p>
+    <div style="overflow-x:auto;margin-bottom:8px;">
+      <table class="admin-table">
+        <thead><tr>
+          <th>Nombre</th><th>Edad</th><th>Zona</th><th>Género</th><th>Orientación</th>
+          <th>Busca</th><th>Rango edad</th><th>Qué busca</th><th>¿Quiere participar?</th><th>Contacto</th><th>Fecha</th>
+        </tr></thead>
+        <tbody>${screeningResponses.map(screeningRow).join('') || '<tr><td colspan="11">Sin respuestas todavía.</td></tr>'}</tbody>
+      </table>
+    </div>
 
     <div class="section-title">Personas registradas</div>
     <div style="overflow-x:auto;">
