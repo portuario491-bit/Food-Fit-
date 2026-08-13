@@ -25,6 +25,14 @@ function renderScreeningForm({ error, values = {} } = {}) {
   <div class="card auth-card" style="max-width:560px;">
     <h1>BlueHeart — Formulario de selección</h1>
     <p class="sub">Antes de invitarte al piloto, queremos conocerte un poco. Responde con sinceridad — no hay respuestas "mejores".</p>
+    <div class="alert info">
+      Algunas preguntas (como tu orientación sexual) son datos especialmente
+      protegidos. Los usamos solo para valorar tu candidatura a este piloto
+      privado y contactarte sobre él — no se usan con fines publicitarios ni
+      se comparten con terceros. Puedes pedir que eliminemos tus respuestas
+      cuando quieras escribiendo a <b>portuario491@hotmail.com</b>. Al
+      continuar, entendemos que lo aceptas.
+    </div>
     ${error ? `<div class="alert error">${escapeHtml(error)}</div>` : ''}
     <form method="POST" action="/seleccion">
       ${selectField({ name: 'age', label: '¿Qué edad tienes?', options: AGE_OPTIONS, value: values.age })}
