@@ -681,7 +681,13 @@
   <div class="screen" id="screen-recipes">
     <p class="section-title" style="margin-top:0;">Recetas saludables</p>
     <span class="hint">ideas fáciles para inspirarte, no hace falta seguirlas al pie de la letra</span>
-    <div class="food-chip-row" id="recipeChipRow" style="margin-top:14px;"></div>
+    <div class="segmented" id="recipeGoalSeg" style="margin-top:14px;">
+      <button type="button" data-val="all" class="active">Todos</button>
+      <button type="button" data-val="definicion">Definición</button>
+      <button type="button" data-val="mantenimiento">Mantenimiento</button>
+      <button type="button" data-val="volumen">Volumen</button>
+    </div>
+    <div class="food-chip-row" id="recipeChipRow" style="margin-top:12px;"></div>
     <div class="recipe-grid" id="recipeGrid"></div>
     <p class="empty-note-food" id="recipeEmptyNote" style="display:none;">No hay recetas en esta categoría todavía.</p>
   </div>
@@ -865,7 +871,7 @@
     </ul>
 
     <p class="section-title">Recetas</p>
-    <p>Ideas de comidas saludables, agrupadas por desayuno, comida, cena y snack. Toca cualquiera para ver ingredientes y pasos.</p>
+    <p>Más de 30 ideas de comidas saludables, agrupadas por desayuno, comida, cena y snack, y filtrables también por objetivo (definición, mantenimiento o volumen — se preselecciona según lo que tengas puesto en Nutrición). Toca cualquiera para ver ingredientes y pasos.</p>
 
     <p class="section-title">Historial</p>
     <ul>
@@ -2058,67 +2064,118 @@
     pan: '<circle cx="11" cy="12" r="7"/><path d="M18 9h4M18 15h3"/>',
     smoothie: '<path d="M8 3h8l-1.4 15.5A2 2 0 0 1 12.6 20h-1.2a2 2 0 0 1-2-1.5L8 3z"/><path d="M7.3 8h9.4"/>',
     sandwich: '<path d="M3 10h18l-2 8H5l-2-8z"/><path d="M4 10a8 5 0 0 1 16 0"/><path d="M5 14h14"/>',
-    skewer: '<path d="M4 20 20 4"/><circle cx="8" cy="16" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="16" cy="8" r="2"/>'
+    skewer: '<path d="M4 20 20 4"/><circle cx="8" cy="16" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="16" cy="8" r="2"/>',
+    nuts: '<ellipse cx="9" cy="12" rx="3.2" ry="4.2" transform="rotate(-20 9 12)"/><ellipse cx="16" cy="10" rx="3.2" ry="4.2" transform="rotate(18 16 10)"/>'
   };
+  const RECIPE_GOAL_LABELS = { definicion:'Definición', mantenimiento:'Mantenimiento', volumen:'Volumen' };
   function recipeIconSVG(key){
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(RECIPE_ICON_SVGS[key]||RECIPE_ICON_SVGS.bowl)+'</svg>';
   }
 
   const RECIPES = [
-    { id:'avena-frutas', name:'Bowl de avena con frutas', cat:'desayuno', icon:'bowl', kcal:380, protein:14, carbs:58, fat:9, time:10,
+    { id:'avena-frutas', name:'Bowl de avena con frutas', cat:'desayuno', icon:'bowl', kcal:380, protein:14, carbs:58, fat:9, time:10, goals:['mantenimiento','volumen'],
       ingredients:['80 g de copos de avena','200 ml de leche o bebida vegetal','1 plátano','Un puñado de frutos rojos','1 cucharada de miel','Canela al gusto'],
       steps:['Cuece la avena con la leche a fuego medio, removiendo, unos 5 minutos.','Pásala a un bol.','Añade el plátano en rodajas y los frutos rojos por encima.','Termina con la miel y un poco de canela.'] },
-    { id:'tostada-aguacate-huevo', name:'Tostada de aguacate y huevo', cat:'desayuno', icon:'sandwich', kcal:340, protein:18, carbs:26, fat:18, time:10,
+    { id:'tostada-aguacate-huevo', name:'Tostada de aguacate y huevo', cat:'desayuno', icon:'sandwich', kcal:340, protein:18, carbs:26, fat:18, time:10, goals:['mantenimiento'],
       ingredients:['2 rebanadas de pan integral','1/2 aguacate','1 huevo','Sal, pimienta y unas gotas de limón'],
       steps:['Tuesta el pan.','Machaca el aguacate con sal, pimienta y limón, y repártelo sobre las tostadas.','Cuece el huevo (a la plancha o poché) y colócalo encima.'] },
-    { id:'yogur-granola', name:'Yogur griego con granola y fruta', cat:'desayuno', icon:'bowl', kcal:310, protein:20, carbs:34, fat:10, time:5,
+    { id:'yogur-granola', name:'Yogur griego con granola y fruta', cat:'desayuno', icon:'bowl', kcal:310, protein:20, carbs:34, fat:10, time:5, goals:['definicion','mantenimiento'],
       ingredients:['200 g de yogur griego natural','30 g de granola o copos de avena tostados','1 manzana o pera','Un puñado de nueces'],
       steps:['Pon el yogur en un bol.','Añade la fruta troceada por encima.','Termina con la granola y las nueces.'] },
-    { id:'tortitas-avena-platano', name:'Tortitas de avena y plátano', cat:'desayuno', icon:'pan', kcal:360, protein:16, carbs:52, fat:10, time:15,
+    { id:'tortitas-avena-platano', name:'Tortitas de avena y plátano', cat:'desayuno', icon:'pan', kcal:360, protein:16, carbs:52, fat:10, time:15, goals:['mantenimiento','volumen'],
       ingredients:['1 plátano maduro','2 huevos','40 g de copos de avena','Media cucharadita de levadura','Canela al gusto'],
       steps:['Tritura todos los ingredientes juntos hasta tener una masa homogénea.','Cocina pequeñas tortitas en una sartén antiadherente a fuego medio, 2 minutos por lado.','Sirve con fruta o un poco de miel.'] },
+    { id:'claras-champinones', name:'Revuelto de claras con champiñones', cat:'desayuno', icon:'pan', kcal:180, protein:22, carbs:6, fat:6, time:10, goals:['definicion'],
+      ingredients:['5 claras de huevo','100 g de champiñones','Espinacas al gusto','Sal, pimienta, un chorrito de aceite'],
+      steps:['Saltea los champiñones y las espinacas con un poco de aceite.','Añade las claras batidas con sal y pimienta.','Cuaja a fuego medio-bajo removiendo suavemente.'] },
+    { id:'avena-cacahuete-platano', name:'Bowl de avena con crema de cacahuete y plátano', cat:'desayuno', icon:'bowl', kcal:560, protein:20, carbs:70, fat:20, time:10, goals:['volumen'],
+      ingredients:['90 g de copos de avena','300 ml de leche entera','1 plátano','2 cucharadas de crema de cacahuete','1 cucharada de miel'],
+      steps:['Cuece la avena con la leche unos 5 minutos.','Sírvela en un bol y añade el plátano en rodajas.','Termina con la crema de cacahuete y la miel por encima.'] },
+    { id:'tortitas-platano-nueces', name:'Tortitas de plátano con miel y nueces', cat:'desayuno', icon:'pan', kcal:520, protein:18, carbs:64, fat:20, time:15, goals:['volumen'],
+      ingredients:['2 plátanos maduros','3 huevos','50 g de copos de avena','Un puñado de nueces','Miel al gusto'],
+      steps:['Tritura los plátanos con los huevos y la avena.','Cocina tortitas en una sartén antiadherente, 2 minutos por lado.','Sirve con nueces troceadas y miel por encima.'] },
 
-    { id:'pollo-arroz-verduras', name:'Pollo a la plancha con arroz y verduras', cat:'comida', icon:'pan', kcal:520, protein:42, carbs:55, fat:12, time:25,
+    { id:'pollo-arroz-verduras', name:'Pollo a la plancha con arroz y verduras', cat:'comida', icon:'pan', kcal:520, protein:42, carbs:55, fat:12, time:25, goals:['mantenimiento','volumen'],
       ingredients:['150 g de pechuga de pollo','80 g de arroz (en seco)','Verduras variadas (pimiento, calabacín, zanahoria)','Aceite de oliva, ajo, sal y pimienta'],
       steps:['Cuece el arroz según el envase.','Saltea las verduras troceadas con un poco de aceite y ajo.','Cocina el pollo a la plancha con sal y pimienta.','Sirve todo junto.'] },
-    { id:'salmon-boniato', name:'Salmón al horno con boniato', cat:'comida', icon:'pan', kcal:480, protein:34, carbs:38, fat:20, time:30,
+    { id:'salmon-boniato', name:'Salmón al horno con boniato', cat:'comida', icon:'pan', kcal:480, protein:34, carbs:38, fat:20, time:30, goals:['mantenimiento'],
       ingredients:['150 g de salmón','1 boniato mediano','Brócoli al gusto','Aceite de oliva, limón, sal'],
       steps:['Precalienta el horno a 200°C.','Corta el boniato en dados y hornea 20-25 min con un poco de aceite.','Añade el salmón y el brócoli los últimos 12-15 minutos.','Termina con un chorro de limón.'] },
-    { id:'ensalada-quinoa-atun', name:'Ensalada de quinoa con atún', cat:'comida', icon:'salad', kcal:430, protein:30, carbs:42, fat:14, time:15,
+    { id:'ensalada-quinoa-atun', name:'Ensalada de quinoa con atún', cat:'comida', icon:'salad', kcal:430, protein:30, carbs:42, fat:14, time:15, goals:['definicion','mantenimiento'],
       ingredients:['70 g de quinoa (en seco)','1 lata de atún al natural','Tomate, pepino y cebolla','Aceite de oliva, limón, sal'],
       steps:['Cuece la quinoa según el envase y déjala templar.','Trocea el tomate, el pepino y la cebolla.','Mezcla todo con el atún escurrido.','Aliña con aceite, limón y sal.'] },
-    { id:'lentejas-verduras', name:'Lentejas estofadas con verduras', cat:'comida', icon:'bowl', kcal:410, protein:22, carbs:58, fat:9, time:35,
+    { id:'lentejas-verduras', name:'Lentejas estofadas con verduras', cat:'comida', icon:'bowl', kcal:410, protein:22, carbs:58, fat:9, time:35, goals:['mantenimiento'],
       ingredients:['150 g de lentejas (en seco)','Zanahoria, cebolla, pimiento y tomate','Ajo, laurel, pimentón, aceite de oliva'],
       steps:['Sofríe la cebolla, el ajo y el pimiento en un poco de aceite.','Añade la zanahoria, el tomate y el pimentón, y remueve un minuto.','Incorpora las lentejas y cubre con agua. Cuece 25-30 minutos.'] },
+    { id:'pechuga-esparragos', name:'Pechuga de pollo a la plancha con espárragos', cat:'comida', icon:'pan', kcal:320, protein:45, carbs:8, fat:10, time:20, goals:['definicion'],
+      ingredients:['180 g de pechuga de pollo','Un manojo de espárragos verdes','Aceite de oliva, ajo, limón, sal'],
+      steps:['Marca la pechuga a la plancha por ambos lados con sal y pimienta.','Saltea los espárragos con ajo y un poco de aceite.','Sirve con un chorro de limón.'] },
+    { id:'ensalada-atun-huevo', name:'Ensalada de atún y huevo', cat:'comida', icon:'salad', kcal:280, protein:28, carbs:10, fat:14, time:15, goals:['definicion'],
+      ingredients:['1 lata de atún al natural','2 huevos cocidos','Lechuga, tomate, pepino','Aceite de oliva, vinagre, sal'],
+      steps:['Cuece los huevos (unos 10 min) y déjalos templar.','Trocea la lechuga, el tomate y el pepino.','Mezcla todo con el atún escurrido y el huevo troceado.','Aliña con aceite, vinagre y sal.'] },
+    { id:'wrap-pavo-ligero', name:'Wrap de pavo bajo en grasa', cat:'comida', icon:'sandwich', kcal:300, protein:32, carbs:30, fat:7, time:10, goals:['definicion'],
+      ingredients:['1 tortilla integral pequeña','120 g de pechuga de pavo en lonchas','Lechuga, tomate','1 cucharada de mostaza o yogur 0%'],
+      steps:['Extiende la mostaza o el yogur sobre la tortilla.','Añade el pavo y las verduras.','Enrolla apretado y corta por la mitad.'] },
+    { id:'arroz-pollo-aguacate', name:'Arroz con pollo y aguacate', cat:'comida', icon:'bowl', kcal:650, protein:40, carbs:75, fat:20, time:25, goals:['volumen'],
+      ingredients:['100 g de arroz (en seco)','180 g de pechuga de pollo','1/2 aguacate','Aceite de oliva, especias al gusto'],
+      steps:['Cuece el arroz según el envase.','Cocina el pollo a la plancha en trozos con especias.','Sirve el arroz con el pollo y el aguacate en láminas por encima.'] },
+    { id:'pasta-carne-queso', name:'Pasta con carne picada y queso', cat:'comida', icon:'bowl', kcal:700, protein:38, carbs:80, fat:22, time:25, goals:['volumen'],
+      ingredients:['100 g de pasta (en seco)','150 g de carne picada','Tomate triturado','Queso rallado al gusto'],
+      steps:['Cuece la pasta según el envase.','Dora la carne picada y añade el tomate, cociendo unos 10 minutos.','Mezcla con la pasta y termina con queso rallado por encima.'] },
+    { id:'burrito-ternera-arroz', name:'Burrito de ternera con arroz y queso', cat:'comida', icon:'sandwich', kcal:700, protein:42, carbs:68, fat:26, time:20, goals:['volumen'],
+      ingredients:['1 tortilla grande de trigo','150 g de ternera picada','60 g de arroz cocido','Queso rallado, salsa al gusto'],
+      steps:['Dora la ternera picada con especias.','Mezcla con el arroz cocido.','Rellena la tortilla, añade queso y enrolla bien apretado.'] },
 
-    { id:'tortilla-espinacas', name:'Tortilla de claras con espinacas', cat:'cena', icon:'pan', kcal:280, protein:28, carbs:8, fat:14, time:15,
+    { id:'tortilla-espinacas', name:'Tortilla de claras con espinacas', cat:'cena', icon:'pan', kcal:280, protein:28, carbs:8, fat:14, time:15, goals:['definicion'],
       ingredients:['4 claras de huevo + 1 huevo entero','Un puñado de espinacas','Champiñones al gusto','Sal, pimienta, aceite de oliva'],
       steps:['Saltea las espinacas y los champiñones con un poco de aceite.','Bate los huevos con sal y pimienta.','Vierte sobre las verduras y cuaja la tortilla a fuego medio-bajo.'] },
-    { id:'merluza-verduras-vapor', name:'Merluza con verduras al vapor', cat:'cena', icon:'pan', kcal:310, protein:32, carbs:16, fat:12, time:20,
+    { id:'merluza-verduras-vapor', name:'Merluza con verduras al vapor', cat:'cena', icon:'pan', kcal:310, protein:32, carbs:16, fat:12, time:20, goals:['definicion'],
       ingredients:['180 g de merluza (o pescado blanco)','Brócoli, zanahoria y judía verde','Aceite de oliva, limón, sal'],
       steps:['Cuece las verduras al vapor 8-10 minutos.','Cocina la merluza a la plancha o al horno con sal y un chorro de limón.','Sirve junto con un poco de aceite de oliva.'] },
-    { id:'crema-calabaza', name:'Crema de calabaza con pollo', cat:'cena', icon:'bowl', kcal:340, protein:26, carbs:32, fat:12, time:30,
+    { id:'crema-calabaza', name:'Crema de calabaza con pollo', cat:'cena', icon:'bowl', kcal:340, protein:26, carbs:32, fat:12, time:30, goals:['mantenimiento'],
       ingredients:['300 g de calabaza','1 patata pequeña','100 g de pechuga de pollo','Cebolla, caldo de verduras, aceite de oliva'],
       steps:['Cuece la calabaza, la patata y la cebolla en caldo hasta que estén tiernas.','Tritura hasta obtener una crema fina.','Cocina el pollo a la plancha y sírvelo troceado encima de la crema.'] },
-    { id:'wrap-pavo', name:'Wrap de pavo y verduras', cat:'cena', icon:'sandwich', kcal:360, protein:28, carbs:34, fat:12, time:10,
+    { id:'wrap-pavo', name:'Wrap de pavo y verduras', cat:'cena', icon:'sandwich', kcal:360, protein:28, carbs:34, fat:12, time:10, goals:['mantenimiento','definicion'],
       ingredients:['1 tortilla integral','100 g de pechuga de pavo en lonchas','Lechuga, tomate y zanahoria rallada','1 cucharada de yogur o hummus'],
       steps:['Extiende el yogur o hummus sobre la tortilla.','Añade el pavo y las verduras.','Enrolla bien apretado y corta por la mitad.'] },
+    { id:'salmon-brocoli-vapor', name:'Salmón al vapor con brócoli', cat:'cena', icon:'pan', kcal:330, protein:33, carbs:10, fat:17, time:20, goals:['definicion'],
+      ingredients:['180 g de salmón','Brócoli al gusto','Limón, eneldo, sal'],
+      steps:['Cuece el salmón y el brócoli al vapor unos 12-15 minutos.','Sirve con un chorro de limón y eneldo.'] },
+    { id:'gambas-calabacin', name:'Gambas a la plancha con calabacín', cat:'cena', icon:'pan', kcal:250, protein:30, carbs:8, fat:10, time:15, goals:['definicion'],
+      ingredients:['200 g de gambas peladas','1 calabacín','Ajo, perejil, aceite de oliva, sal'],
+      steps:['Saltea el calabacín en rodajas con un poco de aceite.','Añade las gambas con ajo picado y saltea 3-4 minutos.','Termina con perejil picado.'] },
+    { id:'chili-carne-arroz', name:'Chili con carne y arroz', cat:'cena', icon:'bowl', kcal:640, protein:36, carbs:70, fat:20, time:35, goals:['volumen'],
+      ingredients:['150 g de carne picada','1 lata de alubias rojas','Tomate triturado, pimiento, cebolla','80 g de arroz (en seco)'],
+      steps:['Sofríe la cebolla y el pimiento.','Añade la carne picada y dórala.','Incorpora el tomate y las alubias, y cuece 20 minutos.','Sirve con el arroz cocido.'] },
 
-    { id:'batido-proteico', name:'Batido de proteína con frutos rojos', cat:'snack', icon:'smoothie', kcal:220, protein:25, carbs:20, fat:4, time:5,
+    { id:'batido-proteico', name:'Batido de proteína con frutos rojos', cat:'snack', icon:'smoothie', kcal:220, protein:25, carbs:20, fat:4, time:5, goals:['definicion'],
       ingredients:['1 medida de proteína en polvo (o 200 g de yogur griego)','150 ml de leche o bebida vegetal','Un puñado de frutos rojos (frescos o congelados)'],
       steps:['Pon todos los ingredientes en la batidora.','Tritura hasta que quede homogéneo.','Sirve bien frío.'] },
-    { id:'brocheta-fruta-yogur', name:'Brocheta de fruta con yogur', cat:'snack', icon:'skewer', kcal:150, protein:6, carbs:26, fat:3, time:8,
+    { id:'brocheta-fruta-yogur', name:'Brocheta de fruta con yogur', cat:'snack', icon:'skewer', kcal:150, protein:6, carbs:26, fat:3, time:8, goals:['definicion'],
       ingredients:['Fruta variada (plátano, fresa, uva, melón)','100 g de yogur natural','Canela al gusto (opcional)'],
       steps:['Corta la fruta en trozos y ensártala en una brocheta.','Sirve con el yogur para mojar.','Añade canela por encima si quieres.'] },
-    { id:'hummus-crudites', name:'Hummus casero con crudités', cat:'snack', icon:'salad', kcal:190, protein:8, carbs:20, fat:9, time:10,
+    { id:'hummus-crudites', name:'Hummus casero con crudités', cat:'snack', icon:'salad', kcal:190, protein:8, carbs:20, fat:9, time:10, goals:['definicion'],
       ingredients:['1 lata de garbanzos cocidos','1 cucharada de tahini (opcional)','Ajo, limón, aceite de oliva, sal','Zanahoria y pepino para mojar'],
       steps:['Tritura los garbanzos con el tahini, ajo, limón, aceite y sal hasta que quede cremoso.','Sirve con bastones de zanahoria y pepino.'] },
-    { id:'tostada-atun', name:'Tosta de atún y tomate', cat:'snack', icon:'sandwich', kcal:210, protein:16, carbs:20, fat:7, time:5,
+    { id:'tostada-atun', name:'Tosta de atún y tomate', cat:'snack', icon:'sandwich', kcal:210, protein:16, carbs:20, fat:7, time:5, goals:['definicion'],
       ingredients:['1 rebanada de pan integral','1 lata pequeña de atún al natural','Tomate en rodajas','Orégano y aceite de oliva'],
-      steps:['Tuesta el pan.','Coloca el tomate y el atún escurrido encima.','Termina con un chorro de aceite y orégano.'] }
+      steps:['Tuesta el pan.','Coloca el tomate y el atún escurrido encima.','Termina con un chorro de aceite y orégano.'] },
+    { id:'yogur-proteico-fresas', name:'Yogur proteico con fresas', cat:'snack', icon:'bowl', kcal:150, protein:18, carbs:14, fat:2, time:5, goals:['definicion'],
+      ingredients:['200 g de yogur griego 0%','1 medida de proteína en polvo (opcional)','Un puñado de fresas'],
+      steps:['Mezcla el yogur con la proteína en polvo si la usas.','Añade las fresas troceadas por encima.'] },
+    { id:'batido-ligero', name:'Batido de proteína ligero', cat:'snack', icon:'smoothie', kcal:130, protein:24, carbs:6, fat:2, time:5, goals:['definicion'],
+      ingredients:['1 medida de proteína en polvo','200 ml de agua o bebida vegetal desnatada','Hielo al gusto'],
+      steps:['Pon todos los ingredientes en la batidora.','Tritura hasta que quede homogéneo y sirve bien frío.'] },
+    { id:'batido-hipercalorico', name:'Batido hipercalórico de avena y cacahuete', cat:'snack', icon:'smoothie', kcal:600, protein:28, carbs:65, fat:24, time:5, goals:['volumen'],
+      ingredients:['300 ml de leche entera','40 g de copos de avena','1 plátano','2 cucharadas de crema de cacahuete','1 medida de proteína en polvo (opcional)'],
+      steps:['Pon todos los ingredientes en la batidora.','Tritura bien hasta que quede cremoso.','Sirve frío.'] },
+    { id:'mix-frutos-secos', name:'Mix energético de frutos secos y fruta desecada', cat:'snack', icon:'nuts', kcal:420, protein:12, carbs:38, fat:26, time:2, goals:['volumen'],
+      ingredients:['30 g de almendras','30 g de nueces','30 g de pasas o orejones','Un puñado de chocolate negro (opcional)'],
+      steps:['Mezcla todos los ingredientes en un bol o bolsa.','Llévalo contigo como snack de energía rápida.'] }
   ];
 
   let recipeCatFilter = 'all';
+  let recipeGoalFilter = 'all';
 
   function buildRecipeChips(){
     const row = $('recipeChipRow');
@@ -2144,9 +2201,29 @@
     });
   }
 
+  // Al abrir Recetas por primera vez, preseleccionamos el objetivo según
+  // lo que ya tenga puesto la persona en Nutrición (bajar peso→Definición,
+  // mantener→Mantenimiento, ganar músculo→Volumen), sin impedir cambiarlo.
+  function initRecipeGoalFilter(){
+    const seg = $('recipeGoalSeg');
+    if(!seg) return;
+    const map = { lose:'definicion', maintain:'mantenimiento', gain:'volumen' };
+    const initial = map[nState.goal] || 'all';
+    recipeGoalFilter = initial;
+    seg.querySelectorAll('button').forEach(b=> b.classList.toggle('active', b.dataset.val===initial));
+    seg.addEventListener('click', e=>{
+      const b = e.target.closest('button'); if(!b) return;
+      seg.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      recipeGoalFilter = b.dataset.val;
+      renderRecipeList();
+    });
+  }
+
   function renderRecipeList(){
     const grid = $('recipeGrid');
-    const list = recipeCatFilter === 'all' ? RECIPES : RECIPES.filter(r=>r.cat===recipeCatFilter);
+    let list = recipeCatFilter === 'all' ? RECIPES : RECIPES.filter(r=>r.cat===recipeCatFilter);
+    if(recipeGoalFilter !== 'all') list = list.filter(r=> r.goals && r.goals.includes(recipeGoalFilter));
     grid.innerHTML = '';
     $('recipeEmptyNote').style.display = list.length ? 'none' : 'block';
     list.forEach(r=>{
@@ -2167,8 +2244,10 @@
     const r = RECIPES.find(x=>x.id===id);
     if(!r) return;
     $('recipeDetailName').textContent = r.name;
+    const goalTags = (r.goals||[]).map(g=> RECIPE_GOAL_LABELS[g]).filter(Boolean).join(' · ');
     $('recipeDetailBody').innerHTML =
       '<div class="recipe-detail-icon">'+recipeIconSVG(r.icon)+'</div>'+
+      (goalTags ? '<p class="hint" style="text-align:center;margin:-8px 0 12px;">'+escapeHtml(goalTags)+'</p>' : '')+
       '<div class="food-macros" style="padding:0 18px 16px;">'+
         '<div class="food-macro-pill"><span class="fm-val">'+r.kcal+'</span><span class="fm-lbl">kcal</span></div>'+
         '<div class="food-macro-pill"><span class="fm-val">'+r.protein+'g</span><span class="fm-lbl">proteína</span></div>'+
@@ -2189,6 +2268,7 @@
   $('recipeClose').addEventListener('click', closeRecipeDetail);
   $('recipeBackdrop').addEventListener('click', closeRecipeDetail);
   buildRecipeChips();
+  initRecipeGoalFilter();
   renderRecipeList();
 
   let foodCatFilter = 'all';
