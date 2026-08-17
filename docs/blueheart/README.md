@@ -16,6 +16,8 @@ Esta carpeta contiene la documentación fundacional del proyecto **BlueHeart**, 
    Cómo se comporta la inteligencia artificial de BlueHeart, qué funciones desempeña, qué límites tiene, cómo conversa, cómo construye perfiles, cómo compara personas y cómo explica sus recomendaciones.
 6. [Bloque 6 — El Algoritmo](./bloque-6-algoritmo.md)
    El sistema de decisión que transforma dos Perfiles de Compatibilidad en un resultado cuantificable, reproducible y explicable: cómo se representan y clasifican las variables, cómo se ponderan, cómo se comparan, criterios no negociables e incompatibilidades críticas, compensaciones, cálculo del porcentaje global y del nivel de confianza, umbral de recomendación, ranking, reproducibilidad, versionado, trazabilidad, validación y límites del algoritmo.
+7. [Bloque 7 — Experiencia del Usuario](./bloque-7-experiencia-usuario.md)
+   El recorrido completo de una persona por BlueHeart, desde el primer contacto hasta el seguimiento posterior a las conexiones y citas: registro, onboarding, conversación con la IA, construcción y presentación del Perfil de Compatibilidad, llegada y explicación de una recomendación, interés bilateral, apertura de contacto, primera cita, seguridad, feedback, seguimiento, pausa y salida, notificaciones, estados del sistema, casos excepcionales, y el mapa completo de pantallas y comunicaciones que sirve de puente hacia la implementación técnica.
 
 ## Resumen del proyecto
 
