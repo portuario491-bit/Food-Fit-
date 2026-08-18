@@ -64,11 +64,11 @@ function renderProfile({ user, photos, profileScores, answeredCount, total, erro
       ${photos.map(photoThumb).join('') || ''}
     </div>
     <form method="POST" action="/perfil/foto" enctype="multipart/form-data" class="upload-box">
-      <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required>
+      <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required onchange="this.form.submit()">
       <div style="margin-top:12px;">
         <button class="btn secondary" type="submit">Subir foto</button>
       </div>
-      <div class="hint">JPG, PNG o WEBP · máx. 5 MB. La primera foto que subas será tu foto principal.</div>
+      <div class="hint">JPG, PNG o WEBP · máx. 5 MB. La primera foto que subas será tu foto principal. Se sube en cuanto la seleccionas — no hace falta pulsar ningún otro botón de esta página para guardarla.</div>
     </form>
 
     <div class="section-title">Datos básicos</div>
