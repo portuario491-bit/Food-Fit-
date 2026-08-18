@@ -43,6 +43,7 @@ function page({ title, user, activeNav = '', body = '', wide = false }) {
         ${navLink('/perfil', 'Mi perfil', activeNav, 'perfil')}
         ${navLink('/cuestionario', 'Cuestionario', activeNav, 'cuestionario')}
         ${navLink('/matches', 'Compatibilidades', activeNav, 'matches')}
+        ${navLink('/chat', 'Mensajes', activeNav, 'chat')}
       </nav>
       <div class="spacer"></div>
       <form method="POST" action="/logout"><button class="logout-btn" type="submit">Salir</button></form>

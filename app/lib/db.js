@@ -74,6 +74,18 @@ CREATE TABLE IF NOT EXISTS screening_responses (
 );
 `);
 
+/** Mensajes del chat interno entre dos personas con match (Bloque 7.19).
+ *  Un simple hilo por pareja de usuarios — sin conversaciones de grupo. */
+db.exec(`
+CREATE TABLE IF NOT EXISTS messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  from_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  to_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  body TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+`);
+
 /** Añade una columna si todavía no existe — permite evolucionar el esquema
  *  sin perder los datos ya guardados de un piloto en marcha. */
 function addColumnIfMissing(table, columnDef) {
@@ -182,6 +194,46 @@ function listScreeningResponses() {
   return db.prepare(`SELECT * FROM screening_responses ORDER BY created_at DESC`).all();
 }
 
+/* ---------- messages (chat interno) ---------- */
+function sendMessage(fromId, toId, body) {
+  db.prepare(`INSERT INTO messages (from_id, to_id, body) VALUES (?, ?, ?)`).run(fromId, toId, body);
+}
+
+/** Todos los mensajes entre dos personas, en cualquier dirección, en orden cronológico. */
+function getConversation(userIdA, userIdB) {
+  return db
+    .prepare(
+      `SELECT * FROM messages
+       WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)
+       ORDER BY created_at ASC, id ASC`
+    )
+    .all(userIdA, userIdB, userIdB, userIdA);
+}
+
+/** Para cada persona con la que el usuario tiene al menos un mensaje, el último
+ *  mensaje del hilo — para poder listar sus conversaciones activas. */
+function listConversationsFor(userId) {
+  return db
+    .prepare(
+      `SELECT
+         other.id AS other_id,
+         other.name AS other_name,
+         m.body AS last_body,
+         m.created_at AS last_at,
+         m.from_id AS last_from_id
+       FROM messages m
+       JOIN users other ON other.id = (CASE WHEN m.from_id = ? THEN m.to_id ELSE m.from_id END)
+       WHERE m.from_id = ? OR m.to_id = ?
+       AND m.id IN (
+         SELECT MAX(id) FROM messages
+         WHERE from_id = ? OR to_id = ?
+         GROUP BY CASE WHEN from_id = ? THEN to_id ELSE from_id END
+       )
+       ORDER BY m.created_at DESC`
+    )
+    .all(userId, userId, userId, userId, userId, userId);
+}
+
 /* ---------- photos ---------- */
 function addPhoto(userId, filename, makePrimary) {
   if (makePrimary) {
@@ -274,6 +326,9 @@ module.exports = {
   createScreeningResponse,
   addScreeningContact,
   listScreeningResponses,
+  sendMessage,
+  getConversation,
+  listConversationsFor,
   addPhoto,
   getPhotos,
   getPrimaryPhoto,

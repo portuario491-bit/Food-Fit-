@@ -177,6 +177,9 @@ Estado de elegibilidad: ${result.eligibility_status} — ${result.eligibility_re
 
     <div class="row-btns" style="margin-top:22px;">
       <a class="btn secondary" href="/matches">← Volver a compatibilidades</a>
+      ${['RECOMMENDED', 'RECOMMENDED_WITH_NOTES'].includes(result.eligibility_status)
+        ? `<a class="btn" href="/chat/${other.id}">Enviar mensaje</a>`
+        : ''}
     </div>
   </div>`;
 

@@ -37,6 +37,9 @@ proyecto y `blueheart-demo.html` para el prototipo de producto sin backend.
 - Todo en un único proceso Node.js con SQLite embebido (`node:sqlite`,
   nativo desde Node 22.5) — sin bases de datos ni servicios externos que
   dar de alta para el piloto.
+- **Chat interno** (Bloque 7.19): cuando dos personas son recomendadas mutuamente
+  (match de género/edad + compatibilidad `RECOMMENDED`/`RECOMMENDED_WITH_NOTES`),
+  pueden escribirse dentro de la propia app, sin compartir teléfono ni redes.
 - **Panel de administración** (`/admin`, protegido por `ADMIN_PASSWORD`,
   separado del código de invitación): lista de personas registradas con su
   estado de perfil/cuestionario, la **matriz completa de compatibilidad**
