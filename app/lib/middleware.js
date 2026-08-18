@@ -16,7 +16,7 @@ function requireAuth(req, res, next) {
 function requireProfileBasics(req, res, next) {
   const photos = db.getPhotos(req.user.id);
   if (!db.hasCompleteBasics(req.user, photos.length)) {
-    return res.redirect('/perfil');
+    return res.redirect('/perfil?incompleto=1');
   }
   next();
 }

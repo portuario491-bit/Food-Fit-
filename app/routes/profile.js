@@ -21,7 +21,10 @@ function renderProfilePage(req, res, status, extra) {
 }
 
 router.get('/perfil', requireAuth, (req, res) => {
-  renderProfilePage(req, res, 200, { success: req.query.saved ? 'Perfil actualizado.' : null });
+  renderProfilePage(req, res, 200, {
+    success: req.query.saved ? 'Perfil actualizado.' : null,
+    showIncompleteNotice: !!req.query.incompleto,
+  });
 });
 
 router.post('/perfil', requireAuth, (req, res) => {

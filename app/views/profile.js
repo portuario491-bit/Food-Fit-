@@ -35,13 +35,27 @@ function dimensionBars(scores) {
   }).join('');
 }
 
-function renderProfile({ user, photos, profileScores, answeredCount, total, error, success }) {
+function renderProfile({ user, photos, profileScores, answeredCount, total, error, success, showIncompleteNotice }) {
   const onboardingDone = !!user.onboarding_completed;
+  const hasPhoto = photos.length > 0;
+  const hasBasics = !!(user.age && user.gender && user.seeking_gender);
+  const profileComplete = hasPhoto && hasBasics;
+
+  const checklist = `
+  <div class="steps-hint">
+    <span class="${hasPhoto ? 'done' : 'current'}">${hasPhoto ? '✓' : '①'} Sube una foto</span>
+    <span class="${hasBasics ? 'done' : hasPhoto ? 'current' : ''}">${hasBasics ? '✓' : '②'} Guarda tus datos básicos</span>
+    <span class="${onboardingDone ? 'done' : profileComplete ? 'current' : ''}">${onboardingDone ? '✓' : '③'} Completa el cuestionario</span>
+  </div>`;
 
   const body = `
   <div class="card">
     <div class="summary-title">Mi perfil</div>
     <div class="summary-sub">Esto es lo que verán las demás personas del piloto cuando aparezcas como una compatibilidad.</div>
+    ${checklist}
+    ${showIncompleteNotice && !profileComplete
+      ? `<div class="alert info">Para pasar al cuestionario primero hay que completar los pasos ① y ② de arriba: ${!hasPhoto ? 'te falta subir una foto' : ''}${!hasPhoto && !hasBasics ? ' y ' : ''}${!hasBasics ? 'te falta guardar tus datos básicos (rellena el formulario y pulsa "Guardar cambios")' : ''}.</div>`
+      : ''}
     ${error ? `<div class="alert error">${escapeHtml(error)}</div>` : ''}
     ${success ? `<div class="alert success">${escapeHtml(success)}</div>` : ''}
 
