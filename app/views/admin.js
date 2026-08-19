@@ -19,6 +19,17 @@ const STATUS_CLASS = {
   CRITICAL_CONFLICT: 'status-bad',
 };
 
+/** `datetime('now')` de SQLite guarda la hora en UTC, no en la hora de
+ *  España — la convertimos para mostrarla en el panel. */
+function formatMadridDateTime(sqliteUtc) {
+  if (!sqliteUtc) return '';
+  const d = new Date(sqliteUtc.replace(' ', 'T') + 'Z');
+  if (Number.isNaN(d.getTime())) return sqliteUtc;
+  return new Intl.DateTimeFormat('es-ES', {
+    timeZone: 'Europe/Madrid', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  }).format(d);
+}
+
 function renderAdminLogin({ error } = {}) {
   const body = `
   <div class="card auth-card">
@@ -48,7 +59,7 @@ function userRow(u) {
     <td>${u.photo_count}</td>
     <td>${completo ? '<span class="status-pill status-good">Perfil OK</span>' : '<span class="status-pill status-neutral">Incompleto</span>'}</td>
     <td>${u.onboarding_completed ? '<span class="status-pill status-good">Sí</span>' : '<span class="status-pill status-neutral">No</span>'}</td>
-    <td>${escapeHtml((u.created_at || '').replace('T', ' ').slice(0, 16))}</td>
+    <td>${escapeHtml(formatMadridDateTime(u.created_at))}</td>
     <td>
       <form method="POST" action="/admin/usuarios/${u.id}/eliminar"
             onsubmit="return confirm('¿Borrar la cuenta de ${escapeHtml(u.name)} y todos sus datos? Esto no se puede deshacer.');">
@@ -82,7 +93,7 @@ function screeningRow(s) {
     <td>${escapeHtml(s.looking_for)}</td>
     <td>${escapeHtml(s.wants_to_participate)}</td>
     <td>${s.contact_method ? `${escapeHtml(s.contact_method)}: ${escapeHtml(s.contact_value)}` : '—'}</td>
-    <td>${escapeHtml((s.created_at || '').replace('T', ' ').slice(0, 16))}</td>
+    <td>${escapeHtml(formatMadridDateTime(s.created_at))}</td>
   </tr>`;
 }
 
