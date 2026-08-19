@@ -125,9 +125,10 @@ function renderMatchDetail({ user, userPhotoId, other, otherPhotoId, result }) {
   <div class="card">
     <div class="result-head">
       <div class="result-avatar-row">
-        ${userPhotoId ? `<img src="/fotos/${userPhotoId}" alt="Tú">` : ''}
-        ${otherPhotoId ? `<img src="/fotos/${otherPhotoId}" alt="${escapeHtml(other.name)}">` : ''}
+        ${userPhotoId ? `<a href="/fotos/${userPhotoId}" target="_blank" rel="noopener"><img src="/fotos/${userPhotoId}" alt="Tú"></a>` : ''}
+        ${otherPhotoId ? `<a href="/fotos/${otherPhotoId}" target="_blank" rel="noopener"><img src="/fotos/${otherPhotoId}" alt="${escapeHtml(other.name)}"></a>` : ''}
       </div>
+      <div class="summary-sub" style="margin-top:2px;">Toca una foto para verla en grande.</div>
       <div class="result-names">Tú &amp; ${escapeHtml(other.name)}</div>
       <div class="gauge">
         <svg viewBox="0 0 120 120">

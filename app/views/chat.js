@@ -17,7 +17,7 @@ function renderChat({ user, other, otherPhotoId, messages }) {
   <div class="card chat-card">
     <div class="chat-header">
       ${otherPhotoId
-        ? `<img class="person-avatar" src="/fotos/${otherPhotoId}" alt="${escapeHtml(other.name)}">`
+        ? `<a href="/fotos/${otherPhotoId}" target="_blank" rel="noopener" title="Ver foto en grande"><img class="person-avatar" src="/fotos/${otherPhotoId}" alt="${escapeHtml(other.name)}"></a>`
         : `<div class="person-avatar">${initials(other.name)}</div>`}
       <div>
         <b>${escapeHtml(other.name)}</b>
