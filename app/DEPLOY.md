@@ -53,9 +53,29 @@ Decide y ten a mano:
    ADMIN_PASSWORD=<una contraseña distinta, solo para ti>
    DATA_DIR=/data/db
    UPLOADS_DIR=/data/uploads
+   EMAIL_USER=<tu email de Gmail>
+   EMAIL_PASS=<la contraseña de aplicación de 16 caracteres>
    ```
    `ADMIN_PASSWORD` da acceso a `/admin`: la lista de personas registradas
    y la matriz completa de compatibilidad. No la compartas con el piloto.
+
+   `EMAIL_USER`/`EMAIL_PASS` son para las notificaciones de chat por email.
+   No uses tu contraseña normal de Gmail — Google no lo permite para este
+   tipo de conexión. Genera una "contraseña de aplicación" así:
+   1. Entra en [myaccount.google.com/security](https://myaccount.google.com/security).
+   2. Activa la **verificación en dos pasos** si todavía no la tienes activada
+      (es obligatoria para poder generar contraseñas de aplicación).
+   3. Busca **"Contraseñas de aplicaciones"** (puedes escribirlo en el buscador
+      de arriba de la página de seguridad de Google si no la encuentras a
+      simple vista).
+   4. Créala con el nombre que quieras (por ejemplo "BlueHeart"), elige tipo
+      "Correo" si te lo pide, y copia el código de 16 caracteres que te da
+      — sin espacios, tal cual, en `EMAIL_PASS`.
+   5. En `EMAIL_USER` pon tu dirección de Gmail completa.
+
+   Si dejas estas dos variables vacías, la app funciona exactamente igual,
+   simplemente no se manda el aviso por email cuando alguien recibe un
+   mensaje de chat nuevo.
    (`DATA_DIR` y `UPLOADS_DIR` son subcarpetas dentro del volumen que
    montaste en el paso 4 — Railway las crea solas al arrancar la app.)
    No hace falta que definas `PORT`: Railway lo asigna automáticamente y

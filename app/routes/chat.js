@@ -3,6 +3,7 @@ const db = require('../lib/db');
 const { requireAuth, requireProfileBasics } = require('../lib/middleware');
 const { computeCompatibility } = require('../lib/algorithm');
 const { isMutualMatch } = require('../lib/matchFilter');
+const { sendNewMessageEmail } = require('../lib/email');
 const { renderChat, renderConversationList } = require('../views/chat');
 
 const router = express.Router();
@@ -41,7 +42,11 @@ router.post('/chat/:id', requireAuth, requireProfileBasics, (req, res) => {
   if (!canChat(req.user, other)) return res.redirect('/matches');
 
   const body = (req.body.body || '').trim().slice(0, 2000);
-  if (body) db.sendMessage(req.user.id, other.id, body);
+  if (body) {
+    db.sendMessage(req.user.id, other.id, body);
+    const chatUrl = `${req.protocol}://${req.get('host')}/chat/${req.user.id}`;
+    sendNewMessageEmail({ to: other.email, recipientName: other.name, senderName: req.user.name, chatUrl }).catch(() => {});
+  }
   res.redirect(`/chat/${other.id}`);
 });
 
