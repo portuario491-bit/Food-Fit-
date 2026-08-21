@@ -76,6 +76,20 @@ Decide y ten a mano:
    Si dejas estas dos variables vacías, la app funciona exactamente igual,
    simplemente no se manda el aviso por email cuando alguien recibe un
    mensaje de chat nuevo.
+
+   Además, para las **notificaciones push del navegador** (segundo canal,
+   además del email — no requieren darse de alta en ningún sitio, son
+   solo un par de claves criptográficas propias de esta app) añade:
+   ```
+   VAPID_PUBLIC_KEY=<genérala con: npx web-push generate-vapid-keys>
+   VAPID_PRIVATE_KEY=<la clave privada que te dé el comando anterior>
+   VAPID_SUBJECT=mailto:tu-email@ejemplo.com
+   ```
+   `VAPID_PRIVATE_KEY` es un secreto — no la compartas ni la subas a
+   ningún sitio público, igual que `SESSION_SECRET` o `ADMIN_PASSWORD`.
+   Recuerda: en iPhone, Safari solo activa estos avisos si la persona
+   añade la web a su pantalla de inicio; si no, solo le llegará el aviso
+   por email (que funciona siempre, en cualquier dispositivo).
    (`DATA_DIR` y `UPLOADS_DIR` son subcarpetas dentro del volumen que
    montaste en el paso 4 — Railway las crea solas al arrancar la app.)
    No hace falta que definas `PORT`: Railway lo asigna automáticamente y

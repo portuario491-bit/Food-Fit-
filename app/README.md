@@ -40,9 +40,12 @@ proyecto y `blueheart-demo.html` para el prototipo de producto sin backend.
 - **Chat interno** (Bloque 7.19): cuando dos personas son recomendadas mutuamente
   (match de género/edad + compatibilidad `RECOMMENDED`/`RECOMMENDED_WITH_NOTES`),
   pueden escribirse dentro de la propia app, sin compartir teléfono ni redes.
-  Al recibir un mensaje, la otra persona recibe un aviso por email (no
-  incluye el contenido del mensaje — solo un enlace para verlo, Bloque
-  7.32.4) si `EMAIL_USER`/`EMAIL_PASS` están configuradas.
+  Al recibir un mensaje, la otra persona recibe un aviso por email (si
+  `EMAIL_USER`/`EMAIL_PASS` están configuradas) y por notificación push
+  del navegador (si `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` están
+  configuradas y la persona la ha activado con el botón "🔔 Activar
+  avisos" de la barra superior) — ninguno de los dos avisos incluye el
+  contenido del mensaje, solo un enlace para verlo (Bloque 7.32.4).
 - **Panel de administración** (`/admin`, protegido por `ADMIN_PASSWORD`,
   separado del código de invitación): lista de personas registradas con su
   estado de perfil/cuestionario, la **matriz completa de compatibilidad**

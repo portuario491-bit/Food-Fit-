@@ -86,6 +86,19 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 `);
 
+/** Suscripciones a notificaciones push del navegador (Bloque 7.32) — un
+ *  dispositivo puede tener varias (móvil, ordenador...). */
+db.exec(`
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  endpoint TEXT NOT NULL UNIQUE,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+`);
+
 /** Añade una columna si todavía no existe — permite evolucionar el esquema
  *  sin perder los datos ya guardados de un piloto en marcha. */
 function addColumnIfMissing(table, columnDef) {
@@ -311,6 +324,22 @@ function computeProfileScores(userId, QUESTIONS) {
   return { scores, answeredCount, total: QUESTIONS.length };
 }
 
+/* ---------- push_subscriptions ---------- */
+function savePushSubscription(userId, { endpoint, keys }) {
+  db.prepare(
+    `INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth) VALUES (?, ?, ?, ?)
+     ON CONFLICT(endpoint) DO UPDATE SET user_id = excluded.user_id, p256dh = excluded.p256dh, auth = excluded.auth`
+  ).run(userId, endpoint, keys.p256dh, keys.auth);
+}
+
+function listPushSubscriptionsFor(userId) {
+  return db.prepare(`SELECT * FROM push_subscriptions WHERE user_id = ?`).all(userId);
+}
+
+function deletePushSubscription(endpoint) {
+  db.prepare(`DELETE FROM push_subscriptions WHERE endpoint = ?`).run(endpoint);
+}
+
 module.exports = {
   db,
   createUser,
@@ -329,6 +358,9 @@ module.exports = {
   sendMessage,
   getConversation,
   listConversationsFor,
+  savePushSubscription,
+  listPushSubscriptionsFor,
+  deletePushSubscription,
   addPhoto,
   getPhotos,
   getPrimaryPhoto,

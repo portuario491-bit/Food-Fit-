@@ -1,3 +1,5 @@
+const { VAPID_PUBLIC_KEY, pushEnabled } = require('../lib/push');
+
 const LOGO_DATA_URI_CACHE = { value: null };
 
 /** Lee el logo una sola vez y lo cachea como data URI para incrustarlo en cada página. */
@@ -46,6 +48,7 @@ function page({ title, user, activeNav = '', body = '', wide = false }) {
         ${navLink('/chat', 'Mensajes', activeNav, 'chat')}
       </nav>
       <div class="spacer"></div>
+      ${pushEnabled ? `<button type="button" class="btn ghost" id="bh-push-btn" style="padding:6px 10px;font-size:12px;margin-right:8px;" onclick="bhEnablePush()">🔔 Activar avisos</button>` : ''}
       <form method="POST" action="/logout"><button class="logout-btn" type="submit">Salir</button></form>
     </div>`
     : `
@@ -74,6 +77,35 @@ function page({ title, user, activeNav = '', body = '', wide = false }) {
   ${nav}
   ${body}
 </div>
+${user && pushEnabled ? `<script>
+  function bhUrlB64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const raw = atob(base64);
+    return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+  }
+  async function bhEnablePush() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      alert('Tu navegador no soporta notificaciones push.');
+      return;
+    }
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js');
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') { alert('No se han activado los avisos.'); return; }
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: bhUrlB64ToUint8Array('${VAPID_PUBLIC_KEY}'),
+      });
+      await fetch('/push/subscribe', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sub),
+      });
+      alert('¡Avisos activados en este dispositivo!');
+    } catch (e) {
+      alert('No se han podido activar los avisos: ' + e.message);
+    }
+  }
+</script>` : ''}
 </body>
 </html>`;
 }

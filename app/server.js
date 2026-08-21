@@ -56,6 +56,7 @@ app.use('/', require('./routes/profile'));
 app.use('/', require('./routes/quiz'));
 app.use('/', require('./routes/matches'));
 app.use('/', require('./routes/chat'));
+app.use('/', require('./routes/push'));
 app.use('/', require('./routes/admin'));
 app.use('/', require('./routes/screening'));
 

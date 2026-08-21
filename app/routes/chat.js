@@ -4,6 +4,7 @@ const { requireAuth, requireProfileBasics } = require('../lib/middleware');
 const { computeCompatibility } = require('../lib/algorithm');
 const { isMutualMatch } = require('../lib/matchFilter');
 const { sendNewMessageEmail } = require('../lib/email');
+const { sendNewMessagePush } = require('../lib/push');
 const { renderChat, renderConversationList } = require('../views/chat');
 
 const router = express.Router();
@@ -44,8 +45,14 @@ router.post('/chat/:id', requireAuth, requireProfileBasics, (req, res) => {
   const body = (req.body.body || '').trim().slice(0, 2000);
   if (body) {
     db.sendMessage(req.user.id, other.id, body);
-    const chatUrl = `${req.protocol}://${req.get('host')}/chat/${req.user.id}`;
+    const chatPath = `/chat/${req.user.id}`;
+    const chatUrl = `${req.protocol}://${req.get('host')}${chatPath}`;
     sendNewMessageEmail({ to: other.email, recipientName: other.name, senderName: req.user.name, chatUrl }).catch(() => {});
+    sendNewMessagePush(other.id, {
+      title: 'BlueHeart',
+      body: `${req.user.name} te ha escrito un mensaje.`,
+      url: chatPath,
+    }).catch(() => {});
   }
   res.redirect(`/chat/${other.id}`);
 });
