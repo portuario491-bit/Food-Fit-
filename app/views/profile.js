@@ -1,6 +1,7 @@
 const { page, escapeHtml } = require('./layout');
 const { DIMENSIONS, DIM_LABELS } = require('../lib/questions');
 const { GENDERS, SEEKING_OPTIONS } = require('../lib/matchFilter');
+const { ZONES } = require('../lib/location');
 
 function selectOptions(options, current) {
   return (
@@ -84,6 +85,14 @@ function renderProfile({ user, photos, profileScores, answeredCount, total, erro
       <div class="form-group">
         <label for="bio">Sobre ti</label>
         <textarea id="bio" name="bio" maxlength="400" placeholder="Un par de frases sobre ti...">${escapeHtml(user.bio)}</textarea>
+      </div>
+      <div class="form-group">
+        <label for="location">Dónde vives (opcional)</label>
+        <select id="location" name="location">
+          <option value="" ${!user.location ? 'selected' : ''}>Prefiero no decirlo</option>
+          ${ZONES.map((z) => `<option value="${z.value}" ${user.location === z.value ? 'selected' : ''}>${z.label}</option>`).join('')}
+        </select>
+        <div class="hint">Solo se usa para mostrar una distancia aproximada junto a cada compatibilidad — no tu ubicación exacta.</div>
       </div>
       <div class="form-group">
         <label class="form-checkbox">

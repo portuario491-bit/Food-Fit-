@@ -37,6 +37,10 @@ proyecto y `blueheart-demo.html` para el prototipo de producto sin backend.
 - Todo en un único proceso Node.js con SQLite embebido (`node:sqlite`,
   nativo desde Node 22.5) — sin bases de datos ni servicios externos que
   dar de alta para el piloto.
+- **Distancia aproximada por zona** entre dos personas (Bloque 7.14.5) —
+  campo opcional de "dónde vives" (misma zona que usa el formulario de
+  selección), mostrado junto a la compatibilidad. No pide permiso de
+  ubicación al navegador ni guarda coordenadas exactas.
 - **Chat interno** (Bloque 7.19): cuando dos personas son recomendadas mutuamente
   (match de género/edad + compatibilidad `RECOMMENDED`/`RECOMMENDED_WITH_NOTES`),
   pueden escribirse dentro de la propia app, sin compartir teléfono ni redes.

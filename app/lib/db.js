@@ -117,6 +117,11 @@ addColumnIfMissing('users', 'gender TEXT');
 addColumnIfMissing('users', 'seeking_gender TEXT');
 addColumnIfMissing('users', 'age_min INTEGER');
 addColumnIfMissing('users', 'age_max INTEGER');
+// Zona aproximada (no coordenadas exactas) — solo para mostrar la distancia
+// relativa entre dos personas junto a la compatibilidad (Bloque 7.14.5).
+// Opcional: no forma parte de los requisitos de "perfil completo" para no
+// invalidar perfiles ya completados antes de añadir este campo.
+addColumnIfMissing('users', 'location TEXT');
 
 /* ---------- users ---------- */
 function createUser({ name, email, passwordHash, inviteCode }) {
@@ -135,11 +140,11 @@ function getUserById(id) {
   return db.prepare(`SELECT * FROM users WHERE id = ?`).get(id);
 }
 
-function updateUserProfile(id, { name, age, bio, hijosNoNegociable, gender, seekingGender, ageMin, ageMax }) {
+function updateUserProfile(id, { name, age, bio, hijosNoNegociable, gender, seekingGender, ageMin, ageMax, location }) {
   db.prepare(
     `UPDATE users SET name = ?, age = ?, bio = ?, hijos_no_negociable = ?,
-       gender = ?, seeking_gender = ?, age_min = ?, age_max = ? WHERE id = ?`
-  ).run(name, age, bio, hijosNoNegociable ? 1 : 0, gender, seekingGender, ageMin, ageMax, id);
+       gender = ?, seeking_gender = ?, age_min = ?, age_max = ?, location = ? WHERE id = ?`
+  ).run(name, age, bio, hijosNoNegociable ? 1 : 0, gender, seekingGender, ageMin, ageMax, location || null, id);
   return getUserById(id);
 }
 
