@@ -4,6 +4,16 @@ function initials(name) {
   return (name || '?').trim().charAt(0).toUpperCase();
 }
 
+/** Combina la etiqueta cualitativa de zona con los km aproximados, cuando
+ *  los hay (p. ej. "Cerca (~60 km)"). Si no hay km calculables (zona
+ *  "otra" o dato ausente), se muestra solo la etiqueta. */
+function formatDistance(label, km) {
+  if (!label) return '';
+  if (km === null || km === undefined) return label;
+  if (km === 0) return label;
+  return `${label} (~${km} km)`;
+}
+
 const STATUS_LABELS = {
   RECOMMENDED: 'Recomendado',
   RECOMMENDED_WITH_NOTES: 'Recomendado, con matices',
@@ -28,7 +38,7 @@ function personCard(m, { showStatus = false } = {}) {
         : `<div class="person-avatar">${initials(m.name)}</div>`}
       <div class="person-info">
         <b>${escapeHtml(m.name)}${m.age ? `, ${m.age}` : ''}</b>
-        <span>${escapeHtml(m.bio || 'Sin descripción todavía')}${m.distance ? ` · 📍 ${escapeHtml(m.distance)}` : ''}</span>
+        <span>${escapeHtml(m.bio || 'Sin descripción todavía')}${m.distance ? ` · 📍 ${escapeHtml(formatDistance(m.distance, m.distanceKm))}` : ''}</span>
         ${showStatus ? `<span class="status-pill ${STATUS_CLASS[m.status] || ''}">${STATUS_LABELS[m.status] || m.status}</span>` : ''}
       </div>
       <div class="person-pct">${m.pct === null ? '—' : `${m.pct}%`}</div>
@@ -85,7 +95,7 @@ function statusNotice(result) {
   return '';
 }
 
-function renderMatchDetail({ user, userPhotoId, other, otherPhotoId, result, distance }) {
+function renderMatchDetail({ user, userPhotoId, other, otherPhotoId, result, distance, distanceKm }) {
   const circumference = 2 * Math.PI * 52;
   const pct = result.compatibility_percentage === null ? 0 : result.compatibility_percentage;
   const offset = circumference - (pct / 100) * circumference;
@@ -129,7 +139,7 @@ function renderMatchDetail({ user, userPhotoId, other, otherPhotoId, result, dis
         ${otherPhotoId ? `<a href="/fotos/${otherPhotoId}" target="_blank" rel="noopener"><img src="/fotos/${otherPhotoId}" alt="${escapeHtml(other.name)}"></a>` : ''}
       </div>
       <div class="summary-sub" style="margin-top:2px;">Toca una foto para verla en grande.</div>
-      <div class="result-names">Tú &amp; ${escapeHtml(other.name)}${distance ? ` · 📍 ${escapeHtml(distance)}` : ''}</div>
+      <div class="result-names">Tú &amp; ${escapeHtml(other.name)}${distance ? ` · 📍 ${escapeHtml(formatDistance(distance, distanceKm))}` : ''}</div>
       <div class="gauge">
         <svg viewBox="0 0 120 120">
           <circle cx="60" cy="60" r="52" stroke="#131a2c" stroke-width="12" fill="none"/>

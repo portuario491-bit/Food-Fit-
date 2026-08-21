@@ -3,7 +3,7 @@ const db = require('../lib/db');
 const { requireAuth, requireProfileBasics } = require('../lib/middleware');
 const { computeCompatibility } = require('../lib/algorithm');
 const { isMutualMatch } = require('../lib/matchFilter');
-const { zoneDistanceLabel } = require('../lib/location');
+const { zoneDistanceLabel, zoneDistanceKm } = require('../lib/location');
 const { renderMatchList, renderMatchDetail } = require('../views/matches');
 
 const router = express.Router();
@@ -35,6 +35,7 @@ router.get('/matches', requireAuth, requireProfileBasics, requireOnboarding, (re
       pct: result.compatibility_percentage,
       status: result.eligibility_status,
       distance: zoneDistanceLabel(req.user.location, other.location),
+      distanceKm: zoneDistanceKm(req.user.location, other.location),
     };
   });
 
@@ -77,6 +78,7 @@ router.get('/matches/:id', requireAuth, requireProfileBasics, requireOnboarding,
       otherPhotoId: otherPhoto ? otherPhoto.id : null,
       result,
       distance: zoneDistanceLabel(req.user.location, other.location),
+      distanceKm: zoneDistanceKm(req.user.location, other.location),
     })
   );
 });

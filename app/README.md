@@ -39,7 +39,10 @@ proyecto y `blueheart-demo.html` para el prototipo de producto sin backend.
   dar de alta para el piloto.
 - **Distancia aproximada por zona** entre dos personas (Bloque 7.14.5) —
   campo opcional de "dónde vives" (misma zona que usa el formulario de
-  selección), mostrado junto a la compatibilidad. No pide permiso de
+  selección), mostrado junto a la compatibilidad como una etiqueta
+  cualitativa ("Cerca", "Lejos"...) y, cuando hay puntos de referencia
+  fijados para ambas zonas, unos km aproximados entre esos puntos (p. ej.
+  "Cerca (~55 km)") — no la dirección exacta de nadie. No pide permiso de
   ubicación al navegador ni guarda coordenadas exactas.
 - **Chat interno** (Bloque 7.19): cuando dos personas son recomendadas mutuamente
   (match de género/edad + compatibilidad `RECOMMENDED`/`RECOMMENDED_WITH_NOTES`),
