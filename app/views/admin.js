@@ -56,6 +56,7 @@ function userRow(u) {
     <td>${u.age || '—'}</td>
     <td>${GENDER_LABEL[u.gender] || '—'}</td>
     <td>${SEEKING_LABEL[u.seeking_gender] || '—'}</td>
+    <td>${u.age_min || '—'}–${u.age_max || '—'}</td>
     <td>${u.photo_count}</td>
     <td>${completo ? '<span class="status-pill status-good">Perfil OK</span>' : '<span class="status-pill status-neutral">Incompleto</span>'}</td>
     <td>${u.onboarding_completed ? '<span class="status-pill status-good">Sí</span>' : '<span class="status-pill status-neutral">No</span>'}</td>
@@ -123,9 +124,9 @@ function renderAdminDashboard({ users, pairs, screeningResponses = [] }) {
       <table class="admin-table">
         <thead><tr>
           <th>Nombre</th><th>Email</th><th>Edad</th><th>Género</th><th>Busca</th>
-          <th>Fotos</th><th>Perfil</th><th>Cuestionario</th><th>Registro</th><th></th>
+          <th>Rango edad</th><th>Fotos</th><th>Perfil</th><th>Cuestionario</th><th>Registro</th><th></th>
         </tr></thead>
-        <tbody>${users.map(userRow).join('') || '<tr><td colspan="10">Sin usuarios todavía.</td></tr>'}</tbody>
+        <tbody>${users.map(userRow).join('') || '<tr><td colspan="11">Sin usuarios todavía.</td></tr>'}</tbody>
       </table>
     </div>
 
