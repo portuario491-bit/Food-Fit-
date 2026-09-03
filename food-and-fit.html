@@ -350,6 +350,15 @@
     color:var(--ink);font-size:15px;font-family:'Inter', sans-serif;margin-bottom:16px;
   }
   .onboarding-card input:focus{outline:2px solid var(--yellow);outline-offset:1px;}
+  .pw-field{position:relative;}
+  .pw-field input[type="password"], .pw-field input[type="text"]{padding-right:42px;margin-bottom:0;}
+  .pw-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:36px;height:36px;background:none;border:none;padding:0;
+    display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;}
+  .pw-toggle:hover{color:var(--ink);}
+  .pw-toggle svg{width:19px;height:19px;}
+  .pw-toggle .eye-off{display:none;}
+  .pw-toggle.shown .eye{display:none;}
+  .pw-toggle.shown .eye-off{display:block;}
   .ob-note{font-family:'IBM Plex Mono', monospace;font-size:9.5px;color:var(--muted);line-height:1.5;margin:14px 0 0;}
 
   .profile-pill{
@@ -392,7 +401,13 @@
       <input type="email" id="authEmail" placeholder="tu@email.com" autocomplete="email">
 
       <label for="authPassword">Contraseña</label>
-      <input type="password" id="authPassword" placeholder="Mínimo 8 caracteres" autocomplete="current-password">
+      <div class="pw-field">
+        <input type="password" id="authPassword" placeholder="Mínimo 8 caracteres" autocomplete="current-password">
+        <button type="button" class="pw-toggle" id="authPasswordToggle" aria-label="Mostrar contraseña" tabindex="-1">
+          <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19c-6.4 0-10-7-10-7a18.4 18.4 0 0 1 4.2-5.1M9.9 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a18.4 18.4 0 0 1-2.2 3.2"/><path d="M14.1 14.1a3 3 0 1 1-4.2-4.2"/><path d="M3 3l18 18"/></svg>
+        </button>
+      </div>
       <p class="ob-note" id="authForgotRow" style="text-align:right;margin:-10px 0 16px;">
         <a href="#" id="authForgotLink" style="color:var(--yellow);text-decoration:none;">¿Olvidaste tu contraseña?</a>
       </p>
@@ -407,7 +422,13 @@
     <div id="authRecoveryForm" style="display:none;">
       <p class="ob-note" style="margin:0 0 20px;">Escribe tu nueva contraseña para tu cuenta.</p>
       <label for="authNewPassword">Nueva contraseña</label>
-      <input type="password" id="authNewPassword" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+      <div class="pw-field">
+        <input type="password" id="authNewPassword" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+        <button type="button" class="pw-toggle" id="authNewPasswordToggle" aria-label="Mostrar contraseña" tabindex="-1">
+          <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19c-6.4 0-10-7-10-7a18.4 18.4 0 0 1 4.2-5.1M9.9 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a18.4 18.4 0 0 1-2.2 3.2"/><path d="M14.1 14.1a3 3 0 1 1-4.2-4.2"/><path d="M3 3l18 18"/></svg>
+        </button>
+      </div>
       <p class="ob-note" id="authRecoveryError" style="display:none;color:var(--red);"></p>
       <button class="btn primary" id="authRecoverySaveBtn" style="width:100%;padding:12px;">Guardar nueva contraseña</button>
     </div>
@@ -4199,6 +4220,18 @@
   $('authTabLogin').addEventListener('click', ()=> setAuthMode('login'));
   $('authTabSignup').addEventListener('click', ()=> setAuthMode('signup'));
 
+  function setupPasswordToggle(inputId, btnId){
+    const input = $(inputId), btn = $(btnId);
+    btn.addEventListener('click', ()=>{
+      const nowShowing = input.type === 'password';
+      input.type = nowShowing ? 'text' : 'password';
+      btn.classList.toggle('shown', nowShowing);
+      btn.setAttribute('aria-label', nowShowing ? 'Ocultar contraseña' : 'Mostrar contraseña');
+    });
+  }
+  setupPasswordToggle('authPassword', 'authPasswordToggle');
+  setupPasswordToggle('authNewPassword', 'authNewPasswordToggle');
+
   $('authSubmitBtn').addEventListener('click', async ()=>{
     hideAuthMessages();
     const email = $('authEmail').value.trim();
@@ -4238,7 +4271,13 @@
     }
   });
 
-  let recoveryMode = false;
+  // Detectamos de inmediato (sin esperar a ningún evento asíncrono de
+  // Supabase) si la URL con la que se abrió la página viene de un enlace
+  // de "recuperar contraseña": si esperásemos al evento PASSWORD_RECOVERY,
+  // a veces la comprobación de la sesión ya activa ("bootstrapAuth") gana
+  // la carrera y mete a la persona directa en la app en vez de dejarle
+  // poner una contraseña nueva.
+  let recoveryMode = window.location.hash.includes('type=recovery') || window.location.search.includes('type=recovery');
 
   function showRecoveryForm(){
     recoveryMode = true;
@@ -4382,7 +4421,13 @@
 
   (async function bootstrapAuth(){
     const { data } = await sb.auth.getSession();
-    if(recoveryMode) return; // a PASSWORD_RECOVERY event already put up the "new password" form
+    if(recoveryMode){
+      // Nos aseguramos de que el formulario de nueva contraseña se muestre
+      // sí o sí, aunque el evento PASSWORD_RECOVERY de Supabase no haya
+      // llegado a tiempo (o no llegue nunca) a nuestro listener.
+      showRecoveryForm();
+      return;
+    }
     if(data && data.session && data.session.user){
       await onLogin(data.session.user);
     } else {
