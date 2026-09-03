@@ -2869,13 +2869,26 @@
   function parseOFFProducts(list){
     return (list || [])
       .map(p => (p && p.product) ? p.product : p)
-      .filter(p => p && p.product_name && p.nutriments)
       .map(p => {
+        if(!p) return null;
+        // El nombre puede venir en distintos campos según el producto
+        // (algunos no rellenan "product_name" pero sí su versión en
+        // español, o solo tienen un nombre genérico).
+        const name = p.product_name || p.product_name_es || p.generic_name || p.generic_name_es;
+        if(!name || !p.nutriments) return null;
         const n = p.nutriments;
-        const kcalRaw = n['energy-kcal_100g'] ?? n['energy-kcal_value'] ?? n['energy-kcal'] ?? 0;
+        // Algunos productos de Open Food Facts solo traen la energía en
+        // kilojulios (no en kcal directamente) — antes eso hacía que
+        // aparecieran con "0 kcal". Si falta el valor en kcal, lo
+        // calculamos a partir del de kJ (1 kcal = 4.184 kJ).
+        let kcalRaw = n['energy-kcal_100g'] ?? n['energy-kcal_value'] ?? n['energy-kcal'];
+        if(kcalRaw == null){
+          const kj = n['energy-kj_100g'] ?? n['energy_100g'] ?? n['energy-kj_value'] ?? n['energy'];
+          kcalRaw = kj != null ? Number(kj) / 4.184 : 0;
+        }
         const rawGrade = (p.nutriscore_grade || p.nutrition_grades || '').toLowerCase();
         return {
-          name: p.product_name,
+          name: name,
           brand: p.brands ? p.brands.split(',')[0].trim() : 'Open Food Facts',
           kcal: Math.round(Number(kcalRaw) || 0),
           protein: +(Number(n['proteins_100g'] || 0).toFixed(1)),
@@ -2884,6 +2897,7 @@
           grade: NUTRISCORE_LABELS[rawGrade] ? rawGrade : null
         };
       })
+      .filter(Boolean)
       .slice(0, 20);
   }
 
@@ -2892,38 +2906,34 @@
     offError = null;
     renderFoodList();
 
-    let lastErr = null;
-
-    // Attempt 1: Search-a-licious — the modern OFF search API, built for third-party apps
+    // Search-a-licious: el buscador oficial y actual de Open Food Facts
+    // para apps de terceros. Si responde correctamente pero no hay
+    // coincidencias, eso NO es un error — es simplemente que no hay
+    // resultados para esa búsqueda.
     try{
       const url1 = `https://search.openfoodfacts.org/search?q=${encodeURIComponent(query)}&langs=es&page_size=20`;
       const res1 = await fetch(url1);
       if(!res1.ok) throw new Error('HTTP ' + res1.status);
       const data1 = await res1.json();
-      const parsed = parseOFFProducts(data1.hits || data1.products || []);
-      if(parsed.length){
-        offResults = parsed;
-        offLoading = false;
-        renderFoodList();
-        return;
+      offResults = parseOFFProducts(data1.hits || data1.products || []);
+      offLoading = false;
+      renderFoodList();
+      return;
+    }catch(err){
+      // Si el buscador principal falla de verdad (sin internet, caído,
+      // etc.), probamos el buscador antiguo como último recurso — aunque
+      // Open Food Facts lo está retirando para peticiones anónimas, así
+      // que puede que tampoco responda.
+      try{
+        const url2 = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,brands,nutriments,nutriscore_grade&lc=es`;
+        const res2 = await fetch(url2);
+        if(!res2.ok) throw new Error('HTTP ' + res2.status);
+        const data2 = await res2.json();
+        offResults = parseOFFProducts(data2.products || []);
+      }catch(err2){
+        offResults = [];
+        offError = 'No se pudo conectar con Open Food Facts ahora mismo. Prueba de nuevo en unos segundos.';
       }
-    }catch(err){ lastErr = err; }
-
-    // Attempt 2: legacy v1 search endpoint, as fallback
-    try{
-      const url2 = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,brands,nutriments,nutriscore_grade&lc=es`;
-      const res2 = await fetch(url2);
-      if(!res2.ok) throw new Error('HTTP ' + res2.status);
-      const data2 = await res2.json();
-      offResults = parseOFFProducts(data2.products || []);
-      lastErr = null;
-    }catch(err2){
-      offResults = [];
-      lastErr = err2;
-    }
-
-    if(lastErr){
-      offError = 'No se pudo obtener resultados de Open Food Facts (' + (lastErr.message || 'error de red') + '). Prueba de nuevo en unos segundos.';
     }
     offLoading = false;
     renderFoodList();
