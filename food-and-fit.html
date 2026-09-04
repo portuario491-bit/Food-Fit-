@@ -3139,8 +3139,18 @@
     $('scannerStatus').textContent = 'Buscando el producto (código ' + code + ')…';
     try{
       const url = 'https://world.openfoodfacts.org/api/v2/product/' + encodeURIComponent(code) + '.json?fields=product_name,brands,nutriments,nutriscore_grade';
-      const res = await fetch(url);
-      if(!res.ok) throw new Error('HTTP ' + res.status);
+      // Open Food Facts a veces da un fallo puntual de red o de mucha
+      // demanda; reintentamos una vez tras una breve espera antes de
+      // rendirnos, para no mostrar un error por un simple bache momentáneo.
+      let res;
+      try{
+        res = await fetch(url);
+        if(!res.ok) throw new Error('HTTP ' + res.status);
+      }catch(firstErr){
+        await new Promise(r=> setTimeout(r, 900));
+        res = await fetch(url);
+        if(!res.ok) throw new Error('HTTP ' + res.status);
+      }
       const data = await res.json();
       if(!data || data.status !== 1 || !data.product){
         $('scannerStatus').textContent = 'No encontramos ese producto en Open Food Facts. Prueba a buscarlo por nombre, o escanea otro código.';
@@ -3158,7 +3168,7 @@
       $('scannerRetryBtn').style.display = 'block';
       showScannedProduct(parsed[0]);
     }catch(err){
-      $('scannerStatus').textContent = 'No se pudo consultar Open Food Facts. Comprueba tu conexión e inténtalo de nuevo.';
+      $('scannerStatus').textContent = 'Open Food Facts no responde ahora mismo (a veces va lento). Prueba a escanear de nuevo en unos segundos, o busca el producto por nombre en "Mi lista" o "Buscar en Open Food Facts".';
       $('scannerRetryBtn').style.display = 'block';
     }finally{
       scanInProgress = false;
