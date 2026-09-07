@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useWatchlist } from "@/lib/watchlist";
 import { RankingTable } from "@/components/RankingTable";
 import { DataQualityBanner, DisclaimerBanner } from "@/components/Disclaimer";
+import { PageHero } from "@/components/PageHero";
 import type { CompanyWithScore } from "@/lib/ranking";
 
 export default function WatchlistPage() {
@@ -31,13 +32,11 @@ export default function WatchlistPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold text-ink-950">Mi watchlist</h1>
-        <p className="mt-2 max-w-2xl text-ink-700">
-          Guardada en este navegador (no en una cuenta todavía). Puntuaciones mostradas con el perfil equilibrado;
-          entra en cada empresa para ver su encaje con otros perfiles.
-        </p>
-      </div>
+      <PageHero
+        title="Mi watchlist"
+        description="Guardada en este navegador (no en una cuenta todavía). Puntuaciones mostradas con el perfil equilibrado; entra en cada empresa para ver su encaje con otros perfiles."
+        variant="violet"
+      />
 
       {rows.length > 0 && <DataQualityBanner isMock={isMock} />}
 

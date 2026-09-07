@@ -22,29 +22,28 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-20">
-      <section className="relative -mx-4 overflow-hidden rounded-b-3xl bg-hero-gradient px-4 pb-16 pt-12 sm:-mx-6 sm:px-6">
+      <section className="relative -mx-4 overflow-hidden rounded-b-3xl bg-ink-950 px-4 pb-16 pt-12 sm:-mx-6 sm:px-6">
         <div
           aria-hidden
-          className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 animate-float rounded-full bg-violet/25 blur-3xl"
+          className="pointer-events-none absolute -left-32 -top-32 h-[26rem] w-[26rem] animate-float rounded-full bg-violet opacity-40 blur-3xl"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-16 top-10 h-80 w-80 animate-float-slow rounded-full bg-accent/20 blur-3xl"
+          className="pointer-events-none absolute -right-24 top-0 h-[28rem] w-[28rem] animate-float-slow rounded-full bg-accent opacity-30 blur-3xl"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute bottom-0 left-1/3 h-56 w-56 animate-float rounded-full bg-gold/20 blur-3xl"
+          className="pointer-events-none absolute bottom-[-6rem] left-1/3 h-72 w-72 animate-float rounded-full bg-gold opacity-30 blur-3xl"
         />
-
         <div className="relative mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.25fr_1fr] lg:items-center">
           <div className="space-y-6">
-            <span className="inline-flex animate-fade-up items-center rounded-full border border-accent/30 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-wide text-accent-dark">
+            <span className="inline-flex animate-fade-up items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white backdrop-blur">
               Universo IBEX35 · Datos reales · Actualización manual
             </span>
-            <h1 className="animate-fade-up delay-1 font-display text-4xl font-bold tracking-tight text-ink-950 sm:text-5xl lg:text-6xl">
-              Descubre qué acciones <span className="text-gradient">encajan de verdad</span> con tu forma de invertir.
+            <h1 className="animate-fade-up delay-1 font-display text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+              Descubre qué acciones <span className="text-gradient-bright">encajan de verdad</span> con tu forma de invertir.
             </h1>
-            <p className="max-w-xl animate-fade-up delay-2 text-lg text-ink-700">
+            <p className="max-w-xl animate-fade-up delay-2 text-lg text-white/75">
               Una herramienta educativa de análisis, scoring y ranking para inversores de largo plazo. Define tu
               estilo de inversión y descubre qué empresas encajan mejor — con la explicación completa de cada
               puntuación, sin recomendaciones simplistas de compra o venta.
@@ -52,14 +51,14 @@ export default async function HomePage() {
             <div className="flex animate-fade-up delay-3 flex-wrap gap-3">
               <Link
                 href="/perfil"
-                className="inline-flex items-center gap-2 rounded-lg bg-ink-950 px-5 py-3 text-sm font-semibold text-white shadow-card transition-transform hover:-translate-y-0.5 hover:bg-ink-800"
+                className="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-white shadow-glow transition-transform hover:-translate-y-0.5 hover:bg-accent-light"
               >
                 Elegir mi estilo de inversión
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/metodologia"
-                className="inline-flex items-center rounded-lg border border-ink-900/15 bg-white px-5 py-3 text-sm font-semibold text-ink-800 transition-colors hover:border-ink-900/30"
+                className="inline-flex items-center rounded-lg border border-white/20 bg-white/5 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition-colors hover:border-white/40 hover:bg-white/10"
               >
                 Cómo calculamos los scores
               </Link>
@@ -68,7 +67,7 @@ export default async function HomePage() {
 
           <Link
             href={`/acciones/${featuredCompany.ticker}`}
-            className="group relative block animate-fade-up delay-2 rounded-2xl border border-ink-900/10 bg-white p-6 shadow-card transition-all hover:-translate-y-1 hover:shadow-glow"
+            className="group relative block animate-fade-up delay-2 rounded-2xl border border-white/10 bg-white p-6 shadow-glow transition-all hover:-translate-y-1"
           >
             <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-ink-500">
               Mejor encaje ahora mismo · perfil equilibrado
@@ -182,16 +181,19 @@ export default async function HomePage() {
               <Link
                 key={profile.key}
                 href={`/ranking/${profile.key}`}
-                className="group flex items-start gap-4 rounded-xl border border-ink-900/10 bg-white p-5 shadow-card transition-all hover:-translate-y-1 hover:shadow-card-hover"
+                className="group flex items-start gap-4 rounded-xl border p-5 shadow-card transition-all hover:-translate-y-1 hover:shadow-card-hover"
+                style={{ backgroundColor: `${color}12`, borderColor: `${color}35` }}
               >
                 <span
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: `${color}1a` }}
+                  style={{ backgroundColor: `${color}2a` }}
                 >
                   <Icon className="h-5 w-5" style={{ color }} strokeWidth={2} />
                 </span>
                 <div>
-                  <h3 className="font-display font-bold text-ink-950 group-hover:text-accent-dark">{profile.label}</h3>
+                  <h3 className="font-display font-bold text-ink-950" style={{ color }}>
+                    {profile.label}
+                  </h3>
                   <p className="mt-1 text-sm text-ink-600">{profile.tagline}</p>
                 </div>
               </Link>

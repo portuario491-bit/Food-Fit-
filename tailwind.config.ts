@@ -40,6 +40,10 @@ const config: Config = {
       },
       backgroundImage: {
         "hero-gradient": "radial-gradient(120% 120% at 100% 0%, #ece9fc 0%, #f8f7f3 45%, #f8f7f3 100%)",
+        "hero-gradient-accent": "radial-gradient(120% 120% at 100% 0%, #e3f4ee 0%, #f8f7f3 45%, #f8f7f3 100%)",
+        "hero-gradient-violet": "radial-gradient(120% 120% at 100% 0%, #ece9fc 0%, #f8f7f3 45%, #f8f7f3 100%)",
+        "hero-gradient-gold": "radial-gradient(120% 120% at 100% 0%, #fbf0dd 0%, #f8f7f3 45%, #f8f7f3 100%)",
+        "hero-gradient-ink": "radial-gradient(120% 140% at 100% 0%, #1e2f4d 0%, #0f1a2e 50%, #0a0f1e 100%)",
         "score-conic": "conic-gradient(var(--ring-color) calc(var(--ring-pct) * 1%), var(--ring-track) 0)",
       },
       boxShadow: {

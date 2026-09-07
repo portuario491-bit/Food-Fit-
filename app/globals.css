@@ -48,6 +48,13 @@ h3 {
   color: transparent;
 }
 
+.text-gradient-bright {
+  background-image: linear-gradient(100deg, #4ee0b0 0%, #e0ac5b 55%, #a89bf7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 .delay-1 {
   animation-delay: 0.08s;
 }

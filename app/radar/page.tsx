@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
 import { getDataProvider } from "@/lib/data";
 import { computeRadarScores } from "@/lib/scoring/radar";
 import { ScoreBadge } from "@/components/ScoreBadge";
 import { DisclaimerBanner, DataQualityBanner } from "@/components/Disclaimer";
+import { PageHero } from "@/components/PageHero";
 import { SectorIcon, SECTOR_COLORS } from "@/lib/sectorIcons";
 
 export const metadata: Metadata = {
@@ -24,18 +24,19 @@ export default async function RadarPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-violet/30 bg-violet-soft px-3 py-1 text-xs font-semibold uppercase tracking-wide text-violet-dark">
-          <Sparkles className="h-3.5 w-3.5" /> Actualización manual
-        </span>
-        <h1 className="mt-3 font-display text-3xl font-bold text-ink-950">Radar mensual</h1>
-        <p className="mt-2 max-w-3xl text-ink-700">
-          Las 10 empresas del universo analizado que combinan actualmente, de forma más equilibrada, calidad,
-          crecimiento, dividendo y valoración razonable. El momentum de mercado <strong>no</strong> forma parte de
-          este cálculo: esto no es una lista de &ldquo;las acciones que más han subido&rdquo;, sino de empresas con una
-          combinación de fundamentales interesante en este momento.
-        </p>
-      </div>
+      <PageHero
+        eyebrow="Actualización manual"
+        title="Radar mensual"
+        description={
+          <>
+            Las 10 empresas del universo analizado que combinan actualmente, de forma más equilibrada, calidad,
+            crecimiento, dividendo y valoración razonable. El momentum de mercado <strong>no</strong> forma parte de
+            este cálculo: esto no es una lista de &ldquo;las acciones que más han subido&rdquo;, sino de empresas con
+            una combinación de fundamentales interesante en este momento.
+          </>
+        }
+        variant="gold"
+      />
 
       <DataQualityBanner isMock={provider.isMock} />
 

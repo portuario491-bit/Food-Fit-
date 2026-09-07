@@ -4,6 +4,7 @@ import { buildRanking } from "@/lib/ranking";
 import { RankingTable } from "@/components/RankingTable";
 import { FilterBar } from "@/components/FilterBar";
 import { DataQualityBanner } from "@/components/Disclaimer";
+import { PageHero } from "@/components/PageHero";
 import type { Region, Sector } from "@/lib/data/types";
 
 export const metadata: Metadata = {
@@ -31,17 +32,20 @@ export default async function AccionesPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold text-ink-950">Universo de empresas analizadas</h1>
-        <p className="mt-2 max-w-3xl text-ink-700">
-          {universe.length} empresas, ordenadas aquí según el perfil <strong>equilibrado</strong>. Para un ranking
-          orientado a un objetivo concreto, elige un{" "}
-          <a href="/perfil" className="underline">
-            estilo de inversión
-          </a>
-          .
-        </p>
-      </div>
+      <PageHero
+        title="Universo de empresas analizadas"
+        description={
+          <>
+            {universe.length} empresas, ordenadas aquí según el perfil <strong>equilibrado</strong>. Para un ranking
+            orientado a un objetivo concreto, elige un{" "}
+            <a href="/perfil" className="underline">
+              estilo de inversión
+            </a>
+            .
+          </>
+        }
+        variant="accent"
+      />
       <DataQualityBanner isMock={provider.isMock} />
       <FilterBar />
       <RankingTable rows={rows} />

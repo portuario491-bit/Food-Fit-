@@ -7,7 +7,17 @@ import type { ProfileKey } from "@/lib/scoring/types";
 import { RankingTable } from "@/components/RankingTable";
 import { FilterBar } from "@/components/FilterBar";
 import { DisclaimerBanner, DataQualityBanner } from "@/components/Disclaimer";
+import { PageHero } from "@/components/PageHero";
 import type { Region, Sector } from "@/lib/data/types";
+
+const PROFILE_HERO_VARIANT: Record<ProfileKey, "accent" | "violet" | "gold"> = {
+  dividendos: "accent",
+  crecimiento: "accent",
+  "dividend-growth": "accent",
+  calidad: "gold",
+  "calidad-precio": "gold",
+  equilibrado: "violet",
+};
 
 export function generateStaticParams() {
   return Object.keys(PROFILES).map((profile) => ({ profile }));
@@ -63,11 +73,12 @@ export default async function RankingPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-sm font-medium uppercase tracking-wide text-accent-dark">Ranking · {meta.label}</p>
-        <h1 className="mt-1 text-3xl font-semibold text-ink-950">Mejores acciones para {meta.label.toLowerCase()}</h1>
-        <p className="mt-2 max-w-3xl text-ink-700">{meta.description}</p>
-      </div>
+      <PageHero
+        eyebrow={`Ranking · ${meta.label}`}
+        title={`Mejores acciones para ${meta.label.toLowerCase()}`}
+        description={meta.description}
+        variant={PROFILE_HERO_VARIANT[profile]}
+      />
 
       <DataQualityBanner isMock={provider.isMock} />
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ProfileSelectorForm } from "@/components/ProfileSelectorForm";
 import { DisclaimerBanner } from "@/components/Disclaimer";
+import { PageHero } from "@/components/PageHero";
 
 export const metadata: Metadata = {
   title: "Elige tu estilo de inversión",
@@ -11,13 +12,12 @@ export const metadata: Metadata = {
 export default function PerfilPage() {
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-semibold text-ink-950">¿Qué estás buscando en una inversión?</h1>
-        <p className="mt-2 max-w-2xl text-ink-700">
-          No existe un único &ldquo;mejor perfil&rdquo;: cada estilo pondera de forma distinta el dividendo, el crecimiento,
-          la calidad del negocio, la valoración, el riesgo y el momentum de mercado.
-        </p>
-      </div>
+      <PageHero
+        eyebrow="Paso 1 de 2"
+        title="¿Qué estás buscando en una inversión?"
+        description="No existe un único “mejor perfil”: cada estilo pondera de forma distinta el dividendo, el crecimiento, la calidad del negocio, la valoración, el riesgo y el momentum de mercado."
+        variant="violet"
+      />
       <ProfileSelectorForm />
       <DisclaimerBanner variant="short" />
     </div>

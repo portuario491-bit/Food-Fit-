@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DisclaimerBanner } from "@/components/Disclaimer";
+import { PageHero } from "@/components/PageHero";
 import { PROFILE_LIST } from "@/lib/scoring/profiles";
 import { PROFILE_WEIGHTS } from "@/lib/scoring/weights";
 import type { SubscoreKey } from "@/lib/scoring/types";
@@ -24,13 +25,14 @@ const SUBSCORE_ORDER = Object.keys(SUBSCORE_LABELS) as SubscoreKey[];
 
 export default function MetodologiaPage() {
   return (
-    <div className="prose prose-slate max-w-3xl">
-      <h1 className="!mb-2 text-3xl font-semibold text-ink-950">Metodología</h1>
-      <p className="text-ink-600">
-        Explicación completa, en lenguaje llano, de qué analizamos y cómo calculamos cada puntuación. El detalle
-        matemático completo está en el repositorio, en <code>/docs/scoring-methodology.md</code>.
-      </p>
+    <div className="space-y-8">
+      <PageHero
+        title="Metodología"
+        description="Explicación completa, en lenguaje llano, de qué analizamos y cómo calculamos cada puntuación. El detalle matemático completo está en el repositorio, en /docs/scoring-methodology.md."
+        variant="ink"
+      />
 
+      <div className="prose prose-slate max-w-3xl">
       <DisclaimerBanner variant="full" />
 
       <h2>Qué analizamos</h2>
@@ -132,6 +134,7 @@ export default function MetodologiaPage() {
         puntuaciones no garantizan ninguna rentabilidad futura. Es una herramienta de análisis y educación
         financiera: la decisión de inversión, y su responsabilidad, es siempre tuya.
       </p>
+      </div>
     </div>
   );
 }
