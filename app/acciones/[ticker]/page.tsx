@@ -13,7 +13,7 @@ import { MetricTable } from "@/components/MetricTable";
 import { PriceChart } from "@/components/PriceChart";
 import { WatchlistButton } from "@/components/WatchlistButton";
 import { DisclaimerBanner, DataQualityBanner } from "@/components/Disclaimer";
-import { SectorIcon } from "@/lib/sectorIcons";
+import { SectorIcon, SECTOR_COLORS } from "@/lib/sectorIcons";
 
 const ALL_PROFILES = Object.keys(PROFILES) as ProfileKey[];
 
@@ -63,6 +63,7 @@ export default async function CompanyPage({
   ]);
 
   if (!company || !series) notFound();
+  const sectorColor = SECTOR_COLORS[company.sector];
 
   const scoresByProfile = Object.fromEntries(
     ALL_PROFILES.map((profile) => [profile, computeUniverseScores(universe, profile).find((r) => r.ticker === company.ticker)!])
@@ -91,26 +92,33 @@ export default async function CompanyPage({
       {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="flex items-center gap-1.5 text-sm text-ink-500">
-            <SectorIcon sector={company.sector} className="h-4 w-4" />
-            {company.sector} · {company.exchange} · {company.country}
-          </p>
-          <h1 className="mt-1 font-display text-3xl font-bold text-ink-950">
-            {company.name} <span className="text-ink-500">({company.ticker})</span>
-          </h1>
-          <p className="mt-2 text-2xl font-medium text-ink-900">
-            {company.price.toLocaleString("es-ES", { style: "currency", currency: company.currency })}
-            <span className="ml-3 text-sm font-normal text-ink-500">
-              Cap.{" "}
-              {company.marketCap != null
-                ? `${(company.marketCap / 1_000_000_000).toFixed(1)} mil M ${company.currency}`
-                : "sin dato"}
-            </span>
-          </p>
+      <div className="relative -mx-4 overflow-hidden rounded-b-3xl bg-ink-950 px-4 pb-8 pt-8 sm:-mx-6 sm:px-6">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full opacity-30 blur-3xl"
+          style={{ backgroundColor: sectorColor }}
+        />
+        <div className="relative mx-auto flex max-w-6xl flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="flex items-center gap-1.5 text-sm text-white/70">
+              <SectorIcon sector={company.sector} className="h-4 w-4" />
+              {company.sector} · {company.exchange} · {company.country}
+            </p>
+            <h1 className="mt-1 font-display text-3xl font-bold text-white">
+              {company.name} <span className="text-white/50">({company.ticker})</span>
+            </h1>
+            <p className="mt-2 text-2xl font-medium text-white">
+              {company.price.toLocaleString("es-ES", { style: "currency", currency: company.currency })}
+              <span className="ml-3 text-sm font-normal text-white/60">
+                Cap.{" "}
+                {company.marketCap != null
+                  ? `${(company.marketCap / 1_000_000_000).toFixed(1)} mil M ${company.currency}`
+                  : "sin dato"}
+              </span>
+            </p>
+          </div>
+          <WatchlistButton ticker={company.ticker} dark />
         </div>
-        <WatchlistButton ticker={company.ticker} />
       </div>
 
       <DataQualityBanner isMock={company.isMock} />
