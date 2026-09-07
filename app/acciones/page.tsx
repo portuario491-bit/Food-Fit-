@@ -3,7 +3,7 @@ import { getDataProvider } from "@/lib/data";
 import { buildRanking } from "@/lib/ranking";
 import { RankingTable } from "@/components/RankingTable";
 import { FilterBar } from "@/components/FilterBar";
-import { MockDataBanner } from "@/components/Disclaimer";
+import { DataQualityBanner } from "@/components/Disclaimer";
 import type { Region, Sector } from "@/lib/data/types";
 
 export const metadata: Metadata = {
@@ -42,7 +42,7 @@ export default async function AccionesPage({
           .
         </p>
       </div>
-      {provider.isMock && <MockDataBanner />}
+      <DataQualityBanner isMock={provider.isMock} />
       <FilterBar />
       <RankingTable rows={rows} />
     </div>

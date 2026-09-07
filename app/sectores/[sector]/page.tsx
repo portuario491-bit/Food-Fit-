@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getDataProvider } from "@/lib/data";
 import { buildRanking } from "@/lib/ranking";
 import { RankingTable } from "@/components/RankingTable";
-import { MockDataBanner } from "@/components/Disclaimer";
+import { DataQualityBanner } from "@/components/Disclaimer";
 import { sectorToSlug, slugToSector, SECTOR_SLUGS } from "@/lib/slug";
 
 export function generateStaticParams() {
@@ -45,7 +45,7 @@ export default async function SectorPage({ params }: { params: Promise<{ sector:
           de este mismo sector.
         </p>
       </div>
-      {provider.isMock && <MockDataBanner />}
+      <DataQualityBanner isMock={provider.isMock} />
       <RankingTable rows={rows} />
     </div>
   );

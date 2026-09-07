@@ -13,14 +13,14 @@ export function ProfileSelectorForm() {
   const [profile, setProfile] = useState<ProfileKey>("equilibrado");
   const [region, setRegion] = useState("");
   const [minYield, setMinYield] = useState("");
-  const [minMarketCapUSD, setMinMarketCapUSD] = useState("");
+  const [minMarketCap, setMinMarketCap] = useState("");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const params = new URLSearchParams();
     if (region) params.set("region", region);
     if (minYield) params.set("minYield", minYield);
-    if (minMarketCapUSD) params.set("minMarketCapUSD", minMarketCapUSD);
+    if (minMarketCap) params.set("minMarketCap", minMarketCap);
     const qs = params.toString();
     router.push(`/ranking/${profile}${qs ? `?${qs}` : ""}`);
   }
@@ -81,13 +81,13 @@ export function ProfileSelectorForm() {
 
           <select
             className="rounded-md border border-ink-900/20 px-3 py-2 text-sm"
-            value={minMarketCapUSD}
-            onChange={(e) => setMinMarketCapUSD(e.target.value)}
+            value={minMarketCap}
+            onChange={(e) => setMinMarketCap(e.target.value)}
           >
             <option value="">Cualquier capitalización</option>
-            <option value="10000000000">Mínimo 10.000 M$</option>
-            <option value="100000000000">Mínimo 100.000 M$</option>
-            <option value="500000000000">Mínimo 500.000 M$</option>
+            <option value="1000000000">Mínimo 1.000 M€</option>
+            <option value="10000000000">Mínimo 10.000 M€</option>
+            <option value="50000000000">Mínimo 50.000 M€</option>
           </select>
         </div>
         <p className="mt-3 text-xs text-ink-500">

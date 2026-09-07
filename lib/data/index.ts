@@ -1,27 +1,32 @@
 import type { FinancialDataProvider } from "./types";
 import { MockProvider } from "./providers/mockProvider";
+import { Ibex35Provider } from "./providers/ibex35Provider";
 
 /**
  * Punto único de acceso al proveedor de datos financieros activo.
- * Selección vía FINANCIAL_DATA_PROVIDER; si el proveedor pedido no tiene
- * API key configurada (o no está implementado todavía), se usa MockProvider
- * en su lugar para que la app nunca muestre datos reales a medio construir.
+ * Selección vía FINANCIAL_DATA_PROVIDER:
+ * - "ibex35" (por defecto): universo real del IBEX35 recopilado manualmente.
+ * - "mock": universo ficticio, útil para desarrollo/pruebas de la metodología.
+ * - "eodhd" / "fmp": proveedores en tiempo real, pendientes de implementar.
+ *   Si se solicitan sin tener la integración lista, se usa Ibex35Provider.
  */
 function resolveProvider(): FinancialDataProvider {
-  const requested = (process.env.FINANCIAL_DATA_PROVIDER ?? "mock").toLowerCase();
+  const requested = (process.env.FINANCIAL_DATA_PROVIDER ?? "ibex35").toLowerCase();
+
+  if (requested === "mock") return new MockProvider();
 
   if (requested === "eodhd" && process.env.EODHD_API_KEY) {
     console.warn(
-      "FINANCIAL_DATA_PROVIDER=eodhd configurado, pero EodhdProvider aún no está implementado. Usando MockProvider."
+      "FINANCIAL_DATA_PROVIDER=eodhd configurado, pero EodhdProvider aún no está implementado. Usando Ibex35Provider."
     );
   }
   if (requested === "fmp" && process.env.FMP_API_KEY) {
     console.warn(
-      "FINANCIAL_DATA_PROVIDER=fmp configurado, pero FmpProvider aún no está implementado. Usando MockProvider."
+      "FINANCIAL_DATA_PROVIDER=fmp configurado, pero FmpProvider aún no está implementado. Usando Ibex35Provider."
     );
   }
 
-  return new MockProvider();
+  return new Ibex35Provider();
 }
 
 let cachedProvider: FinancialDataProvider | null = null;

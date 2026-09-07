@@ -305,10 +305,10 @@ export const RISK_METRICS: MetricDefinition[] = [
   {
     key: "marketCapSize",
     label: "Tamaño (capitalización)",
-    extract: (c) => c.marketCapUSD,
+    extract: (c) => c.marketCap,
     higherIsBetter: true,
     weight: 0.15,
-    format: (v) => `$${(v / 1_000_000_000).toFixed(0)} mil M`,
+    format: (v) => `${(v / 1_000_000_000).toFixed(1)} mil M`,
     describe: phrase("Tamaño de la compañía", "grande y más resiliente", "reducido y más sensible a shocks"),
   },
 ];
@@ -353,7 +353,7 @@ export const MOMENTUM_METRICS: MetricDefinition[] = [
   {
     key: "aboveSma200",
     label: "Tendencia (precio vs. media de 200 sesiones)",
-    extract: (c) => (c.aboveSma200 ? 1 : 0),
+    extract: (c) => (c.aboveSma200 === null ? null : c.aboveSma200 ? 1 : 0),
     higherIsBetter: true,
     weight: 0.15,
     format: (v) => (v === 1 ? "por encima de su media de 200 sesiones" : "por debajo de su media de 200 sesiones"),

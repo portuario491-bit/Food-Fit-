@@ -144,13 +144,25 @@ export function computeScoresForWeights(
       SUBSCORE_KEYS.map((key) => [key, subscoresByKey[key][idx]])
     ) as Record<SubscoreKey, SubscoreResult>;
 
+    // Los sub-scores sin ningún dato disponible se excluyen del total (y se
+    // renormalizan los pesos restantes) en vez de contar como 0, que se
+    // leería erróneamente como "el peor resultado posible".
+    const availableSubscores = SUBSCORE_KEYS.filter((key) => subscores[key].hasData);
     const totalScore = Math.round(
-      SUBSCORE_KEYS.reduce((sum, key) => sum + subscores[key].score * weights[key], 0)
+      weightedAverage(availableSubscores.map((key) => ({ value: subscores[key].score, weight: weights[key] })))
     );
 
     const { strengths, weaknesses } = pickExplanations(subscores, weights);
 
-    return { ticker: company.ticker, profile: label, totalScore, subscores, strengths, weaknesses };
+    return {
+      ticker: company.ticker,
+      profile: label,
+      totalScore,
+      subscores,
+      strengths,
+      weaknesses,
+      subscoresWithData: availableSubscores.length,
+    };
   });
 }
 

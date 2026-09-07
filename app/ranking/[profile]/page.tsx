@@ -6,7 +6,7 @@ import { PROFILES } from "@/lib/scoring/profiles";
 import type { ProfileKey } from "@/lib/scoring/types";
 import { RankingTable } from "@/components/RankingTable";
 import { FilterBar } from "@/components/FilterBar";
-import { DisclaimerBanner, MockDataBanner } from "@/components/Disclaimer";
+import { DisclaimerBanner, DataQualityBanner } from "@/components/Disclaimer";
 import type { Region, Sector } from "@/lib/data/types";
 
 export function generateStaticParams() {
@@ -42,7 +42,7 @@ export default async function RankingPage({
     sector?: string;
     minYield?: string;
     minScore?: string;
-    minMarketCapUSD?: string;
+    minMarketCap?: string;
   }>;
 }) {
   const { profile } = await params;
@@ -58,7 +58,7 @@ export default async function RankingPage({
     sector: query.sector as Sector | undefined,
     minYield: query.minYield ? Number(query.minYield) : undefined,
     minScore: query.minScore ? Number(query.minScore) : undefined,
-    minMarketCapUSD: query.minMarketCapUSD ? Number(query.minMarketCapUSD) : undefined,
+    minMarketCap: query.minMarketCap ? Number(query.minMarketCap) : undefined,
   });
 
   return (
@@ -69,7 +69,7 @@ export default async function RankingPage({
         <p className="mt-2 max-w-3xl text-ink-700">{meta.description}</p>
       </div>
 
-      {provider.isMock && <MockDataBanner />}
+      <DataQualityBanner isMock={provider.isMock} />
 
       <FilterBar />
       <RankingTable rows={rows} />

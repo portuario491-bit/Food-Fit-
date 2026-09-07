@@ -11,10 +11,11 @@ npm install
 npm run dev       # http://localhost:3000
 npm run typecheck
 npm run check:scoring   # sanity-check del motor de scoring sobre el universo mock
+npm run check:ibex35    # sanity-check del motor de scoring sobre el universo real IBEX35
 npm run build
 ```
 
-Sin variables de entorno configuradas, la app usa `MockProvider`: un universo de ~15 empresas ficticias (marcadas explícitamente como datos de demostración) diseñado para validar la metodología de scoring. Ver `.env.example` para conectar un proveedor de datos financieros real (EODHD, FMP) en el futuro.
+Por defecto (`FINANCIAL_DATA_PROVIDER=ibex35`) la app usa `Ibex35Provider`: las 35 empresas del IBEX35 con cifras **reales** recopiladas manualmente de fuentes públicas (ver `/docs/ibex35-fuentes.md`), sin actualización automática todavía. Con `FINANCIAL_DATA_PROVIDER=mock` se usa `MockProvider`, un universo de ~15 empresas ficticias diseñado para validar la metodología de scoring con datos completos. Ver `.env.example` para conectar en el futuro un proveedor de datos en tiempo real (EODHD, FMP).
 
 ## Estructura
 

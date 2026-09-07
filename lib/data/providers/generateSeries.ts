@@ -27,8 +27,8 @@ function seededRandom(seed: string) {
 export function generateMockPriceSeries(company: CompanyFundamentals): PricePoint[] {
   const rnd = seededRandom(company.ticker + "-price");
   const months = 36;
-  const monthlyDrift = Math.pow(1 + company.return3yCagr, 1 / 12) - 1;
-  const monthlyVol = company.volatility3y / Math.sqrt(12);
+  const monthlyDrift = Math.pow(1 + (company.return3yCagr ?? 0), 1 / 12) - 1;
+  const monthlyVol = (company.volatility3y ?? 0.2) / Math.sqrt(12);
 
   const monthlyReturns: number[] = [];
   for (let i = 0; i < months; i++) {
@@ -53,11 +53,13 @@ export function generateMockPriceSeries(company: CompanyFundamentals): PricePoin
 }
 
 export function generateMockDividendHistory(company: CompanyFundamentals): DividendPayment[] {
-  if (company.consecutiveYearsPaying <= 0 || company.dividendYield <= 0) return [];
+  const yearsPaying = company.consecutiveYearsPaying ?? 0;
+  const yield_ = company.dividendYield ?? 0;
+  if (yearsPaying <= 0 || yield_ <= 0) return [];
 
-  const years = Math.min(company.consecutiveYearsPaying, 10);
+  const years = Math.min(yearsPaying, 10);
   const growth = company.dividendCagr5y ?? company.dividendCagr3y ?? 0;
-  const currentAnnualDividend = company.price * company.dividendYield;
+  const currentAnnualDividend = company.price * yield_;
 
   const payments: DividendPayment[] = [];
   for (let yearsAgo = years - 1; yearsAgo >= 0; yearsAgo--) {

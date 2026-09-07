@@ -96,17 +96,30 @@ export default function MetodologiaPage() {
 
       <h2>Fuentes de datos y frecuencia de actualización</h2>
       <p>
-        Mientras no haya un proveedor de datos financieros real configurado, la aplicación usa un universo de
-        empresas <strong>ficticias marcadas explícitamente como datos de demostración</strong>, diseñadas para
-        representar situaciones reales (una aristócrata del dividendo, una &ldquo;trampa de yield&rdquo;, una tecnológica
-        cara y de alto crecimiento...) y así poder validar que la metodología se comporta como se espera. En
-        producción, los datos fundamentales y de dividendos se actualizarán semanalmente y los precios a diario,
-        siempre a través de un proveedor externo (nunca inventados), cacheados en base de datos para minimizar
-        llamadas a la API.
+        El universo actual son las <strong>35 empresas del IBEX35</strong>, con cifras <strong>reales</strong>{" "}
+        recopiladas manualmente de fuentes públicas (Investing.com, MarketScreener, informes de las propias
+        empresas...) a principios de septiembre de 2026. Todavía no hay actualización automática ni en tiempo
+        real: es una fotografía manual, no un feed en vivo. Cuando una cifra no se pudo verificar con confianza
+        en una fuente fiable, se muestra como <span className="italic">sin dato</span> en vez de estimarse — el
+        detalle de fuente y fecha de cada empresa está en{" "}
+        <code>/docs/ibex35-fuentes.md</code> del repositorio. Cuando conectemos un proveedor de datos en tiempo
+        real, los fundamentales y dividendos se actualizarán semanalmente y los precios a diario.
+      </p>
+      <p>
+        La aplicación también incluye un modo de demostración con empresas{" "}
+        <strong>completamente ficticias</strong> (activable con <code>FINANCIAL_DATA_PROVIDER=mock</code>),
+        diseñadas para representar situaciones extremas (una aristócrata del dividendo, una &ldquo;trampa de
+        yield&rdquo;, una tecnológica cara y de alto crecimiento...) y así poder validar que la metodología se
+        comporta como se espera ante cada caso, con datos completos en todas las métricas.
       </p>
 
       <h2>Limitaciones conocidas</h2>
       <ul>
+        <li>
+          Al ser una recopilación manual (no un feed en tiempo real), varias empresas tienen sub-scores calculados
+          con pocas métricas disponibles; la interfaz lo señala explícitamente (por ejemplo, &ldquo;2/7
+          métricas&rdquo;) para que sepas cuándo un score se apoya en pocos datos.
+        </li>
         <li>Con un universo pequeño, la normalización por percentil es menos robusta que con cientos de empresas.</li>
         <li>Las normas contables difieren entre países; algunas métricas (deuda neta/EBITDA en bancos, por ejemplo) no son directamente comparables entre sectores.</li>
         <li>Las estimaciones futuras (forward PER, crecimiento estimado) dependen de la cobertura de analistas del proveedor de datos.</li>

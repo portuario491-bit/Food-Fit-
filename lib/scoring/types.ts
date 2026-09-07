@@ -59,4 +59,6 @@ export interface CompanyScoreResult {
   subscores: Record<SubscoreKey, SubscoreResult>;
   strengths: ExplanationItem[];
   weaknesses: ExplanationItem[];
+  /** Nº de sub-scores con al menos un dato disponible, de los 6 totales (transparencia sobre cobertura de datos). */
+  subscoresWithData: number;
 }

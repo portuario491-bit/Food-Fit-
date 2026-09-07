@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getDataProvider } from "@/lib/data";
 import { computeRadarScores } from "@/lib/scoring/radar";
 import { ScoreBadge } from "@/components/ScoreBadge";
-import { DisclaimerBanner, MockDataBanner } from "@/components/Disclaimer";
+import { DisclaimerBanner, DataQualityBanner } from "@/components/Disclaimer";
 
 export const metadata: Metadata = {
   title: "Radar mensual",
@@ -32,7 +32,7 @@ export default async function RadarPage() {
         </p>
       </div>
 
-      {provider.isMock && <MockDataBanner />}
+      <DataQualityBanner isMock={provider.isMock} />
 
       <div className="space-y-4">
         {top10.map((result, idx) => {

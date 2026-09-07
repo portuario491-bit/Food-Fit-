@@ -41,9 +41,11 @@ export function RankingTable({ rows }: { rows: CompanyWithScore[] }) {
                 {company.price.toLocaleString("es-ES", { style: "currency", currency: company.currency })}
               </td>
               <td className="px-4 py-3 text-ink-700">
-                {company.dividendYield > 0 ? `${(company.dividendYield * 100).toFixed(1)}%` : "—"}
+                {company.dividendYield != null && company.dividendYield > 0
+                  ? `${(company.dividendYield * 100).toFixed(1)}%`
+                  : "—"}
               </td>
-              <td className="px-4 py-3">
+              <td className="px-4 py-3" title={`${score.subscoresWithData}/6 sub-scores con datos`}>
                 <ScoreBadge score={score.totalScore} size="sm" />
               </td>
             </tr>

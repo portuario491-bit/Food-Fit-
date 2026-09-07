@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useWatchlist } from "@/lib/watchlist";
 import { RankingTable } from "@/components/RankingTable";
-import { MockDataBanner, DisclaimerBanner } from "@/components/Disclaimer";
+import { DataQualityBanner, DisclaimerBanner } from "@/components/Disclaimer";
 import type { CompanyWithScore } from "@/lib/ranking";
 
 export default function WatchlistPage() {
@@ -39,7 +39,7 @@ export default function WatchlistPage() {
         </p>
       </div>
 
-      {isMock && rows.length > 0 && <MockDataBanner />}
+      {rows.length > 0 && <DataQualityBanner isMock={isMock} />}
 
       {!ready || loading ? (
         <p className="text-sm text-ink-500">Cargando…</p>

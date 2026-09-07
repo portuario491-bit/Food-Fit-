@@ -15,6 +15,10 @@ export default function HomePage() {
             estilo de inversión y descubre qué empresas encajan mejor con él — con la explicación completa de
             cada puntuación, sin recomendaciones simplistas de compra o venta.
           </p>
+          <p className="max-w-xl text-sm text-ink-500">
+            Empezamos con el universo del <strong>IBEX35</strong>, con datos reales recopilados manualmente.
+            Iremos ampliando a más mercados según crezca el proyecto.
+          </p>
           <div className="flex flex-wrap gap-3">
             <Link
               href="/perfil"

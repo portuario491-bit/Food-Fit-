@@ -11,7 +11,7 @@ import { ExplanationList } from "@/components/ExplanationList";
 import { MetricTable } from "@/components/MetricTable";
 import { PriceChart } from "@/components/PriceChart";
 import { WatchlistButton } from "@/components/WatchlistButton";
-import { DisclaimerBanner, MockDataBanner } from "@/components/Disclaimer";
+import { DisclaimerBanner, DataQualityBanner } from "@/components/Disclaimer";
 
 const ALL_PROFILES = Object.keys(PROFILES) as ProfileKey[];
 
@@ -94,24 +94,53 @@ export default async function CompanyPage({
           <p className="mt-2 text-2xl font-medium text-ink-900">
             {company.price.toLocaleString("es-ES", { style: "currency", currency: company.currency })}
             <span className="ml-3 text-sm font-normal text-ink-500">
-              Cap. {(company.marketCapUSD / 1_000_000_000).toFixed(0)} mil M$
+              Cap.{" "}
+              {company.marketCap != null
+                ? `${(company.marketCap / 1_000_000_000).toFixed(1)} mil M ${company.currency}`
+                : "sin dato"}
             </span>
           </p>
         </div>
         <WatchlistButton ticker={company.ticker} />
       </div>
 
-      {company.isMock && <MockDataBanner />}
+      <DataQualityBanner isMock={company.isMock} />
+
+      {company.sourceNote && (
+        <div className="rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-ink-800">
+          <span className="font-semibold">Nota sobre los datos: </span>
+          {company.sourceNote}
+        </div>
+      )}
 
       <section className="rounded-lg border border-ink-900/10 bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold text-ink-950">Evolución del precio (36 meses)</h2>
-        <PriceChart prices={series.prices} currency={company.currency} />
+        <h2 className="mb-4 text-lg font-semibold text-ink-950">Evolución del precio</h2>
+        {series.prices.length >= 2 ? (
+          <PriceChart prices={series.prices} currency={company.currency} />
+        ) : (
+          <p className="text-sm text-ink-600">
+            Todavía no hay histórico de precio suficiente para esta empresa en la versión inicial con datos
+            curados manualmente. Se añadirá cuando conectemos un proveedor de precios en tiempo real.
+          </p>
+        )}
         <div className="mt-4 grid grid-cols-3 gap-4 text-sm sm:grid-cols-5">
           <Stat label="6 meses" value={fmtPct(company.return6m)} />
           <Stat label="1 año" value={fmtPct(company.return1y)} />
           <Stat label="3 años (anualizada)" value={fmtPct(company.return3yCagr)} />
-          <Stat label="Vs. máximo 52 sem." value={`-${fmtPct(company.distanceFromHigh52w)}`} />
-          <Stat label="Tendencia" value={company.aboveSma200 ? "Alcista (media 200)" : "Bajista (media 200)"} />
+          <Stat
+            label="Vs. máximo 52 sem."
+            value={company.distanceFromHigh52w != null ? `-${(company.distanceFromHigh52w * 100).toFixed(1)}%` : "sin dato"}
+          />
+          <Stat
+            label="Tendencia"
+            value={
+              company.aboveSma200 === null
+                ? "sin dato"
+                : company.aboveSma200
+                  ? "Alcista (media 200)"
+                  : "Bajista (media 200)"
+            }
+          />
         </div>
       </section>
 
@@ -139,6 +168,11 @@ export default async function CompanyPage({
           <div className="flex flex-col items-center gap-2">
             <ScoreBadge score={activeScore.totalScore} size="lg" />
             <p className="text-xs text-ink-500">de 100</p>
+            {activeScore.subscoresWithData < 6 && (
+              <p className="text-center text-xs text-gold" title="Nº de sub-scores con al menos un dato verificado">
+                {activeScore.subscoresWithData}/6 sub-scores con datos
+              </p>
+            )}
           </div>
           <ScorePanel subscores={activeScore.subscores} />
         </div>
@@ -190,7 +224,8 @@ export default async function CompanyPage({
   );
 }
 
-function fmtPct(v: number) {
+function fmtPct(v: number | null) {
+  if (v === null) return "sin dato";
   return `${v >= 0 ? "+" : ""}${(v * 100).toFixed(1)}%`;
 }
 

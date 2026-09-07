@@ -10,7 +10,7 @@ export interface CompanyWithScore {
 export interface RankingFilters {
   region?: Region;
   sector?: Sector;
-  minMarketCapUSD?: number;
+  minMarketCap?: number;
   minYield?: number;
   minScore?: number;
 }
@@ -26,8 +26,8 @@ export function buildRanking(
   return universe
     .filter((c) => !filters.region || c.region === filters.region)
     .filter((c) => !filters.sector || c.sector === filters.sector)
-    .filter((c) => !filters.minMarketCapUSD || c.marketCapUSD >= filters.minMarketCapUSD)
-    .filter((c) => !filters.minYield || c.dividendYield >= filters.minYield)
+    .filter((c) => !filters.minMarketCap || (c.marketCap ?? 0) >= filters.minMarketCap)
+    .filter((c) => !filters.minYield || (c.dividendYield ?? 0) >= filters.minYield)
     .map((company) => ({ company, score: scoreByTicker.get(company.ticker)! }))
     .filter((row) => !filters.minScore || row.score.totalScore >= filters.minScore)
     .sort((a, b) => b.score.totalScore - a.score.totalScore);

@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "check:scoring": "tsx scripts/check-scoring.ts"
+    "check:scoring": "tsx scripts/check-scoring.ts",
+    "check:ibex35": "tsx scripts/check-ibex35.ts"
   },
   "dependencies": {
     "next": "^15.1.0",
