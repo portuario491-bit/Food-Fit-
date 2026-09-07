@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PROFILE_LIST } from "@/lib/scoring/profiles";
+import { PROFILE_ICONS, PROFILE_COLORS } from "@/lib/profileIcons";
 import type { ProfileKey } from "@/lib/scoring/types";
 import type { Region } from "@/lib/data/types";
 
@@ -28,27 +29,40 @@ export function ProfileSelectorForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       <div>
-        <h2 className="mb-4 text-lg font-semibold text-ink-950">1. Elige tu estilo de inversión</h2>
+        <h2 className="mb-4 font-display text-lg font-bold text-ink-950">1. Elige tu estilo de inversión</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {PROFILE_LIST.map((p) => (
-            <label
-              key={p.key}
-              className={`cursor-pointer rounded-lg border p-4 transition-colors ${
-                profile === p.key ? "border-accent bg-accent/5" : "border-ink-900/10 bg-white hover:border-ink-900/25"
-              }`}
-            >
-              <input
-                type="radio"
-                name="profile"
-                value={p.key}
-                checked={profile === p.key}
-                onChange={() => setProfile(p.key)}
-                className="sr-only"
-              />
-              <div className="font-medium text-ink-950">{p.label}</div>
-              <div className="mt-1 text-xs text-ink-600">{p.tagline}</div>
-            </label>
-          ))}
+          {PROFILE_LIST.map((p) => {
+            const Icon = PROFILE_ICONS[p.key];
+            const color = PROFILE_COLORS[p.key];
+            const active = profile === p.key;
+            return (
+              <label
+                key={p.key}
+                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 shadow-card transition-all ${
+                  active ? "border-accent bg-accent-soft/60 shadow-card-hover" : "border-ink-900/10 bg-white hover:-translate-y-0.5 hover:shadow-card-hover"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="profile"
+                  value={p.key}
+                  checked={active}
+                  onChange={() => setProfile(p.key)}
+                  className="sr-only"
+                />
+                <span
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                  style={{ backgroundColor: `${color}1a` }}
+                >
+                  <Icon className="h-5 w-5" style={{ color }} strokeWidth={2} />
+                </span>
+                <div>
+                  <div className="font-display font-bold text-ink-950">{p.label}</div>
+                  <div className="mt-0.5 text-xs text-ink-600">{p.tagline}</div>
+                </div>
+              </label>
+            );
+          })}
         </div>
       </div>
 

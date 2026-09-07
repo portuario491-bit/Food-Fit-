@@ -4,16 +4,24 @@ import Link from "next/link";
 import { getDataProvider } from "@/lib/data";
 import { computeUniverseScores } from "@/lib/scoring/engine";
 import { PROFILES } from "@/lib/scoring/profiles";
-import type { ProfileKey } from "@/lib/scoring/types";
+import type { ProfileKey, SubscoreKey, SubscoreResult } from "@/lib/scoring/types";
 import { ScoreBadge } from "@/components/ScoreBadge";
 import { ScorePanel } from "@/components/ScorePanel";
+import { RadarScoreChart } from "@/components/RadarScoreChart";
 import { ExplanationList } from "@/components/ExplanationList";
 import { MetricTable } from "@/components/MetricTable";
 import { PriceChart } from "@/components/PriceChart";
 import { WatchlistButton } from "@/components/WatchlistButton";
 import { DisclaimerBanner, DataQualityBanner } from "@/components/Disclaimer";
+import { SectorIcon } from "@/lib/sectorIcons";
 
 const ALL_PROFILES = Object.keys(PROFILES) as ProfileKey[];
+
+function toRadarChartData(subscores: Record<SubscoreKey, SubscoreResult>) {
+  return Object.fromEntries(
+    Object.entries(subscores).map(([key, s]) => [key, { score: s.score, hasData: s.hasData }])
+  ) as Record<SubscoreKey, { score: number; hasData: boolean }>;
+}
 
 export async function generateStaticParams() {
   const provider = getDataProvider();
@@ -85,10 +93,11 @@ export default async function CompanyPage({
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm text-ink-500">
+          <p className="flex items-center gap-1.5 text-sm text-ink-500">
+            <SectorIcon sector={company.sector} className="h-4 w-4" />
             {company.sector} · {company.exchange} · {company.country}
           </p>
-          <h1 className="mt-1 text-3xl font-semibold text-ink-950">
+          <h1 className="mt-1 font-display text-3xl font-bold text-ink-950">
             {company.name} <span className="text-ink-500">({company.ticker})</span>
           </h1>
           <p className="mt-2 text-2xl font-medium text-ink-900">
@@ -113,7 +122,7 @@ export default async function CompanyPage({
         </div>
       )}
 
-      <section className="rounded-lg border border-ink-900/10 bg-white p-6">
+      <section className="rounded-xl border border-ink-900/10 bg-white p-6 shadow-card">
         <h2 className="mb-4 text-lg font-semibold text-ink-950">Evolución del precio</h2>
         {series.prices.length >= 2 ? (
           <PriceChart prices={series.prices} currency={company.currency} />
@@ -144,7 +153,7 @@ export default async function CompanyPage({
         </div>
       </section>
 
-      <section className="rounded-lg border border-ink-900/10 bg-white p-6">
+      <section className="rounded-xl border border-ink-900/10 bg-white p-6 shadow-card">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-lg font-semibold text-ink-950">Puntuación — perfil {activeMeta.label}</h2>
           <div className="flex flex-wrap gap-1.5">
@@ -164,7 +173,7 @@ export default async function CompanyPage({
           </div>
         </div>
 
-        <div className="mt-6 grid gap-8 lg:grid-cols-[auto_1fr]">
+        <div className="mt-6 grid gap-6 lg:grid-cols-[auto_1fr_1fr] lg:items-center">
           <div className="flex flex-col items-center gap-2">
             <ScoreBadge score={activeScore.totalScore} size="lg" />
             <p className="text-xs text-ink-500">de 100</p>
@@ -174,6 +183,7 @@ export default async function CompanyPage({
               </p>
             )}
           </div>
+          <RadarScoreChart subscores={toRadarChartData(activeScore.subscores)} />
           <ScorePanel subscores={activeScore.subscores} />
         </div>
 
@@ -182,7 +192,7 @@ export default async function CompanyPage({
         </div>
       </section>
 
-      <section className="rounded-lg border border-ink-900/10 bg-white p-6">
+      <section className="rounded-xl border border-ink-900/10 bg-white p-6 shadow-card">
         <h2 className="text-lg font-semibold text-ink-950">¿Para qué tipo de inversor puede encajar?</h2>
         <p className="mt-3 text-ink-700">
           Con los datos actuales, {company.name} obtiene su mejor encaje ({bestFit.total}/100) con un perfil de{" "}
@@ -207,7 +217,7 @@ export default async function CompanyPage({
         <MetricCard title="Momentum" score={activeScore.subscores.momentum} />
       </section>
 
-      <section className="rounded-lg border border-ink-900/10 bg-white p-6">
+      <section className="rounded-xl border border-ink-900/10 bg-white p-6 shadow-card">
         <h2 className="text-lg font-semibold text-ink-950">Evolución histórica de los scores</h2>
         <p className="mt-2 text-sm text-ink-600">
           Aún no acumulamos histórico suficiente de puntuaciones mensuales para {company.ticker}. Esta sección se
@@ -246,7 +256,7 @@ function MetricCard({
   score: { score: number; hasData: boolean; metrics: import("@/lib/scoring/types").MetricContribution[] };
 }) {
   return (
-    <div className="rounded-lg border border-ink-900/10 bg-white p-5">
+    <div className="rounded-xl border border-ink-900/10 bg-white p-5 shadow-card">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-semibold text-ink-950">{title}</h3>
         <ScoreBadge score={score.score} size="sm" />

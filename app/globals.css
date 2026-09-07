@@ -7,6 +7,17 @@
 }
 
 body {
-  background-color: #f7f8fa;
+  background-color: #f8f7f3;
   color: #101828;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), var(--font-body), ui-sans-serif, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.score-ring {
+  background: conic-gradient(var(--ring-color) calc(var(--ring-pct) * 1%), var(--ring-track) 0);
 }

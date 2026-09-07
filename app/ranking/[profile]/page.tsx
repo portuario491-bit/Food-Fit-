@@ -75,7 +75,7 @@ export default async function RankingPage({
       <RankingTable rows={rows} />
       <DisclaimerBanner variant="full" />
 
-      <section className="rounded-lg border border-ink-900/10 bg-white p-6">
+      <section className="rounded-xl border border-ink-900/10 bg-white p-6 shadow-card">
         <h2 className="text-lg font-semibold text-ink-950">Preguntas frecuentes</h2>
         <div className="mt-4 space-y-4 text-sm text-ink-700">
           <div>
