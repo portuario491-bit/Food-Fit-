@@ -26,7 +26,9 @@ export function ScoreBadge({ score, size = "md" }: { score: number; size?: keyof
 
   return (
     <div
-      className="score-ring inline-flex shrink-0 items-center justify-center rounded-full"
+      className={`score-ring inline-flex shrink-0 items-center justify-center rounded-full ${
+        score >= 75 ? "shadow-glow" : ""
+      }`}
       style={ringStyle}
       title={`${band.label}: ${score}/100`}
     >

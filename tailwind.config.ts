@@ -45,6 +45,31 @@ const config: Config = {
       boxShadow: {
         card: "0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -8px rgba(15, 23, 42, 0.10)",
         "card-hover": "0 4px 8px rgba(15, 23, 42, 0.06), 0 16px 32px -12px rgba(15, 23, 42, 0.16)",
+        glow: "0 0 0 1px rgba(15, 122, 92, 0.15), 0 8px 30px -6px rgba(15, 122, 92, 0.35)",
+      },
+      keyframes: {
+        "fade-up": {
+          from: { opacity: "0", transform: "translateY(14px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        float: {
+          "0%, 100%": { transform: "translate(0, 0) scale(1)" },
+          "50%": { transform: "translate(-3%, 4%) scale(1.05)" },
+        },
+        "float-slow": {
+          "0%, 100%": { transform: "translate(0, 0) scale(1)" },
+          "50%": { transform: "translate(4%, -3%) scale(1.08)" },
+        },
+        "bar-grow": {
+          from: { transform: "scaleX(0)" },
+          to: { transform: "scaleX(1)" },
+        },
+      },
+      animation: {
+        "fade-up": "fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both",
+        float: "float 14s ease-in-out infinite",
+        "float-slow": "float-slow 18s ease-in-out infinite",
+        "bar-grow": "bar-grow 0.9s cubic-bezier(0.16, 1, 0.3, 1) both",
       },
     },
   },
