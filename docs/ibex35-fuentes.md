@@ -372,3 +372,67 @@ Verificado que Tesla no paga ni ha pagado nunca dividendo en efectivo y no prev�
 
 ### Limitación general de esta ronda
 Igual que en rondas anteriores del IBEX35, el fetch directo de páginas no tuvo acceso a los dominios financieros habituales en este entorno (EGRESS_BLOCKED / error de acceso), así que todos los datos proceden de resúmenes de búsqueda (Claude WebSearch), citando en cada caso la fuente que aparece en el snippet. Varias métricas de riesgo y calidad más difíciles de sourcear de forma pública y fiable (volatility3y, maxDrawdown5y, perVsHistoricalAvg5y, earningsStability, interestCoverage, priceToFcf) se han dejado en null de forma generalizada para las 7 empresas por no encontrarse una fuente fiable o por dispersión excesiva entre fuentes — igual criterio aplicado en las rondas del IBEX35.
+
+## Ampliación del universo — S&P 500 (grandes empresas)
+
+Recopilación realizada el 8 de septiembre de 2026 en `lib/data/providers/globalCompanies.ts` para las 7 empresas estadounidenses del bloque "selección adicional de grandes empresas": AAPL, NVDA, AMZN, META, BRKB, JPM, V. Igual que en las rondas anteriores, el fetch directo estuvo bloqueado (EGRESS_BLOCKED) para prácticamente todos los dominios financieros habituales (stockanalysis.com, macrotrends.net, gurufocus.com, wsj.com, marketwatch.com, sec.gov), así que todos los datos proceden de resúmenes de búsqueda (WebSearch), citando la fuente que aparece en cada snippet.
+
+### Apple (AAPL)
+- Precio (319,97$, 4-sep-2026) y market cap (4,61 billones $) — fuente: stockanalysis.com/finance.yahoo.com vía snippet de búsqueda. PER (36,69x) y forward PER (34,73x) — financecharts.com/public.com.
+- ROE con dispersión notable entre fuentes (111,36% GuruFocus vs 151,9% otra fuente) por el patrimonio neto muy reducido tras años de recompras; se usa 111,36%. ROIC (51,01%) — mlq.ai.
+- Márgenes (operativo ~32%, neto 26,9%) y crecimiento (ingresos 7%/6% a 3/5 años, BPA +17,7% a 5 años) — artificall.com, stockstory.org, csimarket.com.
+- Deuda: neta prácticamente nula/caja neta; interestCoverage (673x) y netDebtToEbitda (dato contradictorio, se deja en null) — finance.yahoo.com, stock-analysis-on.net.
+- Dividendo: yield 0,34%, racha de incrementos 14-15 años según fuente (se usa 14) — 247wallst.com.
+- Riesgo/momentum: beta 0,93-1,09 (se usa 1,09), 52w high 344,57$, retorno 1a +37%, 6m +37,9%, por encima de SMA200 — gurufocus.com, financecharts.com, barchart.com.
+
+### Nvidia (NVDA)
+- Precio (230,36$) y market cap (5,67 billones $) — fuente snippet de búsqueda (tradingeconomics/robinhood), 8-sep-2026. Cifras ya ajustadas al split 10x1 de junio de 2024.
+- PER (29,12x, GuruFocus) y forward PER (19,10 vs 24,50 según fuente; se usa 24,50). ROE (112-117%), ROIC (92,03%), márgenes operativo/neto (65,21%/63,66%) — nvidianews.nvidia.com, gurufocus.com, stock-analysis-on.net.
+- Crecimiento explosivo por el boom de IA: ingresos +125%/71% CAGR 3/5 años, BPA diluido +209%/100% CAGR 3/5 años — financecharts.com.
+- Dividendo mínimo (yield 0,43%, 14 años pagando, solo 3 años de incrementos tras la gran subida de 2024) — fullratio.com, investsnips.com.
+- Deuda mínima/caja neta (interestCoverage e netDebtToEbitda no informativos, se dejan en null) — gurufocus.com.
+- Riesgo/momentum: beta 2,22, PEG 0,37, EV/EBITDA 27,52, 52w high 236,54$, retorno 1a +34,2%, por encima de SMA200 — gurufocus.com, investing.com.
+
+### Amazon (AMZN)
+- Precio (256,45$) y market cap (2,79 billones $) — fullratio.com/tipranks.com. Amazon NO reparte dividendo (confirmado, dividendYield=0) — dividendpedia.com.
+- PER con fuerte dispersión (20,8x con BPA TTM que incluye partidas no recurrentes vs 35,3x con BPA FY2025 GAAP; se usa esta última) — financecharts.com, macrotrends.net.
+- Crecimiento: ingresos +11,3%/15,8% CAGR 3/5 años; BPA se deja en null por la distorsión de la pérdida neta de 2022 en el cálculo de CAGR (fuentes muy dispares 27,9%-106,9%) — macrotrends.net, finbox.com.
+- ROE 30,56%, ROIC 11,94%, margen operativo 11,2%, margen neto 12,2% — tipranks.com. FCF de los últimos 12 meses negativo por el capex de IA/AWS; priceToFcf y fcfGrowthCagr3y en null.
+- netDebtToEbitda 0,3x (mínimo de 5 años, dic-2025), interestCoverage 43,55x — finbox.com, valuesense.io.
+- Riesgo/momentum: beta 1,45, 52w high 258,60$, retorno 1a +14,53% — financecharts.com, totalrealreturns.com.
+
+### Meta Platforms (META)
+- Precio (613,26$) y market cap (1,57 billones $, con una fuente alternativa de 1,42 billones) — stockanalysis.com/robinhood.com.
+- PER 22,8-23,2x, forward PER 17,3-17,9x — financecharts.com, gurufocus.com.
+- Meta inició su primer dividendo en febrero de 2024 (yield 0,35%); solo ~2 años de historial, 1 incremento hasta ahora — investor.atmeta.com, 24/7wallst vía snippet.
+- ROE con fuerte dispersión (25,11% GuruFocus jun-2026 vs 29,85% stockanalysis vs 34,88% FY2024); se usa 25,11%. Margen operativo 41%, margen neto 30,1% — gurufocus.com, stock-analysis-on.net.
+- Crecimiento: ingresos +22,4%/18,5% CAGR 3/5 años; BPA diluido +68%/25,93% CAGR 3/5 años — financecharts.com.
+- Deuda: caja (~90.300M$) similar a deuda LP (~83.700M$) a mediados de 2026; netDebtToEbitda se deja en null por no reflejar bien la posición neta el ratio bruto (1,08x); interestCoverage 71,5x (2025) — macrotrends.net, gurufocus.com.
+- Riesgo/momentum: beta 1,24, PEG 0,92, EV/EBITDA 13,77, priceToFcf 32,15, 52w range 520,26$-790,80$, retorno 1a -17,61%, 6m -4,80%; aboveSma200 se deja en null por datos contradictorios entre fuentes (610,79 vs 623,79 de SMA200 frente a precio 613,26) — gurufocus.com, nasdaq.com.
+
+### Berkshire Hathaway (BRKB / BRK.B)
+- Ticker real de mercado: BRK.B (sin puntuación en la ficha por compatibilidad de URLs). Precio (505,93$) y market cap (1,08 billones $, con una fuente alternativa de 1,09 billones) — fullratio.com/investing.com.
+- Es un holding diversificado (seguros, ferrocarril, energía, cartera de acciones cotizadas), no una empresa operativa típica: se dejaron en null operatingMargin, netMargin, evEbitda, priceToFcf, priceToSales, netDebtToEbitda e interestCoverage por no ser métricas comparables de forma estándar en este modelo de negocio.
+- revenueGrowthCagr y epsGrowthCagr en null: las fuentes citan cifras de ingresos muy dispares (de -3,2% a +77,7%) por la volatilidad de las plusvalías/minusvalías no realizadas de la cartera bajo US GAAP — financecharts.com, wallstreetzen.com.
+- Berkshire NO reparte dividendo (el consejo revisa la política cada año) — fool.com. PER muy volátil entre fuentes (12,6x-16,3x) por el mismo motivo de plusvalías/minusvalías en el resultado GAAP; forwardPer 22,94x de una única fuente.
+- ROE 12,12% y ROIC 19,28% incluidos como aproximación best-effort — gurufocus.com/stockanalysis.com. Beta con dispersión fuerte (0,1464 vs 0,61; se usa 0,61) — gurufocus.com.
+- Book value por acción B usado para contexto de P/B: 348,26$ (jun-2026) — gurufocus.com. Retorno 1a +3,64% — según snippet de totalrealreturns.com.
+
+### JPMorgan Chase (JPM)
+- Precio (358,64$) y market cap (944.560M$) — investing.com/robinhood.com vía snippet, 8-sep-2026. PER (15,36x) y forward PER (14,34x) — fullratio.com, gurufocus.com.
+- Banco comercial/de inversión: se dejaron en null operatingMargin, netMargin, netDebtToEbitda, interestCoverage, evEbitda, priceToFcf, priceToSales y peg por no ser métricas estándar/comparables para un banco (mismo criterio usado con bancos y aseguradoras del IBEX35).
+- ROE oficial de la compañía para 2025: 17% (ROTCE 20%); GuruFocus cita 18,16% en otra fecha — jpmorganchase.com (comunicado 4T25), gurufocus.com.
+- Crecimiento: ingresos +13,65%/17,84% CAGR 3/5 años; BPA +18,3%/17,7% promedio anual 3/5 años — financecharts.com.
+- Dividendo: yield 1,67%, payout ~29%, racha de incrementos citada como 14 años (streak explícito en el anuncio de subida de abril 2026) o 16 según otra fuente (se usa 14); consecutiveYearsPaying se deja en null por el recorte de dividendo de 2009 (crisis financiera) que hace ambigua esa cuenta sin una fuente que la calcule explícitamente — 247wallst.com, kavout.com.
+- Riesgo/momentum: beta 0,9266, 52w range 279,10$-366,50$, retorno 1a +27,37%, 6m -7,65%, por encima de SMA200 — gurufocus.com, financecharts.com.
+
+### Visa (V)
+- Precio (382,41$, 24-ago-2026) y market cap (700.270M$) — fullratio.com/tipranks.com. PER (32,49x) y forward PER (24,96x) — fullratio.com, gurufocus.com.
+- Dividendo: yield 0,74%, payout sobre beneficio ~22,5% y sobre FCF ~21,5% (FCF 21.600M$ vs dividendos pagados 4.600M$, dividendCoverage ~4,7x), racha de incrementos citada como 17 o 18 años según fuente (se usa 17), dividendCagr3y 14,16% y dividendCagr5y 15,93% — finance.yahoo.com, financecharts.com, simplywall.st.
+- ROE 61,19%; ROIC con dispersión notable entre fuentes (28,17%-54,82%; se usa 33,43% de GuruFocus jun-2026). Margen neto ~50,8% — gurufocus.com, financecharts.com. operatingMargin no se encontró con cifra fiable y se deja en null.
+- Crecimiento: ingresos +14,45% CAGR 5 años; BPA básico +14,78% CAGR 3 años, +20,1% promedio anual 5 años — finbox.com, tikr.com.
+- Deuda: neta 8.010M$ (sep-2025), debt/EBITDA bruto 0,88-0,93x; netDebtToEbitda se deja en null por cifras de EBITDA demasiado dispares entre fuentes para un cálculo fiable. interestCoverage 35,74x (Q3 2026, con tendencia decreciente desde 43,60x) — gurufocus.com, businessquant.com.
+- Riesgo/momentum: beta 0,76, PEG 1,87, EV/EBITDA 21,82, priceToSales 15,74 (calculado de ingresos LTM 44.490M$ y capitalización), 52w range 293,89$-385,57$, retorno 1a -6,86%, por encima de SMA200 — financecharts.com, tikr.com.
+
+### Limitación general de esta ronda (ampliación S&P 500)
+El fetch directo estuvo bloqueado (EGRESS_BLOCKED) para todos los dominios financieros probados (stockanalysis.com, macrotrends.net, gurufocus.com, sec.gov, wsj.com, marketwatch.com), por lo que todos los datos proceden de resúmenes de búsqueda (WebSearch), citando la fuente que aparece en el snippet. Varias métricas quedaron en null de forma deliberada por: (a) contradicción relevante entre fuentes sin forma de reconciliarlas (p. ej. netDebtToEbitda en META y V, aboveSma200 en META, beta en BRKB), (b) distorsión de la cifra base por eventos puntuales (pérdida neta 2022 de Amazon, plusvalías/minusvalías de la cartera de Berkshire), o (c) el concepto no siendo comparable de forma estándar para el modelo de negocio (bancos: JPM; holding de seguros/industrial: BRKB). Se recomienda, en una futura ronda con acceso a fetch directo a fuentes primarias (10-K/10-Q en sec.gov, IR de cada compañía), verificar en particular `volatility3y`, `maxDrawdown5y`, `perVsHistoricalAvg5y` y `earningsStability`, que se dejaron en null de forma generalizada en las 7 empresas por no encontrarse una fuente fiable vía búsqueda.
