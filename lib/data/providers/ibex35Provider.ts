@@ -1,22 +1,27 @@
 import type { CompanyFundamentals, CompanySeries, FinancialDataProvider } from "../types";
 import { IBEX35_COMPANIES } from "./ibex35Companies";
+import { GLOBAL_COMPANIES } from "./globalCompanies";
+
+const ALL_COMPANIES: CompanyFundamentals[] = [...IBEX35_COMPANIES, ...GLOBAL_COMPANIES];
 
 /**
- * Proveedor de datos real (recopilado manualmente) para el universo del
- * IBEX35. No hay feed de precios en tiempo real todavía: getSeries devuelve
- * un único punto (el precio conocido) en vez de fabricar un histórico, para
- * no presentar un gráfico inventado como si fuera real.
+ * Proveedor de datos real (recopilado manualmente): universo del IBEX35 más
+ * una ampliación con empresas españolas fuera del índice y una selección de
+ * grandes empresas del S&P 500. No hay feed de precios en tiempo real
+ * todavía: getSeries devuelve un único punto (el precio conocido) en vez de
+ * fabricar un histórico, para no presentar un gráfico inventado como si
+ * fuera real.
  */
 export class Ibex35Provider implements FinancialDataProvider {
   readonly id = "ibex35-curated";
   readonly isMock = false;
 
   async listUniverse(): Promise<CompanyFundamentals[]> {
-    return IBEX35_COMPANIES;
+    return ALL_COMPANIES;
   }
 
   async getCompany(ticker: string): Promise<CompanyFundamentals | null> {
-    return IBEX35_COMPANIES.find((c) => c.ticker === ticker.toUpperCase()) ?? null;
+    return ALL_COMPANIES.find((c) => c.ticker === ticker.toUpperCase()) ?? null;
   }
 
   async getSeries(ticker: string): Promise<CompanySeries | null> {
