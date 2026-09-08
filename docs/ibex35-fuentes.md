@@ -184,3 +184,44 @@ Segunda ronda de investigación centrada en las categorías que la ronda 1 dejó
 
 ### Limitación general de esta ronda
 La herramienta de fetch directo de páginas no tuvo acceso a ningún dominio probado (agregadores financieros, webs corporativas de los bancos, SEC, CNMV, incluso Wikipedia), por lo que todos los datos de esta ronda proceden de resúmenes de búsqueda en vez de la lectura directa de la fuente primaria. Se ha priorizado dejar en `null` cualquier cifra con corroboración débil o contradictoria antes que forzar un dato. Se recomienda, en una futura ronda con acceso a fetch, verificar directamente en stockanalysis.com/macrotrends.net las cifras de volatilidad, máximo drawdown, PEG y márgenes que se han dejado en null.
+
+---
+
+## Ronda 3 (septiembre 2026): crecimiento, calidad, valoración y riesgo — ACS, Acciona, Acciona Energía, Acerinox, Aena, Amadeus, ArcelorMittal
+
+Tercera ronda, centrada en las categorías que las rondas anteriores dejaron sin cubrir (crecimiento, calidad, valoración, riesgo) para ACS, ANA, ANE, ACX, AENA, AMS y MTS. Recopilación mediante Claude WebSearch el 8 de septiembre de 2026 (igual que en la Ronda 2, el fetch directo de páginas estuvo bloqueado por el proxy de salida para todos los dominios probados — stockanalysis.com, macrotrends.net, investing.com, marketscreener.com, companiesmarketcap.com, wsj.com, bolsamania.com, gurufocus.com, finance.yahoo.com, mlq.ai — así que los datos proceden de resúmenes/snippets de búsqueda, contrastados entre varias fuentes cuando ha sido posible). Donde varias fuentes daban cifras claramente incompatibles o implausibles, el campo se dejó en `null`.
+
+### ACS
+- Añadido: `dividendYield` (0,0187), `revenueGrowthCagr3y` (0,14), `revenueGrowthCagr5y` (0,12), `operatingMargin` (0,044) y `netMargin` (0,0195) — fuentes: nota de prensa oficial de Grupo ACS (resultados 1S2026, pressroom.grupoacs.com) para márgenes, fiscal.ai y simplywall.st para crecimiento de ingresos, cálculo propio payout/PER para dividendYield (coherente con una fuente que da 1,87% directamente).
+- Dejado en null: `roic` (dispersión extrema entre fuentes, 5,6%-28,7%), `evEbitda` (1,0x-14,6x según fuente), `peg`, `epsGrowthCagr3y/5y` (distorsión por la plusvalía de la venta de la participación en Abertis), `interestCoverage`, `earningsStability`, `perVsHistoricalAvg5y`, `volatility3y`, `maxDrawdown5y`, `consecutiveYearsPaying/Increasing`, `dividendCagr*`, `payoutRatioFCF`, `dividendCoverage`, `fcfGrowthCagr3y`, `operatingMarginTrend5y`.
+
+### Acciona (ANA)
+- Añadido: `dividendYield` (0,0241, calculado sobre el dividendo oficial de 5,74867€/acción con cargo a 2025 según comunicado CNMV del 30/06/2026) y `netMargin` (0,037, TTM).
+- Dejado en null: `roic` (una fuente daba un "ROI" del 17,8% idéntico al ROE ya registrado — probable conflación de métricas, descartada), `revenueGrowthCagr3y/5y` y `epsGrowthCagr3y/5y` (cifras de fuentes secundarias de 22%-26% CAGR implausibles frente al crecimiento interanual real oficial, +12,7% en 2024 y +5,5% en 2025), `operatingMargin`, `peg`, `evEbitda`, `priceToFcf`, `priceToSales`, `perVsHistoricalAvg5y`, `volatility3y`, `maxDrawdown5y`, `interestCoverage`.
+
+### Acciona Energía (ANE)
+- Añadido: `roe` (0,127), `beta` (0,53) y `netMargin` (0,165, 2025) — fuentes: simplywall.st "past performance" e investing.com/lightyear para beta.
+- Advertencia de coherencia: `netMargin` (16,5% en 2025) está muy inflado por plusvalías puntuales de rotación de activos (venta de participaciones en parques renovables) — el margen del año anterior fue de solo el 5%; no se espera que se repita en 2026 (EBITDA guiado a la baja ~22%). Nota en `sourceNote`.
+- Dejado en null: `operatingMargin`, `roic`, `revenueGrowthCagr3y/5y`, `epsGrowthCagr3y/5y`, `peg`, `evEbitda`, `priceToFcf`, `priceToSales`, `volatility3y`, `maxDrawdown5y` — el riesgo de confusión de fuentes entre ANA y ANE (dos cotizadas distintas) es muy alto y no se ha podido despejar con confianza para estas métricas.
+
+### Acerinox (ACX)
+- Añadido: `operatingMargin` (0,0265), `netMargin` (-0,008), `priceToSales` (0,5), `peg` (1,09, forward no-GAAP) y `evEbitda` (12,0x TTM) — fuente: agregados vía Seeking Alpha/stockanalysis (snippets de búsqueda), consulta 8-sep-2026.
+- Descartado explícitamente: un dato de "volatilidad" del 3,2% (Seeking Alpha) por implausible para una acción cíclica del sector del acero (no se usó como `volatility3y`).
+- Dejado en null: `roic`, `epsGrowthCagr3y/5y`, `revenueGrowthCagr3y/5y` (con beneficios TTM cerca de cero, cualquier CAGR no sería representativo), `interestCoverage`, `perVsHistoricalAvg5y`, `volatility3y`, `maxDrawdown5y`, `consecutiveYearsPaying`.
+
+### Aena (AENA)
+- Añadido: `consecutiveYearsIncreasing` (4), `operatingMargin` (0,4553), `netMargin` (0,335), `roic` (0,1592), `priceToSales` (6,13), `peg` (3,03) y `evEbitda` (12,03) — fuentes: nota de prensa oficial de Aena (resultados 2025: beneficio neto 2.136,7M€, ingresos 6.379,2M€, dividendo 1,09€/acción), companiesmarketcap.com y stockanalysis.com (vía snippets) para el resto.
+- Dejado en null: `revenueGrowthCagr3y/5y`, `epsGrowthCagr3y/5y` (la base de comparación de hace 3-5 años incluye 2020-2021, con pérdidas o resultados casi nulos por la pandemia — CAGR no representativo), `interestCoverage`, `perVsHistoricalAvg5y`, `volatility3y`, `maxDrawdown5y`, `consecutiveYearsPaying`.
+
+### Amadeus IT Group (AMS)
+- Añadido: `dividendYield` (0,0359), `consecutiveYearsPaying` (2) y `consecutiveYearsIncreasing` (2) — calculados sobre los dividendos oficiales con cargo a 2024 (1,39€/acción) y 2025 (0,53€ interino + 1,54€ complementario = 2,07€/acción) tras la reanudación del dividendo en 2024 (suspendido 2020-2023 por la pandemia, según amadeus.com/en/investor-center/dividends). También `operatingMargin` (0,27, beneficio de explotación oficial FY2025), `netMargin` (0,2036 TTM), `roic` (0,0923, con lectura TTM alternativa de 0,1258), `peg` (1,57), `evEbitda` (9,71), `priceToSales` (3,4) e `interestCoverage` (24,14x = EBIT TTM 1.800M€ / gastos financieros TTM 74,4M€).
+- Descartado explícitamente: un PEG de 0,15 (gurufocus) por incoherente con el PER ya registrado (19,08) y con la propia comparación del 93% por debajo de la mediana a 10 años que citaba la misma fuente.
+- Dejado en null: `roe` (ya null previamente, fuentes contradictorias no reconciliadas), `epsGrowthCagr3y/5y`, `revenueGrowthCagr3y/5y` (misma razón que Aena: colapso del tráfico aéreo 2020-2021 distorsiona la base de comparación), `perVsHistoricalAvg5y`, `volatility3y`, `maxDrawdown5y`.
+
+### ArcelorMittal (MTS)
+- Añadido: `operatingMargin` (0,0272), `netMargin` (0,0514, verificado también como 3.152M$/61.352M$ de ingresos FY2025), `priceToSales` (0,62) y `evEbitda` (11,7x, rango 11,05x-12,36x según fuente) — todas las cifras en USD (divisa de reporte de la compañía).
+- Descartado explícitamente: un PEG de 0,09 (fuente vía Seeking Alpha) por ser un artefacto de la base de comparación deprimida (el beneficio neto pasó de 1.339M$ en 2024 a 3.152M$ en 2025, +135%, por el ciclo del acero) — no se usó.
+- Dejado en null: `roic`, `epsGrowthCagr3y/5y`, `revenueGrowthCagr3y/5y` (mismo motivo: ciclo del acero muy pronunciado), `interestCoverage` (no se encontró el gasto financiero TTM en una fuente fiable), `consecutiveYearsPaying/Increasing` (se confirmó un recorte de dividendo en 2009 pero no una cronología completa y fiable de la racha posterior), `volatility3y`, `maxDrawdown5y`.
+
+### Limitación general de esta ronda
+Igual que en la Ronda 2, el fetch directo de páginas no tuvo acceso a ningún dominio financiero probado, así que todos los datos proceden de resúmenes de búsqueda. Ha sido especialmente difícil encontrar `volatility3y` y `maxDrawdown5y` para acciones individuales (a diferencia de fondos/ETFs, raramente se publican como una cifra de texto indexable) — se han dejado en `null` para las 7 empresas de esta ronda. Se ha priorizado descartar explícitamente varias cifras concretas (PEG, ROIC, "volatilidad") que resultaban incoherentes con otros datos ya verificados de la misma empresa, en vez de dejarlas pasar sin más porque una sola fuente las mencionaba.
