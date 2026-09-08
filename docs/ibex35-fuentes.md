@@ -145,3 +145,42 @@ Composición del índice verificada como estable desde julio de 2024 (entrada de
 ## Inmobiliaria Colonial (COL)
 - SOCIMI: usa LTV en vez de deuda neta/EBITDA.
 - Fuentes: idealista.com cartera Colonial, estrategiasdeinversion.com resultados y cotización, tradersunion.com COL-EUR.
+
+---
+
+## Ronda 2 (septiembre 2026): crecimiento, calidad, valoración y riesgo — 7 financieras + Cellnex
+
+Segunda ronda de investigación centrada en las categorías que la ronda 1 dejó sin cubrir (crecimiento, calidad, valoración, riesgo) para SAB, SAN, BKT, BBVA, CABK, CLNX y COL. Recopilación por búsqueda web (Claude WebSearch) el 7 de septiembre de 2026; en este entorno no fue posible hacer fetch directo de páginas (stockanalysis.com, macrotrends.net, investing.com, marketscreener.com, companiesmarketcap.com, wsj.com, bolsamania.com, la web corporativa de cada banco, sec.gov e incluso wikipedia.org devolvieron "EGRESS_BLOCKED" al intentar leerlos con la herramienta de fetch), así que los datos proceden de los resúmenes/snippets de búsqueda que citan esas mismas fuentes, y se han contrastado cuando ha sido posible. Donde distintas fuentes daban cifras claramente incompatibles (habitual al mezclar el ticker BME con ADRs en EEUU o listados en otras bolsas europeas, con divisas y bases de acciones distintas), el campo se dejó en `null` en vez de forzar un valor.
+
+### Banco Sabadell (SAB)
+- Añadido: `forwardPer` (10,49) y `epsGrowthCagr5y` (38,3%) — fuente: stockanalysis.com (BME:SAB, vía snippet) y Simply Wall St "past performance", consulta 7-sep-2026.
+- Dejado en null tras búsqueda: `dividendYield` y `payoutRatioEarnings` — las fuentes dan cifras muy dispares (4,4% a más del 20% de yield; 37% a 77% de payout) por mezclar el extraordinario de la venta de TSB, distintos listados y distintas fechas; `revenueGrowthCagr3y/5y`, `netMargin`, `operatingMargin`, `roic`, `interestCoverage`, `peg`, `evEbitda`, `priceToFcf`, `priceToSales`, `perVsHistoricalAvg5y`, `volatility3y`, `maxDrawdown5y`, `consecutiveYearsPaying/Increasing`, `dividendCagr*` — sin fuente fiable o coherente encontrada en el tiempo disponible.
+
+### Banco Santander (SAN)
+- Añadido: `per` (14,10, BME) y `epsGrowthCagr5y` (39,27%) — fuente: stockanalysis.com (BME:SAN) y Simply Wall St, consulta 7-sep-2026. `dividendYield` (1,86%) calculado como dividendo total cargado a 2025 (0,115€ a cuenta + 0,125€ complementario = 0,24€/acción, según nota de prensa oficial de Santander de septiembre 2025 y comunicado de la Junta de marzo 2026) dividido entre el precio de referencia de la ficha (12,88€).
+- Dejado en null: `revenueGrowthCagr3y/5y`, `epsGrowthCagr3y`, `netMargin`, `operatingMargin`, `roic`, `peg`, `evEbitda`, `priceToFcf`, `priceToSales`, `perVsHistoricalAvg5y`, `volatility3y`, `maxDrawdown5y`, `consecutiveYearsPaying/Increasing`, `dividendCagr*` — no se encontró una cifra consistente para el ticker BME concreto.
+
+### Bankinter (BKT)
+- Añadido: `forwardPer` (10,51), `epsGrowthCagr5y` (29,25%) y `revenueGrowthCagr5y` (15,3%, sobre margen bruto/ingresos totales) — fuente: stockanalysis.com (BME:BKT) y Simply Wall St "past performance", consulta 7-sep-2026.
+- Dejado en null: `revenueGrowthCagr3y`, `epsGrowthCagr3y`, `netMargin` (fuentes dispares: 37%-40% según periodo), `operatingMargin`, `roic`, `peg`, `evEbitda`, `priceToFcf`, `priceToSales`, `perVsHistoricalAvg5y`, `volatility3y`, `maxDrawdown5y`, `consecutiveYearsPaying/Increasing` (fuentes indican "al menos 10 años" pero sin cifra exacta verificable), `dividendCagr*`.
+
+### BBVA
+- Añadido: `beta` (0,89, BME, stockanalysis.com), `forwardPer` (9,01, específico del listado BME — se descartó el 10,27 de la ADR estadounidense por corresponder a otro listado), `payoutRatioEarnings` (0,40, coherente con la política de reparto 40-50% declarada por el propio banco) y `dividendYield` (0,0362 = dividendo total cargado a 2025 de 0,92€/acción [0,32€ a cuenta pagado en noviembre 2025 + 0,60€ complementario pagado en abril 2026, confirmado en los formularios 6-K de BBVA ante la SEC] dividido entre el precio de referencia de 25,40€).
+- Dejado en null: `revenueGrowthCagr3y/5y`, `epsGrowthCagr3y/5y` (BBVA reporta guía de crecimiento de valor contable tangible + dividendo del 15% CAGR 2025-2028, pero eso no es EPS growth y no se usó), `netMargin`, `operatingMargin`, `roic`, `peg`, `evEbitda`, `priceToFcf`, `priceToSales`, `perVsHistoricalAvg5y`, `volatility3y`, `maxDrawdown5y`, `consecutiveYearsPaying/Increasing`, `dividendCagr*`.
+
+### CaixaBank (CABK)
+- Añadido: `forwardPer` (12,92), `epsGrowthCagr5y` (13,90%), `revenueGrowthCagr5y` (14,5%) y `netMargin` (37,7%) — fuente: stockanalysis.com (BME:CABK) y Simply Wall St, consulta 7-sep-2026. `dividendYield` (0,038) calculado como dividendo total con cargo a 2025 (0,50€/acción, +15% interanual, según nota de resultados oficial de CaixaBank de enero 2026) dividido entre el precio de referencia (13,17€).
+- Advertencia de coherencia: `revenueGrowthCagr5y` y `epsGrowthCagr5y` a 5 años están inflados por la fusión con Bankia (2021), que amplió de golpe balance, ingresos y beneficio — no reflejan crecimiento orgánico puro; se ha dejado nota en `sourceNote`.
+- Dejado en null: `revenueGrowthCagr3y`, `epsGrowthCagr3y`, `operatingMargin`, `roic`, `peg`, `evEbitda`, `priceToFcf`, `priceToSales`, `perVsHistoricalAvg5y`, `volatility3y`, `maxDrawdown5y`, `consecutiveYearsPaying/Increasing`, `dividendCagr*`.
+
+### Cellnex Telecom (CLNX)
+- Añadido: `netDebtToEbitda` (6,28x, 1S2026, mejorando desde 6,39x — fuente: resultados oficiales de Cellnex 1S2026, cellnex.com) y `evEbitda` (~11,1x — fuente: guía de múltiplos de mercado 2026, consulta 7-sep-2026).
+- Dejado en null: `roic`, `per`, `operatingMargin`, `netMargin` (con beneficio neto negativo estas métricas no son informativas o no se reportan de forma directa), `peg`, `priceToFcf` y `priceToSales` (no se pudo obtener con confianza una capitalización bursátil y una cifra de ingresos anuales de la misma fecha y divisa — las fuentes mezclan USD y EUR, y distintos listados ADR/BME), `revenueGrowthCagr3y/5y` (se encontró crecimiento orgánico ~5% interanual pero no un CAGR a 3-5 años fiable), `volatility3y`, `maxDrawdown5y`, `perVsHistoricalAvg5y`.
+
+### Inmobiliaria Colonial (COL)
+- Añadido: `beta` (1,23 — fuente: investing.com, página dedicada "Beta (5 años)", consulta 7-sep-2026), `forwardPer` (15,88) y `payoutRatioEarnings` (0,93). Ambos calculados sobre la guía de BPA recurrente de la propia Colonial para 2026 (0,34-0,35€/acción) y el dividendo anunciado para 2026 (0,32€/acción) — no sobre el BPA contable, que la propia compañía advierte que está distorsionado por revalorizaciones de activos. Un payout tan alto es coherente con la obligación legal de reparto de las SOCIMI (mínimo 80% del beneficio fiscal aplicable).
+- Deuda neta a cierre de 2025 (~4.973M€, resultados oficiales de Colonial) confirma por qué `netDebtToEbitda` se mantiene en null pese a conocerse la cifra: la propia compañía usa LTV como métrica de apalancamiento y el EBITDA de rentas no es directamente comparable entre fuentes (319M€ TTM según una fuente, 371M€ "rental EBITDA" FY2025 según otra).
+- Dejado en null: `roic`, `per` (contable), `operatingMargin`, `netMargin`, `evEbitda` (no se pudo reconciliar una cifra de EBITDA consistente con el EV), `priceToFcf`, `priceToSales`, `peg`, `revenueGrowthCagr3y/5y`, `epsGrowthCagr3y/5y`, `volatility3y`, `maxDrawdown5y`, `perVsHistoricalAvg5y`, `consecutiveYearsPaying/Increasing`, `dividendCagr*`.
+
+### Limitación general de esta ronda
+La herramienta de fetch directo de páginas no tuvo acceso a ningún dominio probado (agregadores financieros, webs corporativas de los bancos, SEC, CNMV, incluso Wikipedia), por lo que todos los datos de esta ronda proceden de resúmenes de búsqueda en vez de la lectura directa de la fuente primaria. Se ha priorizado dejar en `null` cualquier cifra con corroboración débil o contradictoria antes que forzar un dato. Se recomienda, en una futura ronda con acceso a fetch, verificar directamente en stockanalysis.com/macrotrends.net las cifras de volatilidad, máximo drawdown, PEG y márgenes que se han dejado en null.
