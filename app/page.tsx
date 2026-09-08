@@ -38,7 +38,7 @@ export default async function HomePage() {
         <div className="relative mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.25fr_1fr] lg:items-center">
           <div className="space-y-6">
             <span className="inline-flex animate-fade-up items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white backdrop-blur">
-              Universo IBEX35 · Datos reales · Actualización manual
+              IBEX35 + S&amp;P 500 · Datos reales · Actualización manual
             </span>
             <h1 className="animate-fade-up delay-1 font-display text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
               Descubre qué acciones <span className="text-gradient-bright">encajan de verdad</span> con tu forma de invertir.
@@ -109,7 +109,7 @@ export default async function HomePage() {
 
       <section className="mx-auto grid max-w-6xl grid-cols-2 gap-4 sm:grid-cols-4">
         {[
-          { value: 35, suffix: "", label: "empresas del IBEX35 analizadas" },
+          { value: universe.length, suffix: "", label: "empresas analizadas (IBEX35 + S&P 500)" },
           { value: 6, suffix: "", label: "estilos de inversión distintos" },
           { value: 6, suffix: "", label: "sub-scores por empresa" },
           { value: 100, suffix: "%", label: "datos reales, fuentes citadas" },
@@ -131,8 +131,8 @@ export default async function HomePage() {
           <div>
             <h2 className="font-display text-2xl font-bold text-ink-950">Top del ranking · perfil equilibrado</h2>
             <p className="mt-1 max-w-xl text-ink-600">
-              Las 8 empresas del IBEX35 mejor puntuadas hoy con un perfil equilibrado. Cada perfil tiene su propio
-              ranking completo.
+              Las 8 empresas mejor puntuadas hoy con un perfil equilibrado, de todo el universo analizado. Cada
+              perfil tiene su propio ranking completo.
             </p>
           </div>
           <Link href="/ranking/equilibrado" className="text-sm font-semibold text-accent-dark hover:underline">
@@ -170,8 +170,9 @@ export default async function HomePage() {
       <section className="mx-auto max-w-6xl">
         <h2 className="mb-2 font-display text-2xl font-bold text-ink-950">Seis estilos de inversión, seis rankings</h2>
         <p className="mb-6 max-w-2xl text-ink-600">
-          Empezamos con el universo del <strong>IBEX35</strong>, con datos reales recopilados manualmente. Iremos
-          ampliando a más mercados según crezca el proyecto.
+          Analizamos el <strong>IBEX35</strong> completo y una selección de grandes empresas del{" "}
+          <strong>S&amp;P 500</strong>, con datos reales recopilados manualmente. Iremos ampliando el universo según
+          crezca el proyecto.
         </p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {PROFILE_LIST.map((profile) => {
@@ -217,7 +218,7 @@ export default async function HomePage() {
           <Step
             icon={<ListOrdered className="h-5 w-5" />}
             title="2. Exploras el ranking"
-            text="Vemos las 35 empresas del IBEX35 ordenadas según tu perfil, con filtros por sector, yield y capitalización."
+            text="Vemos las empresas del IBEX35 y del S&P 500 ordenadas según tu perfil, con filtros por sector, yield y capitalización."
           />
           <Step
             icon={<BookOpenCheck className="h-5 w-5" />}

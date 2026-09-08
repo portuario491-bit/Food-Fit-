@@ -110,10 +110,7 @@ export default async function CompanyPage({
             <p className="mt-2 text-2xl font-medium text-white">
               {company.price.toLocaleString("es-ES", { style: "currency", currency: company.currency })}
               <span className="ml-3 text-sm font-normal text-white/60">
-                Cap.{" "}
-                {company.marketCap != null
-                  ? `${(company.marketCap / 1_000_000_000).toFixed(1)} mil M ${company.currency}`
-                  : "sin dato"}
+                Cap. {company.marketCap != null ? formatMarketCap(company.marketCap, company.currency) : "sin dato"}
               </span>
             </p>
           </div>
@@ -240,6 +237,13 @@ export default async function CompanyPage({
       <DisclaimerBanner variant="full" />
     </div>
   );
+}
+
+function formatMarketCap(marketCap: number, currency: string) {
+  if (marketCap >= 1_000_000_000_000) {
+    return `${(marketCap / 1_000_000_000_000).toFixed(2)} billones ${currency}`;
+  }
+  return `${(marketCap / 1_000_000_000).toFixed(1)} mil M ${currency}`;
 }
 
 function fmtPct(v: number | null) {

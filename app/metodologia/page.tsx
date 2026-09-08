@@ -98,9 +98,12 @@ export default function MetodologiaPage() {
 
       <h2>Fuentes de datos y frecuencia de actualización</h2>
       <p>
-        El universo actual son las <strong>35 empresas del IBEX35</strong>, con cifras <strong>reales</strong>{" "}
-        recopiladas manualmente de fuentes públicas (Investing.com, MarketScreener, informes de las propias
-        empresas...) a principios de septiembre de 2026. Todavía no hay actualización automática ni en tiempo
+        El universo actual son las <strong>35 empresas del IBEX35</strong> más una selección de{" "}
+        <strong>grandes empresas del S&amp;P 500</strong> (incluyendo posiciones reales de la cartera personal del
+        creador del sitio), con cifras <strong>reales</strong>{" "}
+        recopiladas manualmente de fuentes públicas (stockanalysis.com, macrotrends.net, Investing.com,
+        MarketScreener, informes de las propias empresas...) a principios de septiembre de 2026. Todavía no hay
+        actualización automática ni en tiempo
         real: es una fotografía manual, no un feed en vivo. Cuando una cifra no se pudo verificar con confianza
         en una fuente fiable, se muestra como <span className="italic">sin dato</span> en vez de estimarse — el
         detalle de fuente y fecha de cada empresa está en{" "}
