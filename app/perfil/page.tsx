@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Elige tu estilo de inversión",
   description:
     "Selecciona tu estilo de inversión (dividendos, crecimiento, calidad, valoración...) y algunos criterios adicionales para ver el ranking de empresas que mejor encaja.",
+  alternates: { canonical: "/perfil" },
 };
 
 export default function PerfilPage() {

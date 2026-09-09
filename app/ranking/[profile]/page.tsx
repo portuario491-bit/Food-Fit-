@@ -9,6 +9,7 @@ import { FilterBar } from "@/components/FilterBar";
 import { DisclaimerBanner, DataQualityBanner } from "@/components/Disclaimer";
 import { PageHero } from "@/components/PageHero";
 import type { Region, Sector } from "@/lib/data/types";
+import { SITE_URL } from "@/lib/constants";
 
 const PROFILE_HERO_VARIANT: Record<ProfileKey, "accent" | "violet" | "gold"> = {
   dividendos: "accent",
@@ -71,8 +72,49 @@ export default async function RankingPage({
     minMarketCap: query.minMarketCap ? Number(query.minMarketCap) : undefined,
   });
 
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "InvIeduca", item: `${SITE_URL}/` },
+      { "@type": "ListItem", position: 2, name: "Perfiles", item: `${SITE_URL}/perfil` },
+      { "@type": "ListItem", position: 3, name: `Ranking ${meta.label}`, item: `${SITE_URL}/ranking/${meta.key}` },
+    ],
+  };
+
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "¿Qué significa el score de esta lista?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `Es una puntuación de 0 a 100 calculada como media ponderada de seis sub-scores (dividendo, crecimiento, calidad, valoración, riesgo y momentum), con pesos específicos para el perfil ${meta.label}.`,
+        },
+      },
+      {
+        "@type": "Question",
+        name: "¿Debo comprar la empresa con mayor score?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "No. El score prioriza según tus criterios, pero no sustituye tu propio análisis ni constituye asesoramiento personalizado. Revisa la ficha de cada empresa para entender por qué obtiene esa puntuación.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "¿Para qué tipo de inversor encaja este perfil?",
+        acceptedAnswer: { "@type": "Answer", text: `Puede encajar mejor con ${meta.fitFor}` },
+      },
+    ],
+  };
+
   return (
     <div className="space-y-6">
+      {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <PageHero
         eyebrow={`Ranking · ${meta.label}`}
         title={`Mejores acciones para ${meta.label.toLowerCase()}`}
