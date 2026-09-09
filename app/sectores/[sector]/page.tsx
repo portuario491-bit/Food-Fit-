@@ -6,6 +6,7 @@ import { RankingTable } from "@/components/RankingTable";
 import { DataQualityBanner } from "@/components/Disclaimer";
 import { PageHero } from "@/components/PageHero";
 import { sectorToSlug, slugToSector, SECTOR_SLUGS } from "@/lib/slug";
+import { SITE_URL } from "@/lib/constants";
 
 export function generateStaticParams() {
   return Object.values(SECTOR_SLUGS).map((slug) => ({ sector: slug }));
@@ -35,8 +36,20 @@ export default async function SectorPage({ params }: { params: Promise<{ sector:
   const universe = await provider.listUniverse();
   const rows = buildRanking(universe, "equilibrado", { sector });
 
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "InvIeduca", item: `${SITE_URL}/` },
+      { "@type": "ListItem", position: 2, name: "Acciones", item: `${SITE_URL}/acciones` },
+      { "@type": "ListItem", position: 3, name: sector, item: `${SITE_URL}/sectores/${sectorToSlug(sector)}` },
+    ],
+  };
+
   return (
     <div className="space-y-6">
+      {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <PageHero
         eyebrow="Sector"
         title={sector}

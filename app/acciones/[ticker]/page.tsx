@@ -14,6 +14,7 @@ import { PriceChart } from "@/components/PriceChart";
 import { WatchlistButton } from "@/components/WatchlistButton";
 import { DisclaimerBanner, DataQualityBanner } from "@/components/Disclaimer";
 import { SectorIcon, SECTOR_COLORS } from "@/lib/sectorIcons";
+import { SITE_URL } from "@/lib/constants";
 
 const ALL_PROFILES = Object.keys(PROFILES) as ProfileKey[];
 
@@ -87,10 +88,21 @@ export default async function CompanyPage({
     industry: company.sector,
   };
 
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "InvIeduca", item: `${SITE_URL}/` },
+      { "@type": "ListItem", position: 2, name: "Acciones", item: `${SITE_URL}/acciones` },
+      { "@type": "ListItem", position: 3, name: `${company.name} (${company.ticker})`, item: `${SITE_URL}/acciones/${company.ticker}` },
+    ],
+  };
+
   return (
     <div className="space-y-8">
       {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 
       <div className="relative -mx-4 overflow-hidden rounded-b-3xl bg-ink-950 px-4 pb-8 pt-8 sm:-mx-6 sm:px-6">
         <div
