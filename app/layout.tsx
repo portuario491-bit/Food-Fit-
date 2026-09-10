@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
   alternates: { canonical: "/" },
   robots: { index: true, follow: true },
+  verification: {
+    google: "oB-rPmKfvYnpVhqCI2jgDLa9KlC6ltPb5B64iVVQvzg",
+  },
   openGraph: {
     type: "website",
     locale: "es_ES",
