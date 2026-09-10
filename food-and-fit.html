@@ -43,6 +43,7 @@
     --panel-grad:linear-gradient(165deg, var(--panel-2) 0%, var(--panel) 65%);
     --panel3-grad:linear-gradient(160deg, var(--panel-3) 0%, var(--panel-2) 100%);
     --yellow-grad:linear-gradient(135deg, #f2c15a, var(--yellow));
+    --red-grad:linear-gradient(135deg, #e56358, var(--red));
   }
   :root[data-theme="light"]{
     --bg:#f7f4ea;
@@ -61,6 +62,7 @@
     --panel-grad:linear-gradient(165deg, #ffffff 0%, var(--panel-2) 130%);
     --panel3-grad:linear-gradient(160deg, #ffffff 0%, var(--panel-3) 130%);
     --yellow-grad:linear-gradient(135deg, #c68a1c, var(--yellow));
+    --red-grad:linear-gradient(135deg, #d65449, var(--red));
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -71,7 +73,7 @@
   @keyframes pulseScale{0%{transform:scale(1);}35%{transform:scale(1.06);}100%{transform:scale(1);}}
   .pulse{animation:pulseScale .3s ease;}
   body{
-    background:radial-gradient(circle at 50% -8%, rgba(227,167,46,0.08), transparent 55%), var(--bg);
+    background:radial-gradient(circle at 50% -8%, rgba(214,72,63,0.08), transparent 55%), var(--bg);
     color:var(--ink);
     font-family:'Inter', sans-serif;
     min-height:100vh;
@@ -82,7 +84,7 @@
   .brand{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;}
   .brand h1{font-family:'Anton', sans-serif;font-weight:400;font-size:32px;letter-spacing:0.5px;margin:0;text-transform:uppercase;color:var(--blue);}
   .brand h1 span{color:var(--red);}
-  .brand .plate-mark{width:30px;height:30px;border-radius:50%;border:5px solid var(--yellow);background:radial-gradient(circle at 50% 50%, var(--bg) 0 30%, transparent 31%);flex-shrink:0;}
+  .brand .plate-mark{width:30px;height:30px;border-radius:50%;border:5px solid var(--red);background:radial-gradient(circle at 50% 50%, var(--bg) 0 30%, transparent 31%);flex-shrink:0;}
   .tagline{font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:0 0 20px;}
 
   .tabs{display:flex;border:2px solid var(--ink);border-radius:999px;overflow:hidden;margin-bottom:20px;background:var(--panel);}
@@ -99,7 +101,7 @@
   .field-row label{font-size:14px;font-weight:600;}
   .field-row .hint{display:block;font-family:'IBM Plex Mono', monospace;font-size:10px;font-weight:500;color:var(--muted);letter-spacing:0.3px;margin-top:2px;}
   input[type="number"]{width:82px;padding:8px 9px;font-size:16px;font-weight:600;border:1.5px solid var(--line);border-radius:8px;background:var(--panel-2);color:var(--ink);text-align:right;font-family:'Inter', sans-serif;}
-  input[type="number"]:focus{outline:2px solid var(--yellow);outline-offset:1px;}
+  input[type="number"]:focus{outline:2px solid var(--red);outline-offset:1px;}
 
   .stepper{display:inline-flex;align-items:center;gap:6px;}
   .stepper input[type="number"]{width:60px;padding:8px 4px;text-align:center;}
@@ -109,19 +111,19 @@
     font-size:18px;font-weight:700;line-height:1;cursor:pointer;
     display:flex;align-items:center;justify-content:center;padding:0;
   }
-  .stepper-btn:active{background:var(--yellow);color:#211a08;border-color:var(--yellow);}
+  .stepper-btn:active{background:var(--red);color:#fff;border-color:var(--red);}
   .stepper.compact{gap:3px;}
   .stepper.compact .stepper-btn{width:23px;height:23px;font-size:13px;border-radius:6px;}
 
   .segmented{display:flex;border-radius:10px;border:1.5px solid var(--line);overflow:hidden;}
   .segmented button{flex:1;padding:8px 6px;font-size:12px;font-weight:600;background:var(--panel-2);color:var(--muted);border:none;border-right:1.5px solid var(--line);cursor:pointer;font-family:'Inter', sans-serif;}
   .segmented button:last-child{border-right:none;}
-  .segmented button.active{background:var(--yellow);color:#211a08;}
+  .segmented button.active{background:var(--red);color:#fff;}
 
   select{width:100%;padding:9px;font-size:13px;font-weight:600;border-radius:8px;border:1.5px solid var(--line);background:var(--panel-2);color:var(--ink);font-family:'Inter', sans-serif;}
 
   .ring-wrap{display:flex;justify-content:center;padding:14px 0 6px;}
-  .ring{position:relative;width:190px;height:190px;border-radius:50%;box-shadow:var(--shadow-pop), 0 0 50px -12px rgba(227,167,46,0.4);transition:transform .2s ease, box-shadow .2s ease;}
+  .ring{position:relative;width:190px;height:190px;border-radius:50%;box-shadow:var(--shadow-pop), 0 0 50px -12px rgba(214,72,63,0.4);transition:transform .2s ease, box-shadow .2s ease;}
   .ring-hole{position:absolute;inset:26px;border-radius:50%;background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:inset 0 2px 8px rgba(0,0,0,0.4);}
   .ring-hole .kcal-num{font-family:'Anton', sans-serif;font-size:38px;line-height:1;}
   .ring-hole .kcal-label{font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-top:4px;}
@@ -139,7 +141,7 @@
 
   .routine-toolbar{display:flex;gap:8px;margin-bottom:14px;}
   .btn{font-family:'IBM Plex Mono', monospace;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;padding:9px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel-2);color:var(--ink);cursor:pointer;transition:background-color .15s ease, border-color .15s ease, box-shadow .15s ease, filter .15s ease;}
-  .btn.primary{background:var(--yellow-grad);color:#211a08;border-color:var(--yellow);box-shadow:0 6px 16px -6px rgba(227,167,46,0.6);}
+  .btn.primary{background:var(--red-grad);color:#fff;border-color:var(--red);box-shadow:0 6px 16px -6px rgba(214,72,63,0.6);}
   .btn.primary:active{filter:brightness(0.94);}
 
   .day-card{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px;background:var(--panel3-grad);box-shadow:var(--shadow-card);}
@@ -150,7 +152,7 @@
     background:transparent;border:none;border-bottom:1.5px dashed var(--line);color:var(--ink);
     padding:2px 0;flex:1;min-width:0;
   }
-  .day-name-input:focus{outline:none;border-bottom-color:var(--yellow);}
+  .day-name-input:focus{outline:none;border-bottom-color:var(--red);}
   .day-head-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
   .day-num{font-family:'IBM Plex Mono', monospace;font-size:10px;color:var(--bg);background:var(--green);padding:3px 9px;border-radius:999px;font-weight:600;}
   .remove-day{background:none;border:none;color:var(--red);font-size:18px;line-height:1;cursor:pointer;padding:2px 4px;}
@@ -183,7 +185,7 @@
   .sheet-search{margin:0 18px 10px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel-2);color:var(--ink);font-size:14px;width:calc(100% - 36px);font-family:'Inter', sans-serif;}
   .chip-row{display:flex;gap:6px;overflow-x:auto;padding:0 18px 12px;}
   .chip{flex-shrink:0;font-family:'IBM Plex Mono', monospace;font-size:11px;font-weight:600;text-transform:uppercase;padding:6px 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--panel-2);color:var(--muted);cursor:pointer;white-space:nowrap;}
-  .chip.active{background:var(--yellow);color:#211a08;border-color:var(--yellow);}
+  .chip.active{background:var(--red);color:#fff;border-color:var(--red);}
   .sheet-list{overflow-y:auto;padding:0 18px 20px;flex:1;}
   .pick-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-top:1px solid var(--line);}
   .pick-row:first-child{border-top:none;}
@@ -202,12 +204,12 @@
   .food-source-toggle button{flex:1;padding:9px 6px;font-size:12px;font-weight:600;background:var(--panel-2);color:var(--muted);border:none;border-right:1.5px solid var(--line);cursor:pointer;font-family:'IBM Plex Mono', monospace;text-transform:uppercase;letter-spacing:0.3px;}
   .food-source-toggle button:last-child{border-right:none;}
   .food-source-toggle button.active{background:var(--blue);color:#f3f0e8;}
-  .fd-brand{display:block;font-family:'IBM Plex Mono', monospace;font-size:9px;color:var(--yellow);text-transform:none;margin-top:1px;}
+  .fd-brand{display:block;font-family:'IBM Plex Mono', monospace;font-size:9px;color:var(--red);text-transform:none;margin-top:1px;}
   .off-status{font-family:'IBM Plex Mono', monospace;font-size:11px;color:var(--muted);text-align:center;padding:18px 0;}
   .off-attrib{font-family:'IBM Plex Mono', monospace;font-size:9px;color:var(--muted);text-align:center;padding:6px 0 0;}
   .food-chip-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:14px;margin-bottom:2px;}
   .food-chip{flex-shrink:0;font-family:'IBM Plex Mono', monospace;font-size:11px;font-weight:600;text-transform:uppercase;padding:6px 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--panel-2);color:var(--muted);cursor:pointer;white-space:nowrap;}
-  .food-chip.active{background:var(--yellow);color:#211a08;border-color:var(--yellow);}
+  .food-chip.active{background:var(--red);color:#fff;border-color:var(--red);}
   .food-card{border:1px solid var(--line);border-radius:14px;background:var(--panel3-grad);margin-bottom:9px;overflow:hidden;box-shadow:var(--shadow-card);transition:transform .12s ease;}
   .food-row:active{background:rgba(243,240,232,0.04);}
   .food-row{display:flex;justify-content:space-between;align-items:center;padding:13px 15px;cursor:pointer;gap:10px;}
@@ -218,7 +220,7 @@
   .food-row .fd-kcal-unit{font-family:'IBM Plex Mono', monospace;font-size:9px;color:var(--muted);display:block;text-align:right;}
   .fav-star{background:none;border:none;padding:2px;cursor:pointer;color:var(--line);flex-shrink:0;}
   .fav-star svg{width:18px;height:18px;display:block;}
-  .fav-star.active{color:var(--yellow);}
+  .fav-star.active{color:var(--red);}
   .food-detail{display:none;padding:0 15px 16px;border-top:1px solid var(--line);}
   .food-detail.open{display:block;}
   .food-grams{display:flex;align-items:center;justify-content:space-between;padding:12px 0 8px;}
@@ -237,18 +239,18 @@
   .recipe-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px;}
   .recipe-card{border:1px solid var(--line);border-radius:14px;background:var(--panel3-grad);overflow:hidden;box-shadow:var(--shadow-card);cursor:pointer;text-align:left;padding:0;font-family:inherit;color:inherit;transition:transform .12s ease, box-shadow .12s ease;}
   .recipe-card:active{transform:scale(0.96);}
-  .recipe-card-icon{display:flex;align-items:center;justify-content:center;height:72px;background:linear-gradient(160deg, var(--panel-3), var(--panel-2));color:var(--yellow);}
+  .recipe-card-icon{display:flex;align-items:center;justify-content:center;height:72px;background:linear-gradient(160deg, var(--panel-3), var(--panel-2));color:var(--red);}
   .recipe-card-icon svg{width:32px;height:32px;}
   .recipe-card-body{padding:10px 11px 12px;}
   .recipe-card-name{font-size:12.5px;font-weight:700;line-height:1.3;display:block;margin-bottom:5px;}
   .recipe-card-meta{font-family:'IBM Plex Mono', monospace;font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px;display:flex;justify-content:space-between;gap:6px;}
-  .recipe-detail-icon{display:flex;align-items:center;justify-content:center;height:120px;background:linear-gradient(160deg, var(--panel-3), var(--panel-2));color:var(--yellow);border-radius:14px;margin:0 18px 14px;box-shadow:inset 0 0 0 1px var(--line), 0 0 40px -14px rgba(227,167,46,0.35);}
+  .recipe-detail-icon{display:flex;align-items:center;justify-content:center;height:120px;background:linear-gradient(160deg, var(--panel-3), var(--panel-2));color:var(--red);border-radius:14px;margin:0 18px 14px;box-shadow:inset 0 0 0 1px var(--line), 0 0 40px -14px rgba(214,72,63,0.35);}
   .recipe-detail-icon svg{width:54px;height:54px;}
   .recipe-ing-list{padding:0 18px;margin:0 0 18px;}
   .recipe-ing-list li{font-size:13px;line-height:1.7;}
   .recipe-step-list{counter-reset:step;list-style:none;padding:0 18px 20px;margin:0;}
   .recipe-step-list li{counter-increment:step;position:relative;margin-bottom:12px;padding-left:28px;font-size:13px;line-height:1.5;}
-  .recipe-step-list li::before{content:counter(step);position:absolute;left:0;top:0;width:19px;height:19px;border-radius:50%;background:var(--yellow);color:#211a08;font-family:'IBM Plex Mono', monospace;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  .recipe-step-list li::before{content:counter(step);position:absolute;left:0;top:0;width:19px;height:19px;border-radius:50%;background:var(--red);color:#fff;font-family:'IBM Plex Mono', monospace;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
   .muscle-icon{width:13px;height:13px;flex-shrink:0;vertical-align:-2px;margin-right:3px;}
 
   /* sports */
@@ -269,8 +271,8 @@
   .cal-day{position:relative;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;background:var(--panel-2);border:1.5px solid transparent;cursor:pointer;font-size:12.5px;font-weight:600;transition:transform .1s ease, background-color .15s ease, border-color .15s ease;}
   .cal-day:active{transform:scale(0.92);}
   .cal-day.empty{background:transparent;cursor:default;}
-  .cal-day.today{border-color:var(--yellow);}
-  .cal-day.selected{background:var(--yellow);color:#211a08;}
+  .cal-day.today{border-color:var(--red);}
+  .cal-day.selected{background:var(--red);color:#fff;}
   .cal-dots{display:flex;gap:2px;position:absolute;bottom:4px;}
   .cal-dot{width:5px;height:5px;border-radius:50%;}
   .day-detail-panel{margin-top:6px;}
@@ -287,12 +289,12 @@
   .totals-pill .tp-lbl{font-family:'IBM Plex Mono', monospace;font-size:8px;color:var(--muted);text-transform:uppercase;}
 
   /* streak */
-  .streak-pill{display:flex;align-items:center;gap:5px;background:var(--panel-2);border:1.5px solid var(--line);border-radius:999px;padding:5px 11px;flex-shrink:0;font-family:'IBM Plex Mono', monospace;font-size:12px;font-weight:700;color:var(--yellow);}
+  .streak-pill{display:flex;align-items:center;gap:5px;background:var(--panel-2);border:1.5px solid var(--line);border-radius:999px;padding:5px 11px;flex-shrink:0;font-family:'IBM Plex Mono', monospace;font-size:12px;font-weight:700;color:var(--green);}
   .streak-pill.tick{animation:streakTickPulse .8s ease-out;}
   @keyframes streakTickPulse{
-    0%{box-shadow:0 0 0 0 rgba(227,167,46,0.65);}
-    60%{box-shadow:0 0 0 9px rgba(227,167,46,0);}
-    100%{box-shadow:0 0 0 0 rgba(227,167,46,0);}
+    0%{box-shadow:0 0 0 0 rgba(92,154,92,0.65);}
+    60%{box-shadow:0 0 0 9px rgba(92,154,92,0);}
+    100%{box-shadow:0 0 0 0 rgba(92,154,92,0);}
   }
   .feedback-flash{position:fixed;inset:0;pointer-events:none;z-index:70;opacity:0;}
   .feedback-flash.ok{background:radial-gradient(circle at 50% 18%, rgba(92,154,92,0.4), transparent 65%);}
@@ -301,9 +303,9 @@
   @keyframes feedbackFlashAnim{0%{opacity:0;}15%{opacity:1;}100%{opacity:0;}}
   .streak-pill svg{width:14px;height:14px;flex-shrink:0;}
   .streak-progress-track{height:10px;border-radius:999px;background:var(--panel-2);overflow:hidden;border:1px solid var(--line);margin-top:14px;}
-  .streak-progress-fill{height:100%;width:0;background:linear-gradient(90deg, var(--red), var(--yellow));border-radius:999px;transition:width .3s ease;}
+  .streak-progress-fill{height:100%;width:0;background:linear-gradient(90deg, var(--red), var(--green));border-radius:999px;transition:width .3s ease;}
   .streak-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
-  .streak-badge{font-family:'IBM Plex Mono', monospace;font-size:10px;font-weight:600;letter-spacing:0.3px;text-transform:uppercase;background:var(--panel-2);border:1px solid var(--yellow);color:var(--yellow);padding:4px 10px;border-radius:999px;}
+  .streak-badge{font-family:'IBM Plex Mono', monospace;font-size:10px;font-weight:600;letter-spacing:0.3px;text-transform:uppercase;background:var(--panel-2);border:1px solid var(--green);color:var(--green);padding:4px 10px;border-radius:999px;}
   .help-btn{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);background:var(--panel-2);color:var(--ink);font-family:'IBM Plex Mono', monospace;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0;padding:0;}
 
   .reminder-banner{display:flex;align-items:center;gap:10px;background:var(--panel-2);border:1.5px solid var(--yellow);border-radius:14px;padding:11px 13px;margin-bottom:16px;cursor:pointer;}
@@ -350,16 +352,16 @@
   #strengthExerciseSelect{margin-top:2px;}
 
   /* rest timer */
-  .rest-timer{position:fixed;left:14px;right:14px;bottom:18px;max-width:432px;margin:0 auto;background:var(--panel);border:1.5px solid var(--yellow);border-radius:18px;padding:14px 18px;z-index:66;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:var(--shadow-pop);}
-  .rest-timer-time{font-family:'Anton', sans-serif;font-size:28px;color:var(--yellow);flex-shrink:0;}
+  .rest-timer{position:fixed;left:14px;right:14px;bottom:18px;max-width:432px;margin:0 auto;background:var(--panel);border:1.5px solid var(--red);border-radius:18px;padding:14px 18px;z-index:66;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:var(--shadow-pop);}
+  .rest-timer-time{font-family:'Anton', sans-serif;font-size:28px;color:var(--red);flex-shrink:0;}
   .rest-timer-controls{display:flex;gap:6px;}
   .rest-timer-controls button{font-family:'IBM Plex Mono', monospace;font-size:10.5px;font-weight:600;text-transform:uppercase;padding:8px 9px;border-radius:8px;border:1.5px solid var(--line);background:var(--panel-2);color:var(--ink);cursor:pointer;}
   .rest-timer-controls button#restTimerStop{border-color:var(--red);color:var(--red);}
   .streak-reward-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:70;display:none;align-items:center;justify-content:center;padding:20px;}
   .streak-reward-backdrop.open{display:flex;}
-  .streak-reward-card{width:100%;max-width:340px;background:var(--panel-grad);border:1.5px solid var(--yellow);border-radius:20px;padding:30px 24px;text-align:center;box-shadow:var(--shadow-pop), 0 0 60px -16px rgba(227,167,46,0.45);animation:screenIn .3s ease;}
-  .streak-reward-icon{width:46px;height:46px;color:var(--yellow);margin-bottom:10px;}
-  .streak-reward-title{font-family:'Anton', sans-serif;font-size:23px;text-transform:uppercase;margin:0 0 8px;color:var(--yellow);}
+  .streak-reward-card{width:100%;max-width:340px;background:var(--panel-grad);border:1.5px solid var(--green);border-radius:20px;padding:30px 24px;text-align:center;box-shadow:var(--shadow-pop), 0 0 60px -16px rgba(92,154,92,0.45);animation:screenIn .3s ease;}
+  .streak-reward-icon{width:46px;height:46px;color:var(--green);margin-bottom:10px;}
+  .streak-reward-title{font-family:'Anton', sans-serif;font-size:23px;text-transform:uppercase;margin:0 0 8px;color:var(--green);}
   .streak-reward-sub{font-size:13.5px;color:var(--muted);margin:0;line-height:1.5;}
 
   /* onboarding / profile */
@@ -373,7 +375,7 @@
     width:100%;padding:11px 13px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel-2);
     color:var(--ink);font-size:15px;font-family:'Inter', sans-serif;margin-bottom:16px;
   }
-  .onboarding-card input:focus{outline:2px solid var(--yellow);outline-offset:1px;}
+  .onboarding-card input:focus{outline:2px solid var(--red);outline-offset:1px;}
   .pw-field{position:relative;margin-bottom:16px;}
   .pw-field input[type="password"], .pw-field input[type="text"]{padding-right:42px;margin-bottom:0;}
   .pw-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:36px;height:36px;background:none;border:none;padding:0;
@@ -390,7 +392,7 @@
     border-radius:999px;padding:5px 11px 5px 5px;cursor:pointer;flex-shrink:0;
   }
   .profile-avatar{
-    width:24px;height:24px;border-radius:50%;background:var(--yellow-grad);color:#211a08;
+    width:24px;height:24px;border-radius:50%;background:var(--red-grad);color:#fff;
     display:flex;align-items:center;justify-content:center;font-family:'Anton', sans-serif;font-size:12px;
   }
   .profile-pill-name{font-family:'IBM Plex Mono', monospace;font-size:11px;font-weight:600;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -433,7 +435,7 @@
         </button>
       </div>
       <p class="ob-note" id="authForgotRow" style="text-align:right;margin:-10px 0 16px;">
-        <a href="#" id="authForgotLink" style="color:var(--yellow);text-decoration:none;">¿Olvidaste tu contraseña?</a>
+        <a href="#" id="authForgotLink" style="color:var(--red);text-decoration:none;">¿Olvidaste tu contraseña?</a>
       </p>
 
       <p class="ob-note" id="authError" style="display:none;color:var(--red);"></p>
@@ -574,7 +576,7 @@
           <span class="pct" id="proteinPct">—</span>
         </div>
         <div class="macro-row">
-          <span class="name"><span class="swatch" style="background:var(--yellow)"></span>Carbohidratos</span>
+          <span class="name"><span class="swatch" style="background:var(--green)"></span>Carbohidratos</span>
           <span class="grams" id="carbsG">—</span>
           <span class="pct" id="carbsPct">—</span>
         </div>
@@ -751,7 +753,7 @@
           <span class="hint">días seguidos con entreno y comida registrados</span>
           <p class="footnote" id="streakAvatarLabel" style="padding-top:4px;margin:0;"></p>
         </div>
-        <span style="font-family:'Anton', sans-serif;font-size:34px;color:var(--yellow);flex-shrink:0;" id="streakBig">0</span>
+        <span style="font-family:'Anton', sans-serif;font-size:34px;color:var(--green);flex-shrink:0;" id="streakBig">0</span>
       </div>
       <div class="streak-progress-track">
         <div class="streak-progress-fill" id="streakProgressFill" style="width:0%;"></div>
@@ -937,7 +939,7 @@
     <p>Desde el navegador, usa "Añadir a pantalla de inicio" (iPhone) o "Instalar app" (Android) para tener Food&amp;Fit como una app normal, sin la barra del navegador.</p>
 
     <p class="section-title">Tus datos</p>
-    <p>Todo se guarda en tu cuenta y solo tú puedes verlo. Consulta la <a href="privacidad.html" style="color:var(--yellow);">política de privacidad</a> para más detalle.</p>
+    <p>Todo se guarda en tu cuenta y solo tú puedes verlo. Consulta la <a href="privacidad.html" style="color:var(--red);">política de privacidad</a> para más detalle.</p>
   </div>
 </div>
 
@@ -1430,7 +1432,7 @@
     const ring = document.getElementById('ring');
     const redEnd = pP;
     const yellowEnd = pP+pC;
-    ring.style.background = `conic-gradient(var(--red) 0% ${redEnd}%, var(--yellow) ${redEnd}% ${yellowEnd}%, var(--blue) ${yellowEnd}% 100%)`;
+    ring.style.background = `conic-gradient(var(--red) 0% ${redEnd}%, var(--green) ${redEnd}% ${yellowEnd}%, var(--blue) ${yellowEnd}% 100%)`;
 
     nutritionTargets = { calories: Math.round(calories), protein: proteinG, carbs: carbsG, fat: fatG };
     if(selectedDate) renderDayDetail(selectedDate);
@@ -2806,7 +2808,7 @@
         <div class="food-macros">
           <div class="food-macro-pill"><span class="fm-val kcal-val">${food.kcal}</span><span class="fm-lbl">kcal</span></div>
           <div class="food-macro-pill"><span class="fm-val protein-val" style="color:var(--red)">${food.protein}g</span><span class="fm-lbl">proteína</span></div>
-          <div class="food-macro-pill"><span class="fm-val carbs-val" style="color:var(--yellow)">${food.carbs}g</span><span class="fm-lbl">carbos</span></div>
+          <div class="food-macro-pill"><span class="fm-val carbs-val" style="color:var(--green)">${food.carbs}g</span><span class="fm-lbl">carbos</span></div>
           <div class="food-macro-pill"><span class="fm-val fat-val" style="color:var(--blue)">${food.fat}g</span><span class="fm-lbl">grasas</span></div>
         </div>
         <button class="log-btn-outline reg-btn">+ Registrar en el diario de hoy</button>
@@ -3681,7 +3683,7 @@
 
   function getStreakAvatarSVG(streak){
     const tier = getStreakTier(streak);
-    const bodyColor = tier === 0 ? 'var(--muted)' : 'var(--yellow)';
+    const bodyColor = tier === 0 ? 'var(--muted)' : 'var(--green)';
     const bodyOpacity = tier === 0 ? 0.35 : 1;
 
     const eyesClosed = `
@@ -4007,7 +4009,7 @@
         if(rec.meals && rec.meals.length){
           const dot = document.createElement('span');
           dot.className = 'cal-dot';
-          dot.style.background = 'var(--yellow)';
+          dot.style.background = 'var(--red)';
           dots.appendChild(dot);
         }
         cell.appendChild(dots);
@@ -4067,7 +4069,7 @@
       html += `<div class="totals-bar">
         <div class="totals-pill"><span class="tp-val">${Math.round(totK)}${nutritionTargets.calories ? '/'+nutritionTargets.calories : ''}</span><span class="tp-lbl">kcal</span></div>
         <div class="totals-pill"><span class="tp-val" style="color:var(--red)">${totP.toFixed(0)}${nutritionTargets.protein ? '/'+nutritionTargets.protein : ''}</span><span class="tp-lbl">proteína</span></div>
-        <div class="totals-pill"><span class="tp-val" style="color:var(--yellow)">${totC.toFixed(0)}${nutritionTargets.carbs ? '/'+nutritionTargets.carbs : ''}</span><span class="tp-lbl">carbos</span></div>
+        <div class="totals-pill"><span class="tp-val" style="color:var(--green)">${totC.toFixed(0)}${nutritionTargets.carbs ? '/'+nutritionTargets.carbs : ''}</span><span class="tp-lbl">carbos</span></div>
         <div class="totals-pill"><span class="tp-val" style="color:var(--blue)">${totF.toFixed(0)}${nutritionTargets.fat ? '/'+nutritionTargets.fat : ''}</span><span class="tp-lbl">grasas</span></div>
       </div>
       <div style="display:flex;gap:6px;margin-top:10px;">
