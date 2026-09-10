@@ -3,19 +3,155 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Food&amp;Fit — Nutrición y entrenamiento</title>
-<meta name="description" content="Food&amp;Fit: calcula tus calorías y macros, registra tus comidas, crea tu rutina de entrenamiento y sigue tu progreso, todo gratis desde el navegador.">
+<title>Food&amp;Fit — Nutrición y entrenamiento, gratis desde el navegador</title>
+<meta name="description" content="Calcula tus calorías y macros, registra tus comidas, crea tu rutina de entrenamiento y sigue tu progreso. Food&amp;Fit es gratuito y funciona desde cualquier navegador, sin instalar nada.">
 <link rel="canonical" href="https://foodfit.utilix.uno/">
 <meta property="og:title" content="Food&amp;Fit — Nutrición y entrenamiento">
 <meta property="og:description" content="Calcula tus calorías y macros, registra tus comidas, crea tu rutina de entrenamiento y sigue tu progreso, todo gratis desde el navegador.">
 <meta property="og:url" content="https://foodfit.utilix.uno/">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://foodfit.utilix.uno/icon-512.png">
-<meta http-equiv="refresh" content="0; url=food-and-fit.html">
+<meta property="og:locale" content="es_ES">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Food&amp;Fit — Nutrición y entrenamiento">
+<meta name="twitter:description" content="Calcula tus calorías y macros, registra tus comidas, crea tu rutina y sigue tu progreso, gratis desde el navegador.">
+<meta name="twitter:image" content="https://foodfit.utilix.uno/icon-512.png">
+<meta name="theme-color" content="#17160f">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-512.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"WebSite","@id":"https://foodfit.utilix.uno/#website","url":"https://foodfit.utilix.uno/","name":"Food&Fit","description":"Nutrición y entrenamiento, a tu medida.","inLanguage":"es"},
+{"@type":"SoftwareApplication","@id":"https://foodfit.utilix.uno/#app","name":"Food&Fit","applicationCategory":"HealthApplication","operatingSystem":"Any (navegador web)","description":"Calcula tus calorías y macros, registra tus comidas, crea tu rutina de entrenamiento y sigue tu progreso.","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR","availability":"https://schema.org/InStock"},"url":"https://foodfit.utilix.uno/"}
+]}
+</script>
+<style>
+  *{box-sizing:border-box;}
+  :root{
+    --bg:#17160f;
+    --panel:#201f18;
+    --ink:#f3f0e8;
+    --muted:#a29c8a;
+    --line:rgba(243,240,232,0.12);
+    --red:#d6483f;
+    --green:#5c9a5c;
+  }
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,-apple-system,sans-serif;line-height:1.5;}
+  a{color:inherit;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px;}
+  header.top{padding:22px 0;border-bottom:1px solid var(--line);}
+  header.top .wrap{display:flex;align-items:center;justify-content:space-between;}
+  .brand{font-family:'Anton',sans-serif;font-size:22px;letter-spacing:.02em;text-transform:uppercase;}
+  .brand span{color:var(--red);}
+  nav.top-nav a{margin-left:18px;font-size:14px;color:var(--muted);text-decoration:none;}
+  nav.top-nav a:hover{color:var(--ink);}
+  .hero{padding:64px 0 48px;text-align:center;}
+  .hero h1{font-family:'Anton',sans-serif;font-size:clamp(32px,6vw,52px);line-height:1.05;text-transform:uppercase;letter-spacing:.01em;margin:0 0 18px;}
+  .hero h1 span{color:var(--red);}
+  .hero p.lead{color:var(--muted);font-size:18px;max-width:620px;margin:0 auto 30px;}
+  .cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+  .btn{display:inline-block;padding:14px 28px;border-radius:10px;font-weight:600;font-size:15px;text-decoration:none;border:1px solid transparent;}
+  .btn-primary{background:var(--red);color:#fff;}
+  .btn-primary:hover{opacity:.92;}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line);}
+  .btn-ghost:hover{border-color:var(--muted);}
+  .features{padding:40px 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;}
+  .feature{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;}
+  .feature h3{margin:0 0 8px;font-size:17px;}
+  .feature p{margin:0;color:var(--muted);font-size:14.5px;}
+  .feature .tag{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--green);background:rgba(92,154,92,.12);padding:3px 8px;border-radius:999px;margin-bottom:10px;}
+  .notice{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:44px 0;font-size:14px;color:var(--muted);}
+  .notice strong{color:var(--ink);}
+  .final-cta{text-align:center;padding:46px 0 60px;}
+  .final-cta h2{font-family:'Anton',sans-serif;font-size:26px;text-transform:uppercase;margin:0 0 14px;}
+  footer{border-top:1px solid var(--line);padding:26px 0;}
+  footer .wrap{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);}
+  footer a{color:var(--muted);text-decoration:underline;}
+  footer a:hover{color:var(--ink);}
+</style>
 </head>
 <body>
-<h1>Food&amp;Fit — Nutrición y entrenamiento</h1>
-<p>Food&amp;Fit es una aplicación web gratuita para llevar el control de tu nutrición y tu entrenamiento: calcula tus calorías y macronutrientes según tu objetivo, registra tus comidas del día, crea y sigue tu rutina de gimnasio, consulta recetas saludables y revisa tu progreso en el calendario.</p>
-<p>Cargando la aplicación… si no ocurre nada automáticamente, <a href="food-and-fit.html">toca aquí para entrar</a>.</p>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">Food<span>&amp;</span>Fit</div>
+    <nav class="top-nav">
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="privacidad.html">Privacidad</a>
+      <a href="food-and-fit.html">Entrar</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <h1>Nutrición y <span>entrenamiento</span>, a tu medida</h1>
+    <p class="lead">Calcula tus calorías y macros, registra tus comidas del día, crea y sigue tu rutina de gimnasio, consulta recetas saludables y revisa tu progreso en el calendario. Gratis, directamente desde el navegador.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="food-and-fit.html">Empezar gratis</a>
+      <a class="btn btn-ghost" href="food-and-fit.html">Ya tengo cuenta</a>
+    </div>
+  </section>
+
+  <section class="features" id="como-funciona">
+    <div class="feature">
+      <span class="tag">Nutrición</span>
+      <h3>Calorías y macros a tu medida</h3>
+      <p>Calcula tu objetivo diario de calorías, proteínas, grasas e hidratos según tu peso y tu objetivo, y registra cada comida para ver cuánto te queda.</p>
+    </div>
+    <div class="feature">
+      <span class="tag">Alimentos</span>
+      <h3>Base de alimentos y escáner</h3>
+      <p>Busca alimentos por nombre o marca, o escanea el código de barras de un producto para rellenar sus valores nutricionales automáticamente.</p>
+    </div>
+    <div class="feature">
+      <span class="tag">Recetas</span>
+      <h3>Recetas saludables</h3>
+      <p>Un recetario con instrucciones paso a paso e información nutricional por ración, listo para añadir directamente a tu registro del día.</p>
+    </div>
+    <div class="feature">
+      <span class="tag">Entrenamiento</span>
+      <h3>Rutinas de gimnasio</h3>
+      <p>Crea tu propia rutina por días, sigue tus series y repeticiones, y usa el cronómetro de descanso integrado entre series.</p>
+    </div>
+    <div class="feature">
+      <span class="tag">Cardio</span>
+      <h3>Más de 50 deportes</h3>
+      <p>Registra sesiones de cardio y deporte con una estimación de calorías quemadas según tu peso, la duración y el esfuerzo típico de cada actividad.</p>
+    </div>
+    <div class="feature">
+      <span class="tag">Progreso</span>
+      <h3>Calendario e historial</h3>
+      <p>Revisa día a día lo que has comido y entrenado, y sigue tu racha para mantener la constancia.</p>
+    </div>
+  </section>
+
+  <p class="notice">
+    <strong>Aviso:</strong> las calorías, macros y calorías quemadas que calcula Food&amp;Fit son estimaciones orientativas
+    (basadas en fórmulas estándar a partir de tu peso, tu objetivo y la duración/esfuerzo típico de cada actividad),
+    no un diagnóstico ni un consejo médico. Para necesidades nutricionales o de entrenamiento específicas, especialmente
+    si tienes alguna condición de salud, consulta con un profesional sanitario cualificado.
+  </p>
+
+  <section class="final-cta">
+    <h2>Crea tu cuenta gratis</h2>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="food-and-fit.html">Empezar ahora</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Food&amp;Fit</span>
+    <span><a href="privacidad.html">Privacidad y términos de uso</a></span>
+  </div>
+</footer>
+
 </body>
 </html>
