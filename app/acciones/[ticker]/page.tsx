@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getDataProvider } from "@/lib/data";
+import { getPriceService } from "@/lib/prices";
 import { computeUniverseScores } from "@/lib/scoring/engine";
 import { PROFILES } from "@/lib/scoring/profiles";
 import type { ProfileKey, SubscoreKey, SubscoreResult } from "@/lib/scoring/types";
@@ -11,6 +12,8 @@ import { RadarScoreChart } from "@/components/RadarScoreChart";
 import { ExplanationList } from "@/components/ExplanationList";
 import { MetricTable } from "@/components/MetricTable";
 import { PriceChart } from "@/components/PriceChart";
+import { PriceBlock } from "@/components/PriceBlock";
+import { TickerAvatar } from "@/components/TickerAvatar";
 import { WatchlistButton } from "@/components/WatchlistButton";
 import { DisclaimerBanner, DataQualityBanner } from "@/components/Disclaimer";
 import { SectorIcon, SECTOR_COLORS } from "@/lib/sectorIcons";
@@ -65,6 +68,7 @@ export default async function CompanyPage({
 
   if (!company || !series) notFound();
   const sectorColor = SECTOR_COLORS[company.sector];
+  const priceQuote = await getPriceService().getQuote(company);
 
   const scoresByProfile = Object.fromEntries(
     ALL_PROFILES.map((profile) => [profile, computeUniverseScores(universe, profile).find((r) => r.ticker === company.ticker)!])
@@ -111,20 +115,24 @@ export default async function CompanyPage({
           style={{ backgroundColor: sectorColor }}
         />
         <div className="relative mx-auto flex max-w-6xl flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="flex items-center gap-1.5 text-sm text-white/70">
-              <SectorIcon sector={company.sector} className="h-4 w-4" />
-              {company.sector} · {company.exchange} · {company.country}
-            </p>
-            <h1 className="mt-1 font-display text-3xl font-bold text-white">
-              {company.name} <span className="text-white/50">({company.ticker})</span>
-            </h1>
-            <p className="mt-2 text-2xl font-medium text-white">
-              {company.price.toLocaleString("es-ES", { style: "currency", currency: company.currency })}
-              <span className="ml-3 text-sm font-normal text-white/60">
-                Cap. {company.marketCap != null ? formatMarketCap(company.marketCap, company.currency) : "sin dato"}
-              </span>
-            </p>
+          <div className="flex gap-4">
+            <TickerAvatar ticker={company.ticker} sector={company.sector} />
+            <div>
+              <p className="flex items-center gap-1.5 text-sm text-white/70">
+                <SectorIcon sector={company.sector} className="h-4 w-4" />
+                {company.sector} · {company.exchange} · {company.country}
+              </p>
+              <h1 className="mt-1 font-display text-3xl font-bold text-white">
+                {company.name} <span className="text-white/50">({company.ticker})</span>
+              </h1>
+              <div className="mt-3">
+                <PriceBlock
+                  quote={priceQuote}
+                  fundamentalsAsOf={company.asOf}
+                  marketCapLabel={company.marketCap != null ? formatMarketCap(company.marketCap, company.currency) : "sin dato"}
+                />
+              </div>
+            </div>
           </div>
           <WatchlistButton ticker={company.ticker} dark />
         </div>
