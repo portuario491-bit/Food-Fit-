@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDataProvider } from "@/lib/data";
+import { getPriceService } from "@/lib/prices";
 import { buildRanking } from "@/lib/ranking";
 import { RankingTable } from "@/components/RankingTable";
 import { DataQualityBanner } from "@/components/Disclaimer";
@@ -35,6 +36,7 @@ export default async function SectorPage({ params }: { params: Promise<{ sector:
   const provider = getDataProvider();
   const universe = await provider.listUniverse();
   const rows = buildRanking(universe, "equilibrado", { sector });
+  const quotes = await getPriceService().getQuotes(rows.map((row) => row.company));
 
   const breadcrumbLd = {
     "@context": "https://schema.org",
@@ -57,7 +59,7 @@ export default async function SectorPage({ params }: { params: Promise<{ sector:
         variant="accent"
       />
       <DataQualityBanner isMock={provider.isMock} />
-      <RankingTable rows={rows} />
+      <RankingTable rows={rows} quotes={quotes} />
     </div>
   );
 }

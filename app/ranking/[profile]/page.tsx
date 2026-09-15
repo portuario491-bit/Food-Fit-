@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDataProvider } from "@/lib/data";
+import { getPriceService } from "@/lib/prices";
 import { buildRanking } from "@/lib/ranking";
 import { PROFILES } from "@/lib/scoring/profiles";
 import type { ProfileKey } from "@/lib/scoring/types";
@@ -71,6 +72,7 @@ export default async function RankingPage({
     minScore: query.minScore ? Number(query.minScore) : undefined,
     minMarketCap: query.minMarketCap ? Number(query.minMarketCap) : undefined,
   });
+  const quotes = await getPriceService().getQuotes(rows.map((row) => row.company));
 
   const breadcrumbLd = {
     "@context": "https://schema.org",
@@ -125,7 +127,7 @@ export default async function RankingPage({
       <DataQualityBanner isMock={provider.isMock} />
 
       <FilterBar />
-      <RankingTable rows={rows} />
+      <RankingTable rows={rows} quotes={quotes} />
       <DisclaimerBanner variant="full" />
 
       <section className="rounded-xl border border-ink-900/10 bg-white p-6 shadow-card">

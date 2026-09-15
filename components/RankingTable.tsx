@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { CompanyWithScore } from "@/lib/ranking";
+import type { PriceQuote } from "@/lib/prices/types";
+import { statusBadge, statusCaption, formatQuoteTimestamp } from "@/lib/prices/format";
 import { ScoreBadge } from "./ScoreBadge";
 import { SectorIcon } from "@/lib/sectorIcons";
 
@@ -9,7 +11,13 @@ function bandBorder(score: number) {
   return "border-l-ink-500/30";
 }
 
-export function RankingTable({ rows }: { rows: CompanyWithScore[] }) {
+/**
+ * `quotes` viene siempre de PriceService (una sola llamada en lote por
+ * página, ver los Server Components que renderizan esta tabla): la ficha
+ * individual y el ranking deben mostrar el mismo precio, nunca sistemas
+ * distintos.
+ */
+export function RankingTable({ rows, quotes }: { rows: CompanyWithScore[]; quotes: Map<string, PriceQuote> }) {
   if (rows.length === 0) {
     return (
       <p className="rounded-lg border border-dashed border-ink-900/20 p-6 text-center text-sm text-ink-600">
@@ -33,38 +41,56 @@ export function RankingTable({ rows }: { rows: CompanyWithScore[] }) {
           </tr>
         </thead>
         <tbody>
-          {rows.map(({ company, score }, idx) => (
-            <tr
-              key={company.ticker}
-              className={`border-b border-l-4 border-ink-900/5 bg-white transition-colors last:border-b-0 hover:bg-accent-soft/40 ${bandBorder(score.totalScore)}`}
-            >
-              <td className="px-4 py-3 text-ink-500">{idx + 1}</td>
-              <td className="px-4 py-3">
-                <Link href={`/acciones/${company.ticker}`} className="font-medium text-ink-950 hover:text-accent-dark">
-                  {company.name}
-                </Link>
-                <div className="text-xs text-ink-500">{company.ticker}</div>
-              </td>
-              <td className="px-4 py-3 text-ink-700">
-                <span className="inline-flex items-center gap-1.5">
-                  <SectorIcon sector={company.sector} className="h-4 w-4" />
-                  {company.sector}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-ink-700">{company.region}</td>
-              <td className="px-4 py-3 text-ink-700">
-                {company.price.toLocaleString("es-ES", { style: "currency", currency: company.currency })}
-              </td>
-              <td className="px-4 py-3 text-ink-700">
-                {company.dividendYield != null && company.dividendYield > 0
-                  ? `${(company.dividendYield * 100).toFixed(1)}%`
-                  : "—"}
-              </td>
-              <td className="px-4 py-3" title={`${score.subscoresWithData}/6 sub-scores con datos`}>
-                <ScoreBadge score={score.totalScore} size="sm" />
-              </td>
-            </tr>
-          ))}
+          {rows.map(({ company, score }, idx) => {
+            const quote = quotes.get(company.ticker);
+            const badge = quote ? statusBadge(quote.status) : null;
+            return (
+              <tr
+                key={company.ticker}
+                className={`border-b border-l-4 border-ink-900/5 bg-white transition-colors last:border-b-0 hover:bg-accent-soft/40 ${bandBorder(score.totalScore)}`}
+              >
+                <td className="px-4 py-3 text-ink-500">{idx + 1}</td>
+                <td className="px-4 py-3">
+                  <Link href={`/acciones/${company.ticker}`} className="font-medium text-ink-950 hover:text-accent-dark">
+                    {company.name}
+                  </Link>
+                  <div className="text-xs text-ink-500">{company.ticker}</div>
+                </td>
+                <td className="px-4 py-3 text-ink-700">
+                  <span className="inline-flex items-center gap-1.5">
+                    <SectorIcon sector={company.sector} className="h-4 w-4" />
+                    {company.sector}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-ink-700">{company.region}</td>
+                <td className="px-4 py-3 text-ink-700">
+                  {quote ? (
+                    <span
+                      className="inline-flex items-center gap-1.5"
+                      title={`${statusCaption(quote)} · Actualizado: ${formatQuoteTimestamp(quote.fetchedAt)}`}
+                    >
+                      {quote.price.toLocaleString("es-ES", { style: "currency", currency: quote.currency })}
+                      {badge && (
+                        <span aria-hidden className="text-xs">
+                          {badge.emoji}
+                        </span>
+                      )}
+                    </span>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+                <td className="px-4 py-3 text-ink-700">
+                  {company.dividendYield != null && company.dividendYield > 0
+                    ? `${(company.dividendYield * 100).toFixed(1)}%`
+                    : "—"}
+                </td>
+                <td className="px-4 py-3" title={`${score.subscoresWithData}/6 sub-scores con datos`}>
+                  <ScoreBadge score={score.totalScore} size="sm" />
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

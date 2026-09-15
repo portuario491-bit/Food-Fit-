@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getDataProvider } from "@/lib/data";
+import { getPriceService } from "@/lib/prices";
 import { buildRanking } from "@/lib/ranking";
 import { RankingTable } from "@/components/RankingTable";
 import { FilterBar } from "@/components/FilterBar";
@@ -29,6 +30,7 @@ export default async function AccionesPage({
     minYield: query.minYield ? Number(query.minYield) : undefined,
     minScore: query.minScore ? Number(query.minScore) : undefined,
   });
+  const quotes = await getPriceService().getQuotes(rows.map((row) => row.company));
 
   return (
     <div className="space-y-6">
@@ -48,7 +50,7 @@ export default async function AccionesPage({
       />
       <DataQualityBanner isMock={provider.isMock} />
       <FilterBar />
-      <RankingTable rows={rows} />
+      <RankingTable rows={rows} quotes={quotes} />
     </div>
   );
 }

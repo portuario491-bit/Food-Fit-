@@ -10,7 +10,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "check:scoring": "tsx scripts/check-scoring.ts",
-    "check:ibex35": "tsx scripts/check-ibex35.ts"
+    "check:ibex35": "tsx scripts/check-ibex35.ts",
+    "check:prices": "tsx scripts/check-prices.ts"
   },
   "dependencies": {
     "lucide-react": "^1.42.0",
