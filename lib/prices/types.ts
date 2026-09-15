@@ -2,17 +2,24 @@ import type { CompanyFundamentals } from "../data/types";
 
 /**
  * Estado de una cotización, pensado para comunicarse siempre con contexto
- * honesto (nunca un número "pelado" sin decir de cuándo es):
+ * honesto (nunca un número "pelado" sin decir de cuándo es). Cuatro
+ * niveles, no tres: distinguir "algo desactualizado" de "muy
+ * desactualizado" evita que todo el dataset manual (actualizado cada
+ * varios días) se vea permanentemente en el estado más alarmante.
  * - "live": viene de un proveedor en tiempo real conectado (Fase 2+), dentro
  *   de su ventana de frescura conocida. Puede llevar retraso (delayMinutes).
- * - "last-close": no hay proveedor en vivo, o el mercado está cerrado; es el
- *   último precio conocido (hoy: el dato del dataset de fundamentales,
- *   siempre que no sea demasiado antiguo).
- * - "stale": el único dato disponible (dataset o último valor en caché) es
- *   más antiguo que el umbral razonable — debe mostrarse como aviso, no
- *   como una cotización utilizable.
+ * - "last-close": no hay proveedor en vivo, o el mercado está cerrado; el
+ *   dato del dataset tiene 0-7 días naturales.
+ * - "stale": el dato del dataset tiene 8-30 días naturales — desactualizado,
+ *   pero todavía se muestra como referencia con su fecha.
+ * - "critical": el dato del dataset tiene más de 30 días naturales — no debe
+ *   tratarse como cotización utilizable.
+ *
+ * Los días son naturales (no de sesión bursátil): no hay calendario de
+ * mercado (festivos, fines de semana) implementado en esta fase. Ver
+ * STALE_AFTER_DAYS/CRITICAL_AFTER_DAYS en providers/datasetProvider.ts.
  */
-export type PriceStatus = "live" | "last-close" | "stale";
+export type PriceStatus = "live" | "last-close" | "stale" | "critical";
 
 export interface PriceQuote {
   ticker: string;

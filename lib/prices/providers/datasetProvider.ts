@@ -2,11 +2,22 @@ import type { CompanyFundamentals } from "../../data/types";
 import type { PriceProvider, PriceQuote, PriceStatus } from "../types";
 
 /**
- * A partir de cuántos días sin actualizar consideramos un precio "antiguo"
- * (🔴) en vez de "último cierre disponible" (🟡). Único sitio donde vive
- * este umbral — cámbialo aquí si hace falta ajustarlo.
+ * Umbrales de antigüedad (días naturales) que separan los cuatro estados.
+ * Único sitio donde viven — cámbialos aquí si hace falta ajustarlos.
+ *   0-7 días           -> "last-close" (🟡)
+ *   8-30 días          -> "stale" (🟠)
+ *   más de 30 días     -> "critical" (🔴)
+ *
+ * Limitación conocida y documentada (no un error): son días naturales, no
+ * de sesión bursátil. No hay calendario de mercado (festivos, fines de
+ * semana) implementado en esta fase, así que un cierre de viernes visto en
+ * lunes cuenta como 2-3 días naturales aunque sea la sesión más reciente
+ * disponible. Construir un calendario de mercado queda fuera de esta fase;
+ * se resolverá de forma natural al conectar un proveedor en vivo real
+ * (Fase 2), que traerá su propia marca de tiempo de sesión.
  */
-export const STALE_AFTER_DAYS = 30;
+export const STALE_AFTER_DAYS = 7;
+export const CRITICAL_AFTER_DAYS = 30;
 
 function parseAsOf(asOf: string): Date {
   return new Date(asOf.includes("T") ? asOf : `${asOf}T00:00:00Z`);
@@ -18,7 +29,10 @@ export function daysSince(asOf: string): number {
 }
 
 function statusForAge(asOf: string): PriceStatus {
-  return daysSince(asOf) > STALE_AFTER_DAYS ? "stale" : "last-close";
+  const age = daysSince(asOf);
+  if (age > CRITICAL_AFTER_DAYS) return "critical";
+  if (age > STALE_AFTER_DAYS) return "stale";
+  return "last-close";
 }
 
 /**

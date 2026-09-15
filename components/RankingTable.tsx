@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { CompanyWithScore } from "@/lib/ranking";
 import type { PriceQuote } from "@/lib/prices/types";
-import { statusBadge, statusCaption, formatQuoteTimestamp } from "@/lib/prices/format";
+import { statusBadge, quoteContext, compactFreshnessLabel } from "@/lib/prices/format";
 import { ScoreBadge } from "./ScoreBadge";
 import { SectorIcon } from "@/lib/sectorIcons";
 
@@ -65,17 +65,19 @@ export function RankingTable({ rows, quotes }: { rows: CompanyWithScore[]; quote
                 <td className="px-4 py-3 text-ink-700">{company.region}</td>
                 <td className="px-4 py-3 text-ink-700">
                   {quote ? (
-                    <span
-                      className="inline-flex items-center gap-1.5"
-                      title={`${statusCaption(quote)} · Actualizado: ${formatQuoteTimestamp(quote.fetchedAt)}`}
-                    >
-                      {quote.price.toLocaleString("es-ES", { style: "currency", currency: quote.currency })}
+                    <div>
+                      <div>{quote.price.toLocaleString("es-ES", { style: "currency", currency: quote.currency })}</div>
                       {badge && (
-                        <span aria-hidden className="text-xs">
-                          {badge.emoji}
-                        </span>
+                        <div
+                          className={`mt-0.5 inline-flex w-fit items-center gap-1 rounded-full border px-1.5 py-0.5 text-[11px] font-medium leading-none ${badge.className}`}
+                          title={quoteContext(quote)}
+                        >
+                          <span aria-hidden="true">{badge.emoji}</span>
+                          <span aria-hidden="true">{compactFreshnessLabel(quote)}</span>
+                          <span className="sr-only">{quoteContext(quote)}</span>
+                        </div>
                       )}
-                    </span>
+                    </div>
                   ) : (
                     "—"
                   )}

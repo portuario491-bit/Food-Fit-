@@ -1,18 +1,19 @@
 import { IBEX35_COMPANIES } from "../lib/data/providers/ibex35Companies";
 import { GLOBAL_COMPANIES } from "../lib/data/providers/globalCompanies";
-import { STALE_AFTER_DAYS, daysSince } from "../lib/prices/providers/datasetProvider";
+import { STALE_AFTER_DAYS, CRITICAL_AFTER_DAYS, daysSince } from "../lib/prices/providers/datasetProvider";
+import { statusBadge } from "../lib/prices/format";
+import type { PriceStatus } from "../lib/prices/types";
 import type { CompanyFundamentals } from "../lib/data/types";
 
 /**
- * Informe de solo lectura: detecta precios desactualizados e
- * inconsistencias entre precio/marketCap en los datos manuales actuales.
- * NO modifica lib/data/providers/*.ts — eso queda para revisión manual.
+ * Informe de solo lectura, en tres secciones separadas (A: coherencia
+ * interna, B: antigüedad del dato, C: comparación con el mercado). NO
+ * modifica lib/data/providers/*.ts — eso queda para revisión manual.
  *
- * Como CompanyFundamentals no guarda sharesOutstanding, la única
- * comprobación objetiva de coherencia precio/marketCap posible es el
- * número de acciones implícito (marketCap / price), contrastado contra
- * límites absolutos razonables para una empresa cotizada grande/mediana
- * y contra el resto del universo (outlier estadístico en log10).
+ * Usa exactamente la misma clasificación y terminología que la interfaz
+ * (mismos umbrales de lib/prices/providers/datasetProvider.ts, mismos
+ * cuatro estados de lib/prices/types.ts): el informe y lo que ve el
+ * usuario en la web nunca deberían decir cosas distintas.
  */
 
 const MIN_PLAUSIBLE_SHARES = 1_000_000; // 1M: por debajo, marketCap/price no cuadra con una cotizada de este tamaño
@@ -35,35 +36,31 @@ interface Finding {
 }
 
 const universe: CompanyFundamentals[] = [...IBEX35_COMPANIES, ...GLOBAL_COMPANIES];
-const findings: Finding[] = [];
 
 const marketSourceFor = (c: CompanyFundamentals) =>
   c.region === "España"
     ? `Cotización oficial BME (${c.ticker}) — bolsamadrid.es / Investing.com`
     : `Cotización oficial ${c.exchange} (${c.ticker}) — Investing.com / MarketScreener / la propia bolsa`;
 
-// --- 1. Precios desactualizados (umbral absoluto, mismo que PriceService) ---
-for (const c of universe) {
-  const age = daysSince(c.asOf);
-  if (age > STALE_AFTER_DAYS) {
-    findings.push({
-      ticker: c.ticker,
-      name: c.name,
-      price: c.price,
-      asOf: c.asOf,
-      currency: c.currency,
-      exchange: c.exchange,
-      region: c.region,
-      marketCap: c.marketCap,
-      issue: `Precio con ${age} días de antigüedad (umbral: ${STALE_AFTER_DAYS} días) — hoy se mostraría como "Dato antiguo" 🔴`,
-      severity: "Alta",
-      recommendation: "Actualizar price y asOf con el cierre más reciente disponible.",
-      source: marketSourceFor(c),
-    });
-  }
+function statusFor(age: number): PriceStatus {
+  if (age > CRITICAL_AFTER_DAYS) return "critical";
+  if (age > STALE_AFTER_DAYS) return "stale";
+  return "last-close";
 }
 
-// --- 2. Inconsistencias precio / marketCap (nº de acciones implícito) ---
+/** Mismos tramos que pide el usuario para el informe, ligados al mismo status que ve la UI. */
+function freshnessBucket(age: number): { label: string; status: PriceStatus } {
+  if (age <= 2) return { label: "0-2 días: reciente", status: "last-close" };
+  if (age <= STALE_AFTER_DAYS) return { label: "3-7 días: advertencia de actualización (sigue siendo last-close)", status: "last-close" };
+  if (age <= CRITICAL_AFTER_DAYS) return { label: "8-30 días: stale / precio desactualizado", status: "stale" };
+  return { label: "Más de 30 días: critical / precio muy desactualizado", status: "critical" };
+}
+
+// ============================================================
+// A. Coherencia interna (precio vs. marketCap)
+// ============================================================
+const coherenceFindings: Finding[] = [];
+
 const withMarketCap = universe.filter((c) => c.marketCap != null && c.marketCap > 0 && c.price > 0);
 const impliedShares = new Map<string, number>();
 for (const c of withMarketCap) impliedShares.set(c.ticker, c.marketCap! / c.price);
@@ -78,7 +75,7 @@ for (const c of withMarketCap) {
   const z = stddev > 0 ? (Math.log10(shares) - mean) / stddev : 0;
 
   if (shares < MIN_PLAUSIBLE_SHARES || shares > MAX_PLAUSIBLE_SHARES) {
-    findings.push({
+    coherenceFindings.push({
       ticker: c.ticker,
       name: c.name,
       price: c.price,
@@ -93,7 +90,7 @@ for (const c of withMarketCap) {
       source: marketSourceFor(c),
     });
   } else if (Math.abs(z) > OUTLIER_Z_SCORE) {
-    findings.push({
+    coherenceFindings.push({
       ticker: c.ticker,
       name: c.name,
       price: c.price,
@@ -110,36 +107,62 @@ for (const c of withMarketCap) {
   }
 }
 
-// --- 3. Resumen de fechas (antigüedad, sin necesidad de superar el umbral) ---
-const ages = universe.map((c) => ({ ticker: c.ticker, age: daysSince(c.asOf) }));
+// ============================================================
+// B. Antigüedad del dato
+// ============================================================
+const ages = universe.map((c) => ({ company: c, age: daysSince(c.asOf) }));
 const oldestFirst = [...ages].sort((a, b) => b.age - a.age);
-const histogram = new Map<string, number>();
+
+const bucketCounts = new Map<string, number>();
+const statusCounts: Record<PriceStatus, number> = { live: 0, "last-close": 0, stale: 0, critical: 0 };
 for (const { age } of ages) {
-  const bucket = age <= 7 ? "0-7 días" : age <= 14 ? "8-14 días" : age <= 30 ? "15-30 días" : "31+ días (antiguo)";
-  histogram.set(bucket, (histogram.get(bucket) ?? 0) + 1);
+  const { label, status } = freshnessBucket(age);
+  bucketCounts.set(label, (bucketCounts.get(label) ?? 0) + 1);
+  statusCounts[status]++;
 }
 
-// --- Salida ---
+const staleOrWorse: Finding[] = ages
+  .filter(({ age }) => age > STALE_AFTER_DAYS)
+  .map(({ company: c, age }) => {
+    const status = statusFor(age);
+    const badge = statusBadge(status);
+    return {
+      ticker: c.ticker,
+      name: c.name,
+      price: c.price,
+      asOf: c.asOf,
+      currency: c.currency,
+      exchange: c.exchange,
+      region: c.region,
+      marketCap: c.marketCap,
+      issue: `${age} días de antigüedad — estado actual en la web: ${badge.emoji} ${badge.label}`,
+      severity: status === "critical" ? "Alta" : "Media",
+      recommendation: "Actualizar price y asOf con el cierre más reciente disponible.",
+      source: marketSourceFor(c),
+    } satisfies Finding;
+  });
+
+// ============================================================
+// C. Comparación con el mercado
+// ============================================================
+// Pendiente: no hay ningún proveedor de mercado conectado. No es posible
+// comparar el dataset con una cotización externa hasta completar la Fase 2.
+// Esta sección no calcula nada — solo documenta la limitación, para no
+// fabricar una comparación que no se puede verificar ("no inventes").
+
+// ============================================================
+// Salida
+// ============================================================
 console.log(`Universo analizado: ${universe.length} empresas (${IBEX35_COMPANIES.length} IBEX35 + ${GLOBAL_COMPANIES.length} S&P500 seleccionadas)`);
 console.log(`Fecha de referencia del análisis: ${new Date().toISOString().slice(0, 10)}`);
-console.log(`Umbral de antigüedad usado (igual que PriceService): ${STALE_AFTER_DAYS} días\n`);
+console.log(`Umbrales (iguales que en la web): last-close 0-${STALE_AFTER_DAYS}d · stale ${STALE_AFTER_DAYS + 1}-${CRITICAL_AFTER_DAYS}d · critical >${CRITICAL_AFTER_DAYS}d`);
+console.log("Los días son naturales, no de sesión bursátil: no se descuentan fines de semana ni festivos en esta fase (ver nota al final).\n");
 
-console.log("=== Distribución de antigüedad del precio ===");
-for (const [bucket, count] of histogram) console.log(`  ${bucket}: ${count} empresas`);
-
-console.log("\n=== 10 precios más antiguos (no implica que incumplan el umbral) ===");
-for (const { ticker, age } of oldestFirst.slice(0, 10)) {
-  console.log(`  ${ticker.padEnd(6)} ${age} días`);
-}
-
-console.log(`\n=== Hallazgos (${findings.length}) ===`);
-if (findings.length === 0) {
-  console.log("  Ninguno: no se ha detectado ningún precio por encima del umbral de antigüedad ni ninguna inconsistencia precio/marketCap con las comprobaciones aplicadas.");
+console.log("=== A. Coherencia interna (precio vs. marketCap) ===");
+if (coherenceFindings.length === 0) {
+  console.log("  Ninguna inconsistencia detectada con las comprobaciones aplicadas (nº de acciones implícito dentro de rango plausible y sin outliers estadísticos).\n");
 } else {
-  const bySeverity = { Alta: 0, Media: 0, Baja: 0 };
-  for (const f of findings) bySeverity[f.severity]++;
-  console.log(`  Por gravedad: Alta=${bySeverity.Alta} · Media=${bySeverity.Media} · Baja=${bySeverity.Baja}\n`);
-  for (const f of findings) {
+  for (const f of coherenceFindings) {
     console.log(`  [${f.severity}] ${f.ticker} (${f.name}) — ${f.currency} ${f.exchange}, ${f.region}`);
     console.log(`    Precio almacenado: ${f.price} ${f.currency} · Fecha: ${f.asOf}`);
     console.log(`    Cap. almacenada: ${f.marketCap != null ? f.marketCap.toLocaleString("es-ES") + " " + f.currency : "sin dato"}`);
@@ -148,5 +171,40 @@ if (findings.length === 0) {
     console.log(`    Fuente a usar: ${f.source}\n`);
   }
 }
+
+console.log("=== B. Antigüedad del dato ===");
+console.log("  Distribución por tramo:");
+for (const [label, count] of bucketCounts) console.log(`    ${label}: ${count} empresas`);
+console.log(`  Distribución por estado (igual que el badge de la web): 🟡 last-close=${statusCounts["last-close"]} · 🟠 stale=${statusCounts.stale} · 🔴 critical=${statusCounts.critical} · 🟢 live=${statusCounts.live} (0 sin proveedor en vivo conectado)`);
+
+console.log("\n  10 precios más antiguos:");
+for (const { company, age } of oldestFirst.slice(0, 10)) {
+  const badge = statusBadge(statusFor(age));
+  console.log(`    ${company.ticker.padEnd(6)} ${String(age).padStart(3)} días  ${badge.emoji} ${badge.label}`);
+}
+
+if (staleOrWorse.length === 0) {
+  console.log("\n  Ninguna empresa por encima de los 7 días de antigüedad ahora mismo.\n");
+} else {
+  console.log(`\n  Empresas en stale o critical (${staleOrWorse.length}):`);
+  for (const f of staleOrWorse) {
+    console.log(`  [${f.severity}] ${f.ticker} (${f.name}) — ${f.currency} ${f.exchange}, ${f.region}`);
+    console.log(`    Precio almacenado: ${f.price} ${f.currency} · Fecha: ${f.asOf}`);
+    console.log(`    Inconsistencia: ${f.issue}`);
+    console.log(`    Corrección recomendada: ${f.recommendation}`);
+    console.log(`    Fuente a usar: ${f.source}\n`);
+  }
+}
+
+console.log("  Nota sobre el umbral: son días naturales, no de sesión bursátil. No hay calendario de mercado");
+console.log("  (festivos, fines de semana) implementado en esta fase -- un cierre de viernes visto en lunes");
+console.log("  puede contar como 2-3 días naturales aunque sea la sesión más reciente disponible. Limitación");
+console.log("  conocida y documentada, no un error; no se construye un calendario de mercado en esta fase.\n");
+
+console.log("=== C. Comparación con el mercado ===");
+console.log("  Pendiente: no hay ningún proveedor de mercado conectado. No es posible comparar el dataset con");
+console.log("  una cotización externa hasta completar la Fase 2.");
+console.log("  Los precios mostrados pueden no coincidir con el mercado actual. La antigüedad solo mide el");
+console.log("  tiempo transcurrido desde la fecha almacenada.\n");
 
 console.log("Informe generado sin modificar ningún archivo de datos.");

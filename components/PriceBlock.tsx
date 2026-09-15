@@ -1,11 +1,13 @@
 import type { PriceQuote } from "@/lib/prices/types";
-import { statusBadge, statusCaption, formatQuoteTimestamp } from "@/lib/prices/format";
+import { statusBadge, quoteContext, formatQuoteTimestamp } from "@/lib/prices/format";
 
 /**
  * Bloque "protagonista" del precio en la ficha de empresa: precio grande +
- * badge de estado (🟢/🟡/🔴) + cuándo se obtuvo + cuándo son los
+ * badge de estado (🟢/🟡/🟠/🔴) + cuándo se obtuvo + cuándo son los
  * fundamentales. Deliberadamente separado de MetricTable/ScorePanel: el
  * precio es un bloque independiente de los fundamentales (Fase 1, punto 1).
+ * El estado nunca se comunica solo con color: emoji + texto van siempre
+ * visibles (no solo en tooltip), aquí y en RankingTable.
  */
 export function PriceBlock({
   quote,
@@ -26,16 +28,14 @@ export function PriceBlock({
         </span>
         <span
           className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${badge.className}`}
-          title={statusCaption(quote)}
+          title={quoteContext(quote)}
         >
           <span aria-hidden>{badge.emoji}</span>
           {badge.label}
         </span>
       </div>
 
-      <p className="mt-2 text-sm text-white/70">
-        Actualizado: {formatQuoteTimestamp(quote.fetchedAt)} · {statusCaption(quote)}
-      </p>
+      <p className="mt-2 text-sm text-white/70">{quoteContext(quote)}</p>
 
       <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/50">
         <span>Cap. {marketCapLabel}</span>
