@@ -7,10 +7,12 @@ import { RankingTable } from "@/components/RankingTable";
 import { DataQualityBanner, DisclaimerBanner } from "@/components/Disclaimer";
 import { PageHero } from "@/components/PageHero";
 import type { CompanyWithScore } from "@/lib/ranking";
+import type { PriceQuote } from "@/lib/prices/types";
 
 export default function WatchlistPage() {
   const { tickers, ready, remove } = useWatchlist();
   const [rows, setRows] = useState<CompanyWithScore[]>([]);
+  const [quotes, setQuotes] = useState<Map<string, PriceQuote>>(new Map());
   const [isMock, setIsMock] = useState(true);
   const [loading, setLoading] = useState(false);
 
@@ -18,6 +20,7 @@ export default function WatchlistPage() {
     if (!ready) return;
     if (tickers.length === 0) {
       setRows([]);
+      setQuotes(new Map());
       return;
     }
     setLoading(true);
@@ -25,6 +28,7 @@ export default function WatchlistPage() {
       .then((r) => r.json())
       .then((data) => {
         setRows(data.rows ?? []);
+        setQuotes(new Map(Object.entries(data.quotes ?? {})) as Map<string, PriceQuote>);
         setIsMock(data.isMock ?? true);
       })
       .finally(() => setLoading(false));
@@ -52,7 +56,7 @@ export default function WatchlistPage() {
         </p>
       ) : (
         <>
-          <RankingTable rows={rows} />
+          <RankingTable rows={rows} quotes={quotes} />
           <div className="flex flex-wrap gap-2">
             {tickers.map((t) => (
               <button
