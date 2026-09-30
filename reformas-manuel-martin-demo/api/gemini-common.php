@@ -52,14 +52,16 @@ function reformas_rate_limited($bucket, $perMinute, $perDay, $globalDay) {
 }
 
 function reformas_call_gemini($apiKey, $systemPrompt, $userText, $temperature = 0.4, $maxTokens = 700, $jsonMode = false) {
-  $models = ['gemini-2.5-flash-lite', 'gemini-2.5-flash'];
+  // gemini-2.5-* was retired for new API keys; gemini-flash-latest tracks
+  // whatever Google's current fast model is, so this keeps working after
+  // future renames too.
+  $models = ['gemini-3.5-flash-lite', 'gemini-flash-latest', 'gemini-3.5-flash'];
   $body = [
     'system_instruction' => ['parts' => [['text' => $systemPrompt]]],
     'contents' => [['role' => 'user', 'parts' => [['text' => $userText]]]],
     'generationConfig' => [
       'temperature' => $temperature,
       'maxOutputTokens' => $maxTokens,
-      'thinkingConfig' => ['thinkingBudget' => 0],
     ],
     'safetySettings' => [
       ['category' => 'HARM_CATEGORY_HARASSMENT', 'threshold' => 'BLOCK_ONLY_HIGH'],

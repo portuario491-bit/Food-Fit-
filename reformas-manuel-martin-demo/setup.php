@@ -32,7 +32,7 @@ $msg = ''; $tone = 'info';
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && !$isSet) {
   $k = trim((string) ($_POST['gemini_key'] ?? ''));
-  if ($k === '' || strpos($k, 'AIza') !== 0) { $msg = 'La clave de Gemini debe empezar por «AIza». Revísala.'; $tone = 'warn'; }
+  if ($k === '') { $msg = 'Pega la clave de Gemini antes de enviar.'; $tone = 'warn'; }
   elseif (!validate_gemini($k)) { $msg = 'No he podido validar la clave con Google. Comprueba que la copiaste bien.'; $tone = 'warn'; }
   elseif (write_key($OUT, $IN, $k)) { $isSet = true; $msg = '¡Clave activada! El asistente y el preparador de presupuesto ya usan Gemini de verdad.'; $tone = 'ok'; }
   else { $msg = 'La clave es válida pero no se pudo guardar (revisa permisos de escritura).'; $tone = 'warn'; }
